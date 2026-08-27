@@ -42,6 +42,10 @@ public class AtlasConfigScreen extends Screen {
 	// init() runs again on every resize and reset.
 	private final AtlasConfig.FallbackHandling wasFallback;
 	private final int[] wasElevations;
+	// A grave's epitaph carries its date in the marker's own name, so a change
+	// of reckoning has to go back and rewrite the ones already on the page.
+	private final AtlasConfig.Reckoning wasReckoning;
+	private final boolean wasMarkDate;
 	private boolean resetArmed = false;
 
 	public AtlasConfigScreen(Screen parent) {
@@ -49,6 +53,8 @@ public class AtlasConfigScreen extends Screen {
 		this.parent = parent;
 		this.wasFallback = config.fallbackFailHandling;
 		this.wasElevations = new int[]{config.elevationLow, config.elevationMid, config.elevationHigh, config.elevationPeak};
+		this.wasReckoning = config.reckoning;
+		this.wasMarkDate = config.showMarkDate;
 	}
 
 	@Override
@@ -85,6 +91,10 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(intSlider("quickMarkRange", config.quickMarkRange, 16, 512, v -> config.quickMarkRange = v, this::blocks));
 		list.addWidget(enumButton("markerSort", AtlasConfig.MarkerSort.values(), () -> config.markerSort,
 			v -> config.markerSort = v, v -> "gui.roleplayers_atlas.sort." + v.name().toLowerCase()));
+		list.addWidget(enumButton("reckoning", AtlasConfig.Reckoning.values(), () -> config.reckoning,
+			v -> config.reckoning = v, v -> "gui.roleplayers_atlas.config.reckoning." + v.name().toLowerCase()));
+		list.addWidget(toggle("showMarkDate", () -> config.showMarkDate, v -> config.showMarkDate = v));
+		list.addWidget(toggle("showRealDate", () -> config.showRealDate, v -> config.showRealDate = v));
 		list.addWidget(toggle("deathMarkers", () -> config.deathMarkers, v -> config.deathMarkers = v));
 		list.addWidget(toggle("hideDeathsByDefault", () -> config.hideDeathsByDefault, v -> config.hideDeathsByDefault = v));
 		list.addWidget(enumButton("graveStyle", AtlasConfig.GraveStyle.values(), () -> config.graveStyle,
@@ -145,6 +155,7 @@ public class AtlasConfigScreen extends Screen {
 			|| wasElevations[2] != config.elevationHigh
 			|| wasElevations[3] != config.elevationPeak;
 		if (config.fallbackFailHandling != wasFallback || elevationsChanged) WorldAtlasData.retileAll();
+		if (config.reckoning != wasReckoning || config.showMarkDate != wasMarkDate) WorldAtlasData.redateGraves();
 		this.client.setScreen(parent);
 	}
 

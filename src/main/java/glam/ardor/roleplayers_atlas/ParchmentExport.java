@@ -174,14 +174,7 @@ public final class ParchmentExport {
 	public static NativeImage decorate(NativeImage map) {
 		if (!decorated()) return map;
 		String author = stampAuthor ? AtlasTime.selfName() : "";
-		String stamp = "";
-		if (stampTime) {
-			long day = AtlasTime.gameDay();
-			String date = AtlasTime.realDate(AtlasTime.realMillis());
-			stamp = date.isEmpty()
-				? Text.translatable("gui.roleplayers_atlas.marker.stampPlain", day).getString()
-				: Text.translatable("gui.roleplayers_atlas.marker.stamp", day, date).getString();
-		}
+		String stamp = stampTime ? AtlasTime.stampNow() : "";
 		String caption = author.isEmpty() ? stamp : stamp.isEmpty() ? author : author + " · " + stamp;
 
 		int scale = Math.max(1, Math.min(4, Math.min(map.getWidth(), map.getHeight()) / 320));

@@ -1017,19 +1017,31 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		java.util.List<Text> lines = new ArrayList<>();
 		Long day = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.DAY);
 		Long realTime = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.REAL_TIME);
-		boolean dated = !Boolean.FALSE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DATE));
+		// Both the mark's own switch and the two in the settings have to allow it.
+		boolean dated = !Boolean.FALSE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DATE))
+			&& glam.ardor.roleplayers_atlas.AtlasTime.datingShown();
 		String source = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.SOURCE);
 		if (source != null && !source.isEmpty() && !source.equals(glam.ardor.roleplayers_atlas.AtlasTime.selfName())) {
 			// Who told you never changes; going there only adds a line under it.
-			lines.add(glam.ardor.roleplayers_atlas.AtlasTime.hearsay(source, dated ? day : null, dated ? realTime : null).copy().formatted(Formatting.GRAY, Formatting.ITALIC));
+			lines.add((dated
+				? glam.ardor.roleplayers_atlas.AtlasTime.hearsay(source, day, realTime)
+				: Text.translatable("gui.roleplayers_atlas.marker.hearsayPlain", source)
+			).copy().formatted(Formatting.GRAY, Formatting.ITALIC));
 			Long verified = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.CONFIRMED_DAY);
 			if (verified != null) {
-				lines.add(Text.translatable("gui.roleplayers_atlas.marker.verified", verified).formatted(Formatting.DARK_GREEN, Formatting.ITALIC));
+				net.minecraft.text.MutableText seen = dated
+					? glam.ardor.roleplayers_atlas.AtlasTime.dateText(verified, landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.CONFIRMED_REAL_TIME))
+					: null;
+				lines.add((seen == null
+					? Text.translatable("gui.roleplayers_atlas.marker.verifiedPlain")
+					: Text.translatable("gui.roleplayers_atlas.marker.verifiedDate", seen)
+				).formatted(Formatting.DARK_GREEN, Formatting.ITALIC));
 			}
 			return lines;
 		}
 		if (dated && day != null) {
-			lines.add(glam.ardor.roleplayers_atlas.AtlasTime.stamp(day, realTime == null ? 0 : realTime).copy().formatted(Formatting.DARK_GRAY));
+			net.minecraft.text.MutableText stamp = glam.ardor.roleplayers_atlas.AtlasTime.dateText(day, realTime);
+			if (stamp != null) lines.add(stamp.formatted(Formatting.DARK_GRAY));
 		}
 		return lines;
 	}

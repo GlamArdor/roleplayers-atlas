@@ -47,6 +47,18 @@ public class AtlasConfig extends WrappedConfig {
 		LOOKING
 	}
 
+	/**
+	 * Which calendar dates a mark.
+	 * <p>
+	 * REIGN is the reckoning kept on Reign RP — cycles, unias and years, worked
+	 * out from the real moment the mark was drawn. DAYS is the world's own day
+	 * count, which is what the atlas used before the server opened.
+	 */
+	public enum Reckoning {
+		REIGN,
+		DAYS
+	}
+
 	/** How the bookmark list is ordered. */
 	public enum MarkerSort {
 		KIND,
@@ -132,6 +144,16 @@ public class AtlasConfig extends WrappedConfig {
 
 	@Comment("How the bookmark list is ordered: KIND, DISTANCE, DATE or NAME")
 	public MarkerSort markerSort = MarkerSort.KIND;
+
+	@Comment("Which calendar dates a mark: REIGN for the server's cycles, unias and years, DAYS for the world's own day count")
+	public Reckoning reckoning = Reckoning.REIGN;
+
+	@Comment("Whether a mark shows the in-world date it was drawn on")
+	public boolean showMarkDate = true;
+
+	@Comment("Whether the real date and time follows it, in ((out-of-character brackets))")
+	@Comment("Under the server's reckoning it is read on the Moscow clock the cycles are counted on")
+	public boolean showRealDate = true;
 
 	@Comment("Whether entering the area of a named marker shows its title on screen")
 	public boolean zoneTitles = true;
