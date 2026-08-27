@@ -209,6 +209,24 @@ public class WorldAtlasData {
 		WORLDS.values().forEach(WorldAtlasData::retile);
 	}
 
+	/**
+	 * Rewrites every death marker's epitaph, so a change of reckoning shows on
+	 * the graves already drawn instead of waiting for the next rejoin.
+	 * <p>
+	 * The names are rebuilt from the landmarks Surveyor holds rather than from
+	 * the markers on the page, because a marker's name is already the epitaph
+	 * and re-reading it would write the old date inside the new one.
+	 */
+	public static void redateGraves() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.world == null) return;
+		RegistryKey<World> dimension = client.world.getRegistryKey();
+		WorldSummary summary = SurveyorClient.tryGetSummary(dimension);
+		WorldAtlasData data = WORLDS.get(dimension);
+		if (summary == null || summary.landmarks() == null || data == null) return;
+		data.onLandmarksAdded(summary, summary.landmarks().keySet(SurveyorClient.getExploration()));
+	}
+
 	public void invalidateTileBatches() {
 		synchronized (tileBatchCache) {
 			tileBatchCache.clear();
@@ -358,7 +376,11 @@ public class WorldAtlasData {
 			if (!AtlasTime.isUnverified(landmark)) continue;
 			if (!reached(landmark, px, pz, playerChunk)) continue;
 			long day = AtlasTime.gameDay();
-			summary.landmarks().put(copyLandmarkWith(landmark, landmark.id(), m -> m.set(AtlasComponents.CONFIRMED_DAY, day)));
+			long seenAt = AtlasTime.realMillis();
+			summary.landmarks().put(copyLandmarkWith(landmark, landmark.id(), m -> {
+				m.set(AtlasComponents.CONFIRMED_DAY, day);
+				m.set(AtlasComponents.CONFIRMED_REAL_TIME, seenAt);
+			}));
 			AtlasSounds.hearsayConfirmed();
 		}
 	}
@@ -440,13 +462,25 @@ public class WorldAtlasData {
 			AtlasConfig.GraveStyle style = RoleplayersAtlas.CONFIG.graveStyle;
 			Text name = grave.get(LandmarkComponentTypes.NAME);
 			if (name == null && style == AtlasConfig.GraveStyle.CAUSE) style = AtlasConfig.GraveStyle.DIED;
-			MutableText timeText = Text.literal(String.valueOf(grave.getOrDefault(AtlasComponents.DAY, 0L))).formatted(Formatting.WHITE);
-			String key = "gui.roleplayers_atlas.marker.death.%s".formatted(style.toString().toLowerCase());
-			MutableText text = switch (style) {
-				case CAUSE -> Text.translatable(key, name.copy().formatted(Formatting.GRAY).formatted(Formatting.RED), timeText).formatted(Formatting.GRAY);
-				case GRAVE, ITEMS, DIED -> Text.translatable(key, Text.translatable("gui.roleplayers_atlas.marker.death.%s.verb".formatted(style.toString().toLowerCase())).formatted(Formatting.RED), timeText).formatted(Formatting.GRAY);
-				case EUPHEMISMS -> Text.translatable(key, Text.translatable("gui.roleplayers_atlas.marker.death.%s.verb.%s".formatted(style.toString().toLowerCase(), new Random(grave.getOrDefault(LandmarkComponentTypes.SEED, 0)).nextInt(11))).formatted(Formatting.RED), timeText).formatted(Formatting.GRAY);
+			String styleName = style.toString().toLowerCase();
+			MutableText verb = switch (style) {
+				case CAUSE -> name.copy().formatted(Formatting.GRAY).formatted(Formatting.RED);
+				case GRAVE, ITEMS, DIED -> Text.translatable("gui.roleplayers_atlas.marker.death.%s.verb".formatted(styleName)).formatted(Formatting.RED);
+				case EUPHEMISMS -> Text.translatable("gui.roleplayers_atlas.marker.death.%s.verb.%s".formatted(styleName, new Random(grave.getOrDefault(LandmarkComponentTypes.SEED, 0)).nextInt(11))).formatted(Formatting.RED);
 			};
+			// A grave dug before this update has no real moment recorded, so the
+			// server's reckoning can't date it; it keeps the day number it has
+			// always shown rather than being given an invented cycle.
+			Long graveReal = grave.get(AtlasComponents.REAL_TIME);
+			boolean reign = RoleplayersAtlas.CONFIG.reckoning == AtlasConfig.Reckoning.REIGN && graveReal != null && graveReal > 0;
+			MutableText timeText = (reign
+				? AtlasTime.inWorldDate(grave.get(AtlasComponents.DAY), graveReal).copy()
+				: Text.literal(String.valueOf(grave.getOrDefault(AtlasComponents.DAY, 0L)))).formatted(Formatting.WHITE);
+			String key = "gui.roleplayers_atlas.marker.death.%s%s".formatted(styleName, reign ? ".reign" : "");
+			// With in-world dates turned off the epitaph is the verb on its own.
+			MutableText text = RoleplayersAtlas.CONFIG.showMarkDate
+				? Text.translatable(key, verb, timeText).formatted(Formatting.GRAY)
+				: verb.copy().formatted(Formatting.GRAY);
 			addLandmarkMarker(copyLandmarkWith(grave, grave.id(), m -> {
 				m.set(LandmarkComponentTypes.COLOR, DyeColor.GRAY.getEntityColor());
 				m.set(LandmarkComponentTypes.NAME, text);

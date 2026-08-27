@@ -31,7 +31,13 @@ The first stage is the one you travel with. The second is the one you work on.
 
 **Marker layers.** Your own layers with names and colours, filtered by tabs down the left edge. Deaths get their own automatically.
 
-**Dating.** Every mark records the day it was drawn. The day comes from the world's *game* time, not its time of day, because a server can freeze the day cycle or hand each player their own – game time keeps ticking and is the same for everyone.
+**Dating.** Every mark records when it was drawn, and is dated in one of two reckonings, chosen in the settings.
+
+The default is the reckoning kept on **Reign RP**: *cycles*, *unias* and *years*. A cycle is one setting and rising of the sun, two real hours; twelve of them make a unia, an elven day; thirty unias make a year, an elven month. A mark drawn on 15 September 2026 at 22:00 reads *Cycle 12 of Unia 15, Year 226*. It is worked out from the real moment the mark was drawn, on the Moscow clock the server counts by, so it is the same date for everyone who reads it and cannot drift.
+
+The other is the world's own **day count**, which is what the atlas used before. The day comes from the world's *game* time, not its time of day, because a server can freeze the day cycle or hand each player their own – game time keeps ticking and is the same for everyone.
+
+Either way the real date and time can follow it in ((out-of-character brackets)). Both halves have their own switch, and every mark can turn its own date off.
 
 **Scrolls, signatures and hearsay.** Export any slice of your atlas – terrain, chosen markers, inscriptions, territories, routes – into an `.atlas` scroll and hand the file to another player. Signed scrolls carry your name and date. On the other side those marks arrive **faint**, filed into a layer of their own named after you, captioned *"As told by …"*. They stay faint until that player physically walks to the spot, at which point the mark firms up and records the day it was verified.
 

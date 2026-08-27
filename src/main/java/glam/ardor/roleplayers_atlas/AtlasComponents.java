@@ -52,6 +52,9 @@ public final class AtlasComponents {
 	/** The game day the owner stood at a mark they had only heard of; absent means still unverified. */
 	public static final LandmarkComponentType<Long> CONFIRMED_DAY = LandmarkComponentTypes.register(RoleplayersAtlas.id("confirmed_day"), Codec.LONG, d -> Text.literal(String.valueOf(d)));
 
+	/** The real-world moment that walk happened, epoch millis — what the server's reckoning dates it by. Absent on marks verified before the reckoning existed. */
+	public static final LandmarkComponentType<Long> CONFIRMED_REAL_TIME = LandmarkComponentTypes.register(RoleplayersAtlas.id("confirmed_real_time"), Codec.LONG, t -> Text.literal(String.valueOf(t)));
+
 	private AtlasComponents() {
 	}
 

@@ -46,7 +46,13 @@ A third press closes it.
 
 ## Marks that are worth something
 
-**Dating.** Every mark records the day it was drawn. The day comes from the world's *game* time rather than its time of day, because a server can freeze the day cycle or hand each player their own. Game time keeps ticking and reads the same for everyone.
+**Dating.** Every mark records when it was drawn, and is dated in one of two reckonings, chosen in the settings.
+
+The default is the reckoning kept on **Reign RP**: *cycles*, *unias* and *years*. A cycle is one setting and rising of the sun, two real hours; twelve make a unia, an elven day; thirty unias make a year, an elven month. A mark drawn on 15 September 2026 at 22:00 reads *Cycle 12 of Unia 15, Year 226*. It is worked out from the real moment the mark was drawn, on the Moscow clock the server counts by, so it reads the same for everyone and cannot drift.
+
+The other is the world's own **day count**, which is what the atlas used before. The day comes from the world's *game* time rather than its time of day, because a server can freeze the day cycle or hand each player their own. Game time keeps ticking and reads the same for everyone.
+
+Either way the real date and time can follow it in ((out-of-character brackets)). Both halves have their own switch, and every mark can turn its own date off.
 
 **Layers.** Your own layers with names and colours, filtered by tabs down the left edge. Deaths get one automatically.
 

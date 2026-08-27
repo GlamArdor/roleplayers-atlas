@@ -52,6 +52,10 @@ public final class AtlasClothConfig {
 		// land already on the map, or the setting appears to do nothing at all.
 		AtlasConfig.FallbackHandling wasFallback = config.fallbackFailHandling;
 		int[] wasElevations = {config.elevationLow, config.elevationMid, config.elevationHigh, config.elevationPeak};
+		// A grave's epitaph carries its date in the marker's own name, so a change
+		// of reckoning has to go back and rewrite the ones already on the page.
+		AtlasConfig.Reckoning wasReckoning = config.reckoning;
+		boolean wasMarkDate = config.showMarkDate;
 		ConfigBuilder builder = ConfigBuilder.create()
 			.setParentScreen(parent)
 			.setTitle(Text.translatable("gui.roleplayers_atlas.config"))
@@ -63,6 +67,7 @@ public final class AtlasClothConfig {
 					|| wasElevations[2] != config.elevationHigh
 					|| wasElevations[3] != config.elevationPeak;
 				if (config.fallbackFailHandling != wasFallback || elevationsChanged) WorldAtlasData.retileAll();
+				if (config.reckoning != wasReckoning || config.showMarkDate != wasMarkDate) WorldAtlasData.redateGraves();
 			});
 		// See the land while setting it up: the map redraws to these options, and
 		// a solid menu background would hide what the settings are for.
@@ -136,6 +141,16 @@ public final class AtlasClothConfig {
 			.build();
 		marks.addEntry(sortEntry);
 		LIVE.add(() -> config.markerSort = sortEntry.getValue());
+		var reckoningEntry = e.startEnumSelector(label("reckoning"), AtlasConfig.Reckoning.class, config.reckoning)
+			.setDefaultValue(AtlasConfig.Reckoning.REIGN)
+			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.reckoning." + v.name().toLowerCase()))
+			.setTooltip(tip("reckoning"))
+			.setSaveConsumer(v -> config.reckoning = v)
+			.build();
+		marks.addEntry(reckoningEntry);
+		LIVE.add(() -> config.reckoning = reckoningEntry.getValue());
+		marks.addEntry(toggle(e, "showMarkDate", config.showMarkDate, true, v -> config.showMarkDate = v));
+		marks.addEntry(toggle(e, "showRealDate", config.showRealDate, true, v -> config.showRealDate = v));
 		marks.addEntry(toggle(e, "deathMarkers", config.deathMarkers, true, v -> config.deathMarkers = v));
 		marks.addEntry(toggle(e, "hideDeathsByDefault", config.hideDeathsByDefault, false, v -> config.hideDeathsByDefault = v));
 		var graveEntry = e.startEnumSelector(label("graveStyle"), AtlasConfig.GraveStyle.class, config.graveStyle)
