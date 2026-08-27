@@ -137,7 +137,11 @@ modrinth {
 		// Surveyor rides inside the jar, so it is embedded rather than required:
 		// listing it as required tells people to go and install it separately,
 		// which they neither need to do nor can do wrongly.
-		embedded.version libs.surveyor.get().getName(), libs.versions.surveyor.get()
+		//
+		// The project rather than a version of it: this branch carries our own
+		// port of Surveyor to 1.21.11, which upstream never released, so there
+		// is no version on Modrinth for the pin to resolve against.
+		embedded.project libs.surveyor.get().getName()
 		optional.project "cloth-config"
 		optional.project "modmenu"
 	}
