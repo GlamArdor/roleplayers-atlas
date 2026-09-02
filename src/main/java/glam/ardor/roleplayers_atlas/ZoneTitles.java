@@ -23,7 +23,6 @@ import java.util.Map;
  */
 public final class ZoneTitles {
 	private static final long FADE_IN_MS = 400;
-	private static final long HOLD_MS = 2500;
 	private static final long FADE_OUT_MS = 800;
 
 	private static String insideZoneKey = null;
@@ -60,7 +59,6 @@ public final class ZoneTitles {
 		String territoryKey = null;
 		Text territoryName = null;
 		int territorySize = Integer.MAX_VALUE;
-		net.minecraft.util.math.ChunkPos playerChunk = new net.minecraft.util.math.ChunkPos(client.player.getBlockPos());
 
 		for (Map.Entry<Landmark, MarkerTexture> entry : data.getAllMarkers(1).entrySet()) {
 			Landmark landmark = entry.getKey();
@@ -75,9 +73,16 @@ public final class ZoneTitles {
 			if (name == null || name.getString().isEmpty()) continue;
 			BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 			if (pos == null) {
-				// Territory: containment test on the chunk bitsets.
+				// Territory: the title now fires within a radius of the claim, not
+				// only when standing on it, so it can announce the place as you
+				// approach. The per-mark ZONE_RADIUS (or the config default) is that
+				// buffer; distance is measured to the nearest claimed chunk, and is
+				// zero inside.
 				var regions = landmark.get(LandmarkComponentTypes.CHUNKS);
-				if (regions == null || !glam.ardor.roleplayers_atlas.util.TerritoryUtil.contains(regions, playerChunk)) continue;
+				if (regions == null) continue;
+				Integer markerRadius = landmark.get(AtlasComponents.ZONE_RADIUS);
+				int radius = markerRadius != null ? markerRadius : RoleplayersAtlas.CONFIG.zoneTitleRadius;
+				if (territoryDistance(regions, px, pz) > radius) continue;
 				int size = regions.values().stream().mapToInt(java.util.BitSet::cardinality).sum();
 				// The smallest containing territory wins (duchy inside a kingdom).
 				if (size < territorySize) {
@@ -129,19 +134,36 @@ public final class ZoneTitles {
 		}
 	}
 
+	/** Block distance from a point to the nearest claimed chunk; zero inside the territory. */
+	private static double territoryDistance(Map<folk.sisby.surveyor.util.RegionPos, java.util.BitSet> regions, double px, double pz) {
+		double best = Double.MAX_VALUE;
+		for (net.minecraft.util.math.ChunkPos chunk : folk.sisby.surveyor.util.RegionPos.regionsToChunks(regions)) {
+			double x0 = chunk.getStartX(), z0 = chunk.getStartZ();
+			double dx = Math.max(Math.max(x0 - px, px - (x0 + 16)), 0);
+			double dz = Math.max(Math.max(z0 - pz, pz - (z0 + 16)), 0);
+			double d = Math.hypot(dx, dz);
+			if (d < best) best = d;
+			if (best == 0) break;
+		}
+		return best;
+	}
+
 	private static void render(DrawContext context, RenderTickCounter tickCounter) {
 		if (title == null) return;
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client.options.hudHidden || client.player == null) return;
 
+		// How long the title holds fully shown before fading is a setting; the
+		// fade-in and fade-out stay fixed.
+		long holdMs = Math.max(0L, RoleplayersAtlas.CONFIG.zoneTitleSeconds * 1000L);
 		long t = Util.getMeasuringTimeMs() - shownAt;
-		if (t >= FADE_IN_MS + HOLD_MS + FADE_OUT_MS) {
+		if (t >= FADE_IN_MS + holdMs + FADE_OUT_MS) {
 			title = null;
 			return;
 		}
 		float alpha = t < FADE_IN_MS
 			? t / (float) FADE_IN_MS
-			: t > FADE_IN_MS + HOLD_MS ? 1 - (t - FADE_IN_MS - HOLD_MS) / (float) FADE_OUT_MS : 1;
+			: t > FADE_IN_MS + holdMs ? 1 - (t - FADE_IN_MS - holdMs) / (float) FADE_OUT_MS : 1;
 		int a = (int) (MathHelper.clamp(alpha, 0, 1) * 255);
 		if (a < 8) return;
 

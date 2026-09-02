@@ -54,7 +54,9 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 		// hands exactly like a held map, then fit the book spread to map height.
 		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
 		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180.0F));
-		matrices.scale(0.38F, 0.38F, 0.38F);
+		// The held book's size scales with the setting (and the live zoom keys).
+		float handScale = 0.38F * (RoleplayersAtlas.CONFIG.handheldScale / 100.0F);
+		matrices.scale(handScale, handScale, handScale);
 		float fit = 142.0F / bookHeight;
 		matrices.scale(fit, fit, 1.0F);
 		matrices.scale(1.0F / 128.0F, 1.0F / 128.0F, 1.0F / 128.0F);

@@ -68,6 +68,7 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(enumButton("emptyHandling", AtlasConfig.EmptyHandling.values(), () -> config.emptyHandling,
 			v -> config.emptyHandling = v, v -> "gui.roleplayers_atlas.config.emptyHandling." + v.name().toLowerCase()));
 		list.addWidget(toggle("stabilizeHeldMap", () -> config.stabilizeHeldMap, v -> config.stabilizeHeldMap = v));
+		list.addWidget(intSlider("handheldScale", config.handheldScale, 50, 200, v -> config.handheldScale = v, this::percent));
 		list.addWidget(toggle("showHints", () -> config.showHints, v -> config.showHints = v));
 		list.addWidget(intSlider("mapScale", config.mapScale, -2, 10, v -> config.mapScale = v, v -> Text.literal(Integer.toString(v))));
 		list.addWidget(intSlider("maxTileChunks", config.maxTileChunks, 0, 6, v -> config.maxTileChunks = v, v -> Text.literal(Integer.toString(v))));
@@ -108,6 +109,7 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(toggle("zoneTitles", () -> config.zoneTitles, v -> config.zoneTitles = v));
 		list.addWidget(toggle("zoneTitleSound", () -> config.zoneTitleSound, v -> config.zoneTitleSound = v));
 		list.addWidget(intSlider("zoneTitleRadius", config.zoneTitleRadius, 4, 256, v -> config.zoneTitleRadius = v, this::blocks));
+		list.addWidget(intSlider("zoneTitleSeconds", config.zoneTitleSeconds, 1, 30, v -> config.zoneTitleSeconds = v, this::seconds));
 
 		list.addHeader(Text.translatable("roleplayers_atlas.category.terrain"));
 		list.addWidget(intSlider("elevationLow", config.elevationLow, -64, 320, v -> config.elevationLow = v, this::blocks));
@@ -165,6 +167,10 @@ public class AtlasConfigScreen extends Screen {
 
 	private Text percent(int value) {
 		return Text.translatable("config.roleplayers_atlas.percent", value);
+	}
+
+	private Text seconds(int value) {
+		return Text.translatable("config.roleplayers_atlas.seconds", value);
 	}
 
 	private static Text label(String key, Text value) {

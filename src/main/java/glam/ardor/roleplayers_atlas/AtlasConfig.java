@@ -132,6 +132,10 @@ public class AtlasConfig extends WrappedConfig {
 	@Comment("Off by default: the book bobs in step with you, like any held map")
 	public boolean stabilizeHeldMap = false;
 
+	@Comment("Size of the atlas held in the hands, percent. The zoom-in/out keys adjust this live")
+	@IntegerRange(min = 50, max = 200)
+	public int handheldScale = 100;
+
 	@Comment("Where the quick-mark key puts its mark: AT_PLAYER, or LOOKING at whatever you are facing")
 	public QuickMark quickMark = QuickMark.LOOKING;
 
@@ -164,6 +168,10 @@ public class AtlasConfig extends WrappedConfig {
 	@Comment("Radius in blocks around a named marker that counts as its zone")
 	@IntegerRange(min = 4, max = 256)
 	public int zoneTitleRadius = 32;
+
+	@Comment("How many seconds a zone title stays fully shown before it fades")
+	@IntegerRange(min = 1, max = 30)
+	public int zoneTitleSeconds = 3;
 
 	@Comment("Whether player death markers appear on the map")
 	public boolean deathMarkers = true;

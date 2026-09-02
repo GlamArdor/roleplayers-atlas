@@ -333,7 +333,17 @@ public interface AtlasRenderer {
 				|| markerY - 4 < MAP_BORDER_HEIGHT || markerY + 5 > MAP_BORDER_HEIGHT + mapHeight()) return;
 			Integer color = landmark.get(LandmarkComponentTypes.COLOR);
 			int ink = color == null ? 0xF8ECD0 : color & 0xFFFFFF;
-			painter.drawText(styled, (float) (markerX - half), (float) (markerY - 4), ((int) (labelAlpha * 255) << 24) | ink, light);
+			int penArgb = ((int) (labelAlpha * 255) << 24) | ink;
+			boolean penNoPlate = Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW));
+			int penRot = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
+			painter.push();
+			painter.translate(markerX, markerY - 4);
+			if (penRot != 0) painter.rotateDegrees(penRot);
+			// No plate means bare ink (drawGlyph with a zero shadow); otherwise the
+			// usual translucent name-tag plate.
+			if (penNoPlate) painter.drawGlyph(styled, (float) -half, 0, penArgb, 0, light);
+			else painter.drawText(styled, (float) -half, 0, penArgb, light);
+			painter.pop();
 			return;
 		}
 		double labelHalf = textRenderer.getWidth(name) / 2.0;
@@ -342,7 +352,9 @@ public interface AtlasRenderer {
 		if (markerX - labelHalf < MAP_BORDER_WIDTH || markerX + labelHalf > MAP_BORDER_WIDTH + mapWidth()
 			|| labelY < MAP_BORDER_HEIGHT || labelY + 9 > MAP_BORDER_HEIGHT + mapHeight()) return;
 		int argb = ((int) (labelAlpha * 255) << 24) | 0xF8ECD0;
-		painter.drawText(name, (float) (markerX - labelHalf), (float) labelY, argb, light);
+		if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW)))
+			painter.drawGlyph(name, (float) (markerX - labelHalf), (float) labelY, argb, 0, light);
+		else painter.drawText(name, (float) (markerX - labelHalf), (float) labelY, argb, light);
 	}
 
 	/**
@@ -408,7 +420,15 @@ public interface AtlasRenderer {
 		double luma = 0.299 * ((fillRgb >> 16) & 0xFF) + 0.587 * ((fillRgb >> 8) & 0xFF) + 0.114 * (fillRgb & 0xFF);
 		boolean darkInk = luma > 110;
 		int inkColor = darkInk ? 0x2E1A0C : 0xF8ECD0;
-		int shadowArgb = ((int) (labelAlpha * 200) << 24) | (darkInk ? 0xF3E7C9 : 0x2E1A0C);
+		boolean noShadow = Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW));
+		int shadowArgb = noShadow ? 0 : ((int) (labelAlpha * 200) << 24) | (darkInk ? 0xF3E7C9 : 0x2E1A0C);
+		// A per-mark twist rides on top of the auto-computed axis: the extent and
+		// scale are still measured along the principal axis, so only the finished
+		// label spins about its centre.
+		int userRot = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
+		double drawDeg = deg + userRot;
+		double drawTheta = Math.toRadians(drawDeg);
+		double dcos = Math.cos(drawTheta), dsin = Math.sin(drawTheta);
 		Text[] glyphs = new Text[count];
 		int[] glyphWidths = new int[count];
 		int rawWidth = 0;
@@ -432,13 +452,13 @@ public interface AtlasRenderer {
 			double u = total > 0 ? t / (total / 2) : 0;
 			double arcOffset = -sagitta * (1 - u * u);
 			double tilt = Math.toDegrees(Math.atan2(2 * sagitta * u / (total / 2), 1));
-			double px = meanX + cos * t - sin * arcOffset;
-			double py = meanY + sin * t + cos * arcOffset;
+			double px = meanX + dcos * t - dsin * arcOffset;
+			double py = meanY + dsin * t + dcos * arcOffset;
 			cursor += charWidth + spacing;
 			if (px < MAP_BORDER_WIDTH || px > MAP_BORDER_WIDTH + mapWidth() || py < MAP_BORDER_HEIGHT || py > MAP_BORDER_HEIGHT + mapHeight()) continue;
 			painter.push();
 			painter.translate(px, py);
-			painter.rotateDegrees((float) (deg + tilt));
+			painter.rotateDegrees((float) (drawDeg + tilt));
 			painter.scale((float) scale);
 			painter.drawGlyph(glyphs[i], -glyphWidths[i] / 2.0F, -4, argb, shadowArgb, light);
 			painter.pop();
@@ -581,6 +601,9 @@ public interface AtlasRenderer {
 		// No shadow: plain ink on the dark plate, or the two blur together.
 		int shadowArgb = 0;
 		int argb = ((int) (labelAlpha * 235) << 24) | ink;
+		// The route's "shadow" is the dark ribbon behind its name; hiding it
+		// leaves the name as bare ink laid along the path.
+		boolean routeNoPlate = Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW));
 
 		// The dark plate is one continuous ribbon: a plate per glyph, or a strip
 		// of rectangles, leaves a wedge open on every bend. Each piece is a quad
@@ -608,7 +631,7 @@ public interface AtlasRenderer {
 			}
 			ribbon.add(new double[]{x, y});
 		}
-		if (ribbon.size() > 1) {
+		if (!routeNoPlate && ribbon.size() > 1) {
 			// The offset at each joint follows the bisector of the two pieces
 			// meeting there, which is what makes their corners line up exactly.
 			int nodes = ribbon.size();
