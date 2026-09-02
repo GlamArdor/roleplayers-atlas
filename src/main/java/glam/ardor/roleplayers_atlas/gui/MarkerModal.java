@@ -146,6 +146,10 @@ public class MarkerModal extends Component {
 	protected String markerLayer = "personal";
 	protected net.minecraft.client.gui.widget.SliderWidget radiusSlider;
 	protected net.minecraft.client.gui.widget.SliderWidget opacitySlider;
+	protected int labelRotation = 0;
+	protected boolean labelNoShadow = false;
+	protected net.minecraft.client.gui.widget.SliderWidget rotationSlider;
+	protected ButtonWidget btnShadow;
 
 	public static final int BUTTON_WIDTH = 120;
 	public static final int BUTTON_SPACING = 8;
@@ -189,6 +193,8 @@ public class MarkerModal extends Component {
 		this.noteText = baseLandmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.NOTE, "");
 		this.dateEnabled = !Boolean.FALSE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DATE));
 		this.showDistance = !Boolean.FALSE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DISTANCE));
+		this.labelRotation = baseLandmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
+		this.labelNoShadow = Boolean.TRUE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW));
 		this.noteFocused = false;
 		if (isSpawn()) {
 			selectedTexture = glam.ardor.roleplayers_atlas.SpawnMarker.texture();
@@ -203,13 +209,33 @@ public class MarkerModal extends Component {
 		return Text.translatable("gui.roleplayers_atlas.marker.zoneTitle", Text.translatable(zoneTitleEnabled ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
+	/** Marks that carry a map label get an extra row (rotation/shadow), so everything below shifts down. */
+	private boolean hasLabelControls() {
+		return isTerritory() || isSimple();
+	}
+
 	/** Where the confirm row sits — the spawn mark's dialog is much shorter. */
 	private int bottomY() {
-		return isSpawn() ? 78 : isSimple() ? 148 : 182;
+		return isSpawn() ? 78 : isSimple() ? 171 : isTerritory() ? 205 : 182;
+	}
+
+	/** The layer/date row — pushed down by one row where the label controls exist. */
+	private int labelRowY() {
+		return this.height / 2 + (isSimple() ? 81 : isTerritory() ? 115 : 92);
+	}
+
+	/**
+	 * The confirm row, but never below the screen: at a normal GUI scale it sits
+	 * center-relative as before, and only clamps up to the bottom edge when the
+	 * dialog would otherwise run off (high GUI scale / small window), so "Готово"
+	 * and "Изменить границы" stay on screen instead of being cut off.
+	 */
+	private int confirmRowY() {
+		return Math.min(this.height / 2 + bottomY(), this.height - 46);
 	}
 
 	private int noteBoxY() {
-		return this.height / 2 + (isSimple() ? 82 : 116);
+		return this.height / 2 + (isSimple() ? 105 : isTerritory() ? 139 : 116);
 	}
 
 	private int noteBoxX() {
@@ -284,6 +310,11 @@ public class MarkerModal extends Component {
 		return Text.translatable(key, Text.translatable(value ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
+	/** "Тень: ВКЛ/ВЫКЛ" — the label's shadow (or a route's backing ribbon). */
+	private Text shadowText() {
+		return onOff("gui.roleplayers_atlas.marker.shadow", !labelNoShadow);
+	}
+
 	private class RadiusSlider extends net.minecraft.client.gui.widget.SliderWidget {
 		RadiusSlider(int x, int y, int width, int height) {
 			super(x, y, width, height, Text.empty(), (Math.max(4, Math.min(256, zoneRadius)) - 4) / 252.0);
@@ -316,6 +347,24 @@ public class MarkerModal extends Component {
 		@Override
 		protected void applyValue() {
 			markerOpacity = (int) Math.round(value * 100.0);
+			updateMessage();
+		}
+	}
+
+	private class RotationSlider extends net.minecraft.client.gui.widget.SliderWidget {
+		RotationSlider(int x, int y, int width, int height) {
+			super(x, y, width, height, Text.empty(), ((labelRotation % 360) + 360) % 360 / 360.0);
+			updateMessage();
+		}
+
+		@Override
+		protected void updateMessage() {
+			setMessage(Text.translatable("gui.roleplayers_atlas.marker.rotation", ((labelRotation % 360) + 360) % 360));
+		}
+
+		@Override
+		protected void applyValue() {
+			labelRotation = ((int) Math.round(value * 360.0)) % 360;
 			updateMessage();
 		}
 	}
@@ -415,6 +464,10 @@ public class MarkerModal extends Component {
 					copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LAYER, markerLayer);
 					copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.NOTE, noteText.trim());
 					if (route) copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DISTANCE, showDistance);
+					// The shadow/backing toggle rides on every mark with a drawn
+					// label; the turn only on names written across the map.
+					if (territory || simple) copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW, labelNoShadow);
+					if (territory || (simple && !route)) copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, labelRotation);
 					// A mark keeps the date it was first drawn on; editing it later
 					// doesn't rewrite history, it only decides whether to show it.
 					copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DATE, dateEnabled);
@@ -430,9 +483,9 @@ public class MarkerModal extends Component {
 			ClientPlayerEntity player = MinecraftClient.getInstance().player;
 			if (player != null) MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
 			closeChild();
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, this.height / 2 + bottomY(), BUTTON_WIDTH, 20).build());
+		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmRowY(), BUTTON_WIDTH, 20).build());
 		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), (button) -> closeChild())
-			.dimensions(this.width / 2 + BUTTON_SPACING / 2, this.height / 2 + bottomY(), BUTTON_WIDTH, 20).build());
+			.dimensions(this.width / 2 + BUTTON_SPACING / 2, confirmRowY(), BUTTON_WIDTH, 20).build());
 		// A road walked further than it was drawn: pick the pencil back up at its
 		// far end rather than starting again.
 		addDrawableChild(btnExtend = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.route.extend"), (button) -> {
@@ -440,7 +493,7 @@ public class MarkerModal extends Component {
 				closeChild();
 				screen.startExtendingRoute(baseLandmark);
 			}
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, this.height / 2 + bottomY() + 24, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
+		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmRowY() + 24, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
 		// A zone that grew or shrank since it was drawn: take the brush back to it
 		// rather than rubbing it out and painting the whole thing again.
 		addDrawableChild(btnEditArea = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.territory.edit"), (button) -> {
@@ -448,9 +501,13 @@ public class MarkerModal extends Component {
 				closeChild();
 				screen.startEditingTerritory(baseLandmark);
 			}
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, this.height / 2 + bottomY() + 24, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
+		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmRowY() + 24, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
 		int settingsLeft = this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2;
 		int settingsRight = settingsLeft + BUTTON_WIDTH + BUTTON_SPACING;
+		// The label-controls row (rotation/shadow) is added only for the marks
+		// that carry a drawn label; everything else leaves these null.
+		rotationSlider = null;
+		btnShadow = null;
 		if (isSpawn()) {
 			btnLayer = null;
 			btnDate = null;
@@ -463,12 +520,12 @@ public class MarkerModal extends Component {
 				}
 				markerLayer = allLayers.get((index + 1) % allLayers.size()).id();
 				button.setMessage(layerText());
-			}).dimensions(settingsLeft, this.height / 2 + (isSimple() ? 58 : 92), BUTTON_WIDTH, 20).build());
+			}).dimensions(settingsLeft, labelRowY(), BUTTON_WIDTH, 20).build());
 			// Dating shares the layer row: every kind of mark can carry a date.
 			addDrawableChild(btnDate = ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled), button -> {
 				dateEnabled = !dateEnabled;
 				button.setMessage(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled));
-			}).dimensions(settingsRight, this.height / 2 + (isSimple() ? 58 : 92), BUTTON_WIDTH, 20).build());
+			}).dimensions(settingsRight, labelRowY(), BUTTON_WIDTH, 20).build());
 		}
 		if (isSpawn()) {
 			// Only how it looks: the icon row, the ink row and how strongly it shows.
@@ -493,6 +550,20 @@ public class MarkerModal extends Component {
 				btnDistance = null;
 				addDrawableChild(opacitySlider = new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, this.height / 2 + 34, BUTTON_WIDTH, 20));
 			}
+			// Label row: a route only hides its backing ribbon; a pen inscription
+			// can also be turned.
+			if (isRoute()) {
+				addDrawableChild(btnShadow = ButtonWidget.builder(shadowText(), button -> {
+					labelNoShadow = !labelNoShadow;
+					button.setMessage(shadowText());
+				}).dimensions(this.width / 2 - BUTTON_WIDTH / 2, this.height / 2 + 58, BUTTON_WIDTH, 20).build());
+			} else {
+				addDrawableChild(rotationSlider = new RotationSlider(settingsLeft, this.height / 2 + 58, BUTTON_WIDTH, 20));
+				addDrawableChild(btnShadow = ButtonWidget.builder(shadowText(), button -> {
+					labelNoShadow = !labelNoShadow;
+					button.setMessage(shadowText());
+				}).dimensions(settingsRight, this.height / 2 + 58, BUTTON_WIDTH, 20).build());
+			}
 		} else {
 			btnDistance = null;
 			addDrawableChild(btnZoneTitle = ButtonWidget.builder(zoneTitleText(), button -> {
@@ -505,6 +576,15 @@ public class MarkerModal extends Component {
 				hideLabel = !hideLabel;
 				button.setMessage(hideLabelText());
 			}).dimensions(settingsRight, this.height / 2 + 69, BUTTON_WIDTH, 20).build());
+			// Territory names are written across the land, so they get the turn and
+			// shadow controls; a plain point marker keeps the old two-row layout.
+			if (isTerritory()) {
+				addDrawableChild(rotationSlider = new RotationSlider(settingsLeft, this.height / 2 + 92, BUTTON_WIDTH, 20));
+				addDrawableChild(btnShadow = ButtonWidget.builder(shadowText(), button -> {
+					labelNoShadow = !labelNoShadow;
+					button.setMessage(shadowText());
+				}).dimensions(settingsRight, this.height / 2 + 92, BUTTON_WIDTH, 20).build());
+			}
 		}
 		textField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, (this.width - 200) / 2, this.height / 2 - 65, 200, 20, Text.translatable("gui.roleplayers_atlas.marker.label"));
 		textField.setEditable(true);
@@ -677,6 +757,8 @@ public class MarkerModal extends Component {
 		if (btnDistance != null) btnDistance.render(context, mouseX, mouseY, partialTick);
 		if (btnDate != null) btnDate.render(context, mouseX, mouseY, partialTick);
 		if (btnLayer != null) btnLayer.render(context, mouseX, mouseY, partialTick);
+		if (rotationSlider != null) rotationSlider.render(context, mouseX, mouseY, partialTick);
+		if (btnShadow != null) btnShadow.render(context, mouseX, mouseY, partialTick);
 		opacitySlider.render(context, mouseX, mouseY, partialTick);
 		// Darker background for marker type selector
 		if (textureScrollBox != null) {

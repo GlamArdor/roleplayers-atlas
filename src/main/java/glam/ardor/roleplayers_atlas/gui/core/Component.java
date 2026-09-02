@@ -260,7 +260,10 @@ public class Component extends Screen {
 	@Override
 	public boolean mouseDragged(Click click, double offsetX, double offsetY) {
 		if (!iterateInput((c) -> c.mouseDragged(click, offsetX, offsetY))) {
-			return super.mouseClicked(click, false);
+			// A drag must stay a drag: falling back to mouseClicked re-fired a
+			// full click (and its down-sound) on every drag tick, so holding the
+			// button and moving the mouse machine-gunned whatever was hovered.
+			return super.mouseDragged(click, offsetX, offsetY);
 		} else {
 			return true;
 		}

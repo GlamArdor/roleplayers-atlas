@@ -55,6 +55,12 @@ public final class AtlasComponents {
 	/** The real-world moment that walk happened, epoch millis — what the server's reckoning dates it by. Absent on marks verified before the reckoning existed. */
 	public static final LandmarkComponentType<Long> CONFIRMED_REAL_TIME = LandmarkComponentTypes.register(RoleplayersAtlas.id("confirmed_real_time"), Codec.LONG, t -> Text.literal(String.valueOf(t)));
 
+	/** Extra rotation of the mark's map label, in degrees; absent means none. Used by territory names and pen inscriptions. */
+	public static final LandmarkComponentType<Integer> LABEL_ROTATION = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_rotation"), Codec.INT, d -> Text.literal(d + "°"));
+
+	/** Whether the label's shadow (or the dark backing behind a route name) is hidden. */
+	public static final LandmarkComponentType<Boolean> LABEL_NO_SHADOW = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_no_shadow"), Codec.BOOL, b -> Text.literal(String.valueOf(b)));
+
 	private AtlasComponents() {
 	}
 

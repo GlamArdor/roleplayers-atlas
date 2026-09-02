@@ -94,6 +94,8 @@ public final class AtlasClothConfig {
 		map.addEntry(emptyEntry);
 		LIVE.add(() -> config.emptyHandling = emptyEntry.getValue());
 		map.addEntry(toggle(e, "stabilizeHeldMap", config.stabilizeHeldMap, false, v -> config.stabilizeHeldMap = v));
+		map.addEntry(intSlider(e, "handheldScale", config.handheldScale, 100, 50, 200,
+			v -> Text.translatable("config.roleplayers_atlas.percent", v), v -> config.handheldScale = v));
 		map.addEntry(toggle(e, "showHints", config.showHints, true, v -> config.showHints = v));
 		map.addEntry(intSlider(e, "mapScale", config.mapScale, 0, -2, 10, null, v -> config.mapScale = v));
 		map.addEntry(intSlider(e, "maxTileChunks", config.maxTileChunks, 5, 0, 6, null, v -> config.maxTileChunks = v));
@@ -174,6 +176,8 @@ public final class AtlasClothConfig {
 		titles.addEntry(toggle(e, "zoneTitleSound", config.zoneTitleSound, false, v -> config.zoneTitleSound = v));
 		titles.addEntry(intSlider(e, "zoneTitleRadius", config.zoneTitleRadius, 32, 4, 256,
 			v -> Text.translatable("config.roleplayers_atlas.blocks", v), v -> config.zoneTitleRadius = v));
+		titles.addEntry(intSlider(e, "zoneTitleSeconds", config.zoneTitleSeconds, 3, 1, 30,
+			v -> Text.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleSeconds = v));
 
 		ConfigCategory terrain = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.terrain"));
 		terrain.addEntry(intField(e, "elevationLow", config.elevationLow, 10, v -> config.elevationLow = v));
