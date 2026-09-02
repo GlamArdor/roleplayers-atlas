@@ -30,8 +30,25 @@ public final class ZoneTitles {
 	private static Text title = null;
 	private static boolean grandTitle = false;
 	private static long shownAt = 0;
+	/** When each place last announced itself, so a cooldown can hold the next one back. */
+	private static final java.util.Map<String, Long> lastShown = new java.util.HashMap<>();
 
 	private ZoneTitles() {
+	}
+
+	/**
+	 * Puts a title on screen, unless the same place announced itself less than
+	 * the cooldown ago — which is what stops it flickering when you step across a
+	 * border and back.
+	 */
+	private static void show(String key, Text name, boolean grand) {
+		long now = Util.getMeasuringTimeMs();
+		if (now - lastShown.getOrDefault(key, 0L) < RoleplayersAtlas.CONFIG.zoneTitleCooldown * 1000L) return;
+		lastShown.put(key, now);
+		title = name;
+		grandTitle = grand;
+		shownAt = now;
+		if (RoleplayersAtlas.CONFIG.zoneTitleSound) AtlasSounds.zoneTitle();
 	}
 
 	public static void init() {
@@ -81,7 +98,7 @@ public final class ZoneTitles {
 				var regions = landmark.get(LandmarkComponentTypes.CHUNKS);
 				if (regions == null) continue;
 				Integer markerRadius = landmark.get(AtlasComponents.ZONE_RADIUS);
-				int radius = markerRadius != null ? markerRadius : RoleplayersAtlas.CONFIG.zoneTitleRadius;
+				int radius = markerRadius != null ? markerRadius : RoleplayersAtlas.DEFAULT_ZONE_RADIUS;
 				if (territoryDistance(regions, px, pz) > radius) continue;
 				int size = regions.values().stream().mapToInt(java.util.BitSet::cardinality).sum();
 				// The smallest containing territory wins (duchy inside a kingdom).
@@ -93,7 +110,7 @@ public final class ZoneTitles {
 				continue;
 			}
 			Integer markerRadius = landmark.get(AtlasComponents.ZONE_RADIUS);
-			int radius = markerRadius != null ? markerRadius : RoleplayersAtlas.CONFIG.zoneTitleRadius;
+			int radius = markerRadius != null ? markerRadius : RoleplayersAtlas.DEFAULT_ZONE_RADIUS;
 			double dx = pos.getX() + 0.5 - px;
 			double dz = pos.getZ() + 0.5 - pz;
 			double sq = dx * dx + dz * dz;
@@ -110,10 +127,7 @@ public final class ZoneTitles {
 		if (territoryKey != null) {
 			if (!territoryKey.equals(insideTerritoryKey)) {
 				insideTerritoryKey = territoryKey;
-				title = territoryName;
-				grandTitle = true;
-				shownAt = Util.getMeasuringTimeMs();
-				if (RoleplayersAtlas.CONFIG.zoneTitleSound) AtlasSounds.zoneTitle();
+				show(territoryKey, territoryName, true);
 			}
 		} else {
 			insideTerritoryKey = null;
@@ -122,10 +136,7 @@ public final class ZoneTitles {
 		if (bestKey != null) {
 			if (!bestKey.equals(insideZoneKey)) {
 				insideZoneKey = bestKey;
-				title = bestName;
-				grandTitle = false;
-				shownAt = Util.getMeasuringTimeMs();
-				if (RoleplayersAtlas.CONFIG.zoneTitleSound) AtlasSounds.zoneTitle();
+				show(bestKey, bestName, false);
 			}
 		} else if (!stillInside) {
 			// Left the zone (with a little hysteresis): the next entry shows the

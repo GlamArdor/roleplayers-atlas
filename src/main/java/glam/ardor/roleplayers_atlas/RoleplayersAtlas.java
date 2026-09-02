@@ -35,6 +35,9 @@ import java.util.UUID;
 
 public class RoleplayersAtlas implements ClientModInitializer {
 	public static final String ID = "roleplayers_atlas";
+
+	/** The zone radius a named mark uses until one is set on the mark itself. */
+	public static final int DEFAULT_ZONE_RADIUS = 32;
 	public static final String NAME = "Roleplayer's Atlas";
 
 	/** Landmarks tracked with a guide arrow this session, keyed by owner+id. */

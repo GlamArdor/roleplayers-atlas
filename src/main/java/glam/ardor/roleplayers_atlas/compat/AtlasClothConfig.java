@@ -174,10 +174,10 @@ public final class AtlasClothConfig {
 		ConfigCategory titles = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.titles"));
 		titles.addEntry(toggle(e, "zoneTitles", config.zoneTitles, true, v -> config.zoneTitles = v));
 		titles.addEntry(toggle(e, "zoneTitleSound", config.zoneTitleSound, false, v -> config.zoneTitleSound = v));
-		titles.addEntry(intSlider(e, "zoneTitleRadius", config.zoneTitleRadius, 32, 4, 256,
-			v -> Text.translatable("config.roleplayers_atlas.blocks", v), v -> config.zoneTitleRadius = v));
 		titles.addEntry(intSlider(e, "zoneTitleSeconds", config.zoneTitleSeconds, 3, 1, 30,
 			v -> Text.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleSeconds = v));
+		titles.addEntry(intSlider(e, "zoneTitleCooldown", config.zoneTitleCooldown, 0, 0, 600,
+			v -> Text.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleCooldown = v));
 
 		ConfigCategory terrain = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.terrain"));
 		terrain.addEntry(intField(e, "elevationLow", config.elevationLow, 10, v -> config.elevationLow = v));

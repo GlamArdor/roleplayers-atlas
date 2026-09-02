@@ -165,13 +165,14 @@ public class AtlasConfig extends WrappedConfig {
 	@Comment("Whether a faint chime plays when a zone title appears")
 	public boolean zoneTitleSound = false;
 
-	@Comment("Radius in blocks around a named marker that counts as its zone")
-	@IntegerRange(min = 4, max = 256)
-	public int zoneTitleRadius = 32;
-
 	@Comment("How many seconds a zone title stays fully shown before it fades")
 	@IntegerRange(min = 1, max = 30)
 	public int zoneTitleSeconds = 3;
+
+	@Comment("Least seconds between one zone title and the next of the same place")
+	@Comment("Off by default (0), so titles appear at once as before; raise it to stop a title flickering when you cross a border back and forth")
+	@IntegerRange(min = 0, max = 600)
+	public int zoneTitleCooldown = 0;
 
 	@Comment("Whether player death markers appear on the map")
 	public boolean deathMarkers = true;
