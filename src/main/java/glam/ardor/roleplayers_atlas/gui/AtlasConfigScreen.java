@@ -108,8 +108,8 @@ public class AtlasConfigScreen extends Screen {
 		list.addHeader(Text.translatable("roleplayers_atlas.category.titles"));
 		list.addWidget(toggle("zoneTitles", () -> config.zoneTitles, v -> config.zoneTitles = v));
 		list.addWidget(toggle("zoneTitleSound", () -> config.zoneTitleSound, v -> config.zoneTitleSound = v));
-		list.addWidget(intSlider("zoneTitleRadius", config.zoneTitleRadius, 4, 256, v -> config.zoneTitleRadius = v, this::blocks));
 		list.addWidget(intSlider("zoneTitleSeconds", config.zoneTitleSeconds, 1, 30, v -> config.zoneTitleSeconds = v, this::seconds));
+		list.addWidget(intSlider("zoneTitleCooldown", config.zoneTitleCooldown, 0, 600, v -> config.zoneTitleCooldown = v, this::seconds));
 
 		list.addHeader(Text.translatable("roleplayers_atlas.category.terrain"));
 		list.addWidget(intSlider("elevationLow", config.elevationLow, -64, 320, v -> config.elevationLow = v, this::blocks));

@@ -98,7 +98,7 @@ public class MarkerModal extends Component {
 		this.selectedTexture = MarkerTextures.getInstance().fromLandmark(baseLandmark);
 		this.zoneTitleEnabled = !Boolean.FALSE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.ZONE_TITLE));
 		Integer storedRadius = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.ZONE_RADIUS);
-		this.zoneRadius = storedRadius != null ? storedRadius : glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.zoneTitleRadius;
+		this.zoneRadius = storedRadius != null ? storedRadius : glam.ardor.roleplayers_atlas.RoleplayersAtlas.DEFAULT_ZONE_RADIUS;
 		Integer storedOpacity = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.OPACITY);
 		this.markerOpacity = storedOpacity != null ? storedOpacity : 100;
 		this.hideLabel = Boolean.TRUE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.HIDE_LABEL));
