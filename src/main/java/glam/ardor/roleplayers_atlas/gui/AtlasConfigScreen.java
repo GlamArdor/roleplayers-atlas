@@ -92,6 +92,10 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(intSlider("quickMarkRange", config.quickMarkRange, 16, 512, v -> config.quickMarkRange = v, this::blocks));
 		list.addWidget(enumButton("markerSort", AtlasConfig.MarkerSort.values(), () -> config.markerSort,
 			v -> config.markerSort = v, v -> "gui.roleplayers_atlas.sort." + v.name().toLowerCase()));
+		// The command itself is only edited in the file or on the Cloth screen:
+		// a free-text field has no place in this fallback list.
+		list.addWidget(enumButton("teleport", AtlasConfig.Teleport.values(), () -> config.teleport,
+			v -> config.teleport = v, v -> "gui.roleplayers_atlas.config.teleport." + v.name().toLowerCase()));
 		list.addWidget(enumButton("reckoning", AtlasConfig.Reckoning.values(), () -> config.reckoning,
 			v -> config.reckoning = v, v -> "gui.roleplayers_atlas.config.reckoning." + v.name().toLowerCase()));
 		list.addWidget(toggle("showMarkDate", () -> config.showMarkDate, v -> config.showMarkDate = v));

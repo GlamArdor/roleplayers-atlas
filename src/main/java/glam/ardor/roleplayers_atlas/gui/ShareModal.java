@@ -153,6 +153,90 @@ public class ShareModal extends Component {
 		}
 	}
 
+	/** One of Xaero's waypoint files, listed like a scroll and read the same way. */
+	private class XaeroRow extends ButtonComponent {
+		final glam.ardor.roleplayers_atlas.XaeroImport.Source source;
+
+		XaeroRow(glam.ardor.roleplayers_atlas.XaeroImport.Source source, int width) {
+			this.source = source;
+			setSize(width, ROW_H);
+			addListener(button -> selectXaero(source));
+		}
+
+		@Override
+		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+			int x = getGuiX();
+			int y = getGuiY();
+			int top = listTop();
+			int bottom = top + LIST_H;
+			if (y + getHeight() <= top || y >= bottom) return;
+			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
+			if (selectedXaero != null && selectedXaero.file().equals(source.file())) context.fill(x, y, x + getWidth(), y + getHeight(), 0x33FFD98A);
+			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
+			String count = " (" + source.count() + ")";
+			int room = getWidth() - 6 - textRenderer.getWidth(count);
+			String label = textRenderer.trimToWidth(source.label(), room);
+			// The world being played on right now is the one nearly everybody wants.
+			context.drawText(textRenderer, label + count, x + 3, y + 5, source.current() ? 0xFFFFE9A8 : 0xFFF0E4C8, true);
+			context.disableScissor();
+			super.render(context, mouseX, mouseY, partialTick);
+		}
+
+		@Override
+		public boolean mouseClicked(Click click, boolean doubled) {
+			double mouseY = click.y();
+			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
+			return super.mouseClicked(click, doubled);
+		}
+	}
+
+	/** Checkbox row for one of Xaero's waypoint sets. */
+	private class SetRow extends ToggleButtonComponent {
+		final String set;
+
+		SetRow(String set, int count, int width) {
+			super(true);
+			this.set = set;
+			setSelected(true);
+			setSize(width, ROW_H);
+			this.count = count;
+			addListener(button -> {
+				if (isSelected()) chosenSets.add(set);
+				else chosenSets.remove(set);
+			});
+		}
+
+		private final int count;
+
+		@Override
+		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+			int x = getGuiX();
+			int y = getGuiY();
+			int top = listTop();
+			int bottom = top + LIST_H;
+			if (y + getHeight() <= top || y >= bottom) return;
+			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
+			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
+			int bx = x + 2;
+			int by = y + 4;
+			context.fill(bx, by, bx + 9, by + 9, 0xFF3E2B18);
+			context.fill(bx + 1, by + 1, bx + 8, by + 8, 0xFFE8DCC2);
+			if (isSelected()) context.fill(bx + 2, by + 2, bx + 7, by + 7, 0xFF7A4A1E);
+			String count = " (" + this.count + ")";
+			int room = getWidth() - 17 - textRenderer.getWidth(count);
+			context.drawText(textRenderer, textRenderer.trimToWidth(set, room) + count, bx + 13, y + 5, 0xFFF0E4C8, true);
+			context.disableScissor();
+			super.render(context, mouseX, mouseY, partialTick);
+		}
+
+		@Override
+		public boolean mouseClicked(Click click, boolean doubled) {
+			double mouseY = click.y();
+			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
+			return super.mouseClicked(click, doubled);
+		}
+	}
+
 	/** Clickable file row inside the import list. Selecting one reads it, but applies nothing. */
 	private class FileRow extends ButtonComponent {
 		final String name;
@@ -215,10 +299,58 @@ public class ShareModal extends Component {
 	private Path selectedFile = null;
 	private MapShare.Preview preview = null;
 
+	/** Import mode reads either our own scrolls or Xaero's waypoints. */
+	private boolean fromXaero = false;
+	private ScrollBoxComponent setBox;
+	private glam.ardor.roleplayers_atlas.XaeroImport.Source selectedXaero = null;
+	private List<glam.ardor.roleplayers_atlas.XaeroImport.Waypoint> xaeroWaypoints = new ArrayList<>();
+	private final java.util.Set<String> chosenSets = new java.util.HashSet<>();
+	private boolean setsAsLayers = true;
+	private ButtonWidget btnSource;
+	private ButtonWidget btnSetsAsLayers;
+
 	private void select(Path file) {
 		selectedFile = file;
 		preview = MapShare.peek(file, dim);
 		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+	}
+
+	/** Reads one of Xaero's files and lists its sets to pick from. */
+	private void selectXaero(glam.ardor.roleplayers_atlas.XaeroImport.Source source) {
+		selectedXaero = source;
+		xaeroWaypoints = glam.ardor.roleplayers_atlas.XaeroImport.read(source.file());
+		chosenSets.clear();
+		chosenSets.addAll(glam.ardor.roleplayers_atlas.XaeroImport.sets(xaeroWaypoints).keySet());
+		rebuildSetBox();
+		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+	}
+
+	private void rebuildSetBox() {
+		if (setBox == null) return;
+		setBox.getViewport().removeAllContent();
+		int y = 0;
+		for (java.util.Map.Entry<String, Integer> entry : glam.ardor.roleplayers_atlas.XaeroImport.sets(xaeroWaypoints).entrySet()) {
+			setBox.getViewport().addContent(new SetRow(entry.getKey(), entry.getValue(), PANE_W)).setRelativeY(y);
+			y += ROW_H;
+		}
+		setBox.setScrollPos(0);
+	}
+
+	/** The waypoints the chosen sets hold, which is what Take in would write. */
+	private List<glam.ardor.roleplayers_atlas.XaeroImport.Waypoint> chosenWaypoints() {
+		return xaeroWaypoints.stream()
+			.filter(w -> chosenSets.contains(glam.ardor.roleplayers_atlas.XaeroImport.setName(w.set())))
+			.toList();
+	}
+
+	private Text sourceText() {
+		return Text.translatable("gui.roleplayers_atlas.share.source",
+			Text.translatable(fromXaero ? "gui.roleplayers_atlas.share.source.xaero" : "gui.roleplayers_atlas.share.source.scrolls"));
+	}
+
+	private Text setsAsLayersText() {
+		return Text.translatable("gui.roleplayers_atlas.share.setsAsLayers",
+			Text.translatable(setsAsLayers ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
 	void setData(WorldSummary summary, DynamicRegistryManager manager, RegistryKey<World> dim, WorldAtlasData data) {
@@ -338,6 +470,22 @@ public class ShareModal extends Component {
 		}
 
 		fileBox = new ScrollBoxComponent(true, ROW_H);
+		setBox = new ScrollBoxComponent(true, ROW_H);
+		setBox.getViewport().setSize(PANE_W, LIST_H);
+
+		// Import mode's two headers: where the marks are coming from, and — for
+		// Xaero's — whether its sets become layers of ours.
+		addDrawableChild(btnSource = ButtonWidget.builder(sourceText(), button -> {
+			fromXaero = !fromXaero;
+			button.setMessage(sourceText());
+			switchMode(true);
+		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.source.tooltip")))
+			.dimensions(paneLeft(), this.height / 2 - 18, PANE_W, 14).build());
+		addDrawableChild(btnSetsAsLayers = ButtonWidget.builder(setsAsLayersText(), button -> {
+			setsAsLayers = !setsAsLayers;
+			button.setMessage(setsAsLayersText());
+		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.setsAsLayers.tooltip")))
+			.dimensions(previewLeft(), this.height / 2 - 18, PANE_W, 14).build());
 
 		int bottomY = this.height / 2 + LIST_H + 24;
 		addDrawableChild(btnExport = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.export"), button -> doExport())
@@ -354,7 +502,8 @@ public class ShareModal extends Component {
 			.dimensions(0, bottomY, BTN_W, 20).build());
 		// Nothing is written until this is pressed — the row above only reads.
 		addDrawableChild(btnTakeIn = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.takeIn"), button -> {
-			if (selectedFile != null) doImport(selectedFile);
+			if (fromXaero) doXaeroImport();
+			else if (selectedFile != null) doImport(selectedFile);
 		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.takeIn.tooltip")))
 			.dimensions(0, bottomY, BTN_W, 20).build());
 		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), button -> closeChild())
@@ -399,6 +548,9 @@ public class ShareModal extends Component {
 		selectedFile = null;
 		preview = null;
 		layoutBottomRow();
+		selectedXaero = null;
+		xaeroWaypoints = new ArrayList<>();
+		chosenSets.clear();
 		if (toImport) {
 			for (ScrollBoxComponent box : columns) removeChild(box);
 			addChild(fileBox);
@@ -406,13 +558,29 @@ public class ShareModal extends Component {
 			fileBox.getViewport().setSize(PANE_W, LIST_H);
 			fileBox.setGuiCoords(paneLeft(), listTop());
 			int y = 0;
-			for (Path file : MapShare.listScrolls()) {
-				fileBox.getViewport().addContent(new FileRow(file, PANE_W)).setRelativeY(y);
-				y += ROW_H;
+			if (fromXaero) {
+				for (glam.ardor.roleplayers_atlas.XaeroImport.Source source : glam.ardor.roleplayers_atlas.XaeroImport.sources(dim)) {
+					fileBox.getViewport().addContent(new XaeroRow(source, PANE_W)).setRelativeY(y);
+					y += ROW_H;
+				}
+				// The right pane holds the sets to pick from rather than a reading.
+				// Joined to the tree before it is placed or filled: content added to
+				// a parentless box resolves its position against (0,0).
+				addChild(setBox);
+				setBox.getViewport().setSize(PANE_W, LIST_H);
+				setBox.setGuiCoords(previewLeft(), listTop());
+				rebuildSetBox();
+			} else {
+				removeChild(setBox);
+				for (Path file : MapShare.listScrolls()) {
+					fileBox.getViewport().addContent(new FileRow(file, PANE_W)).setRelativeY(y);
+					y += ROW_H;
+				}
 			}
 			fileBox.setScrollPos(0);
 		} else {
 			removeChild(fileBox);
+			removeChild(setBox);
 			for (int type = 0; type < COL_COUNT; type++) {
 				addChild(columns[type]);
 				columns[type].setGuiCoords(columnX(type), listTop());
@@ -435,6 +603,22 @@ public class ShareModal extends Component {
 			glam.ardor.roleplayers_atlas.RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] Export failed", e);
 			if (player != null) player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.exportFailed"), false);
 		}
+	}
+
+	/** Writes the chosen Xaero waypoints in as marks of our own. */
+	private void doXaeroImport() {
+		var player = MinecraftClient.getInstance().player;
+		List<glam.ardor.roleplayers_atlas.XaeroImport.Waypoint> chosen = chosenWaypoints();
+		int written = glam.ardor.roleplayers_atlas.XaeroImport.importWaypoints(chosen, dim, setsAsLayers);
+		if (player != null) {
+			player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.xaeroImported", written), false);
+			MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
+		}
+		if (getParent() instanceof AtlasScreen screen) {
+			screen.rebuildLayerTabs();
+			screen.updateBookmarkerList();
+		}
+		closeChild();
 	}
 
 	private void doImport(Path file) {
@@ -470,7 +654,14 @@ public class ShareModal extends Component {
 			|| glam.ardor.roleplayers_atlas.CityPaint.ownCount(dim) > 0;
 		btnExport.active = includeTerrain || (includeCorrections && btnCorrections.active) || entries.stream().anyMatch(e -> e.included);
 		btnTakeIn.visible = importMode;
-		btnTakeIn.active = selectedFile != null && preview != null && preview.sameDimension();
+		btnTakeIn.active = fromXaero
+			? selectedXaero != null && !chosenWaypoints().isEmpty()
+			: selectedFile != null && preview != null && preview.sameDimension();
+		// Switching source is only offered where Xaero has left something behind.
+		btnSource.visible = importMode && glam.ardor.roleplayers_atlas.XaeroImport.present();
+		btnSetsAsLayers.visible = importMode && fromXaero;
+		if (btnSource.visible) btnSource.render(context, mouseX, mouseY, partialTick);
+		if (btnSetsAsLayers.visible) btnSetsAsLayers.render(context, mouseX, mouseY, partialTick);
 		btnImport.setMessage(Text.translatable(importMode ? "gui.roleplayers_atlas.share.back" : "gui.roleplayers_atlas.share.import"));
 		btnImport.setTooltip(Tooltip.of(Text.translatable(importMode ? "gui.roleplayers_atlas.share.back.tooltip" : "gui.roleplayers_atlas.share.import.tooltip")));
 
@@ -495,10 +686,20 @@ public class ShareModal extends Component {
 			context.fillGradient(previewLeft(), listTop(), previewLeft() + PANE_W, listTop() + LIST_H, 0x66101010, 0x77101010);
 			if (fileBox.getViewport().getChildren().stream().allMatch(child -> child.getChildren().isEmpty())) {
 				int y = listTop() + LIST_H / 2 - 4;
-				Text none = Text.translatable("gui.roleplayers_atlas.share.noFiles");
+				Text none = Text.translatable(fromXaero ? "gui.roleplayers_atlas.share.noXaero" : "gui.roleplayers_atlas.share.noFiles");
 				context.drawText(textRenderer, none, paneLeft() + (PANE_W - textRenderer.getWidth(none)) / 2, y, 0xFFAAAAAA, true);
 			}
-			renderPreview(context);
+			if (fromXaero) {
+				if (selectedXaero == null) {
+					context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.share.pickXaero"), previewLeft() + 5, listTop() + 5, 0xFF9A8C70, true);
+				} else {
+					// What Take in would write, counted rather than promised.
+					Text total = Text.translatable("gui.roleplayers_atlas.share.xaeroChosen", chosenWaypoints().size());
+					context.drawText(textRenderer, total, previewLeft() + (PANE_W - textRenderer.getWidth(total)) / 2, listTop() + LIST_H + 4, 0xFFF0E4C8, true);
+				}
+			} else {
+				renderPreview(context);
+			}
 		}
 		if (btnTakeIn.visible) btnTakeIn.render(context, mouseX, mouseY, partialTick);
 		btnImport.render(context, mouseX, mouseY, partialTick);
@@ -595,5 +796,6 @@ public class ShareModal extends Component {
 			if (box != null && box.getParent() != null) box.closeChild();
 		}
 		if (fileBox != null && fileBox.getParent() != null) fileBox.closeChild();
+		if (setBox != null && setBox.getParent() != null) setBox.closeChild();
 	}
 }

@@ -59,6 +59,20 @@ public class AtlasConfig extends WrappedConfig {
 		DAYS
 	}
 
+	/**
+	 * Whether the map can send you somewhere.
+	 * <p>
+	 * AUTO offers it only where the game says you may teleport — singleplayer
+	 * with cheats, or an operator's seat on a server. ON is for servers that
+	 * hand the command out through a permissions plugin without the operator
+	 * rank the client can see; OFF keeps the map a map.
+	 */
+	public enum Teleport {
+		AUTO,
+		ON,
+		OFF
+	}
+
 	/** How the bookmark list is ordered. */
 	public enum MarkerSort {
 		KIND,
@@ -148,6 +162,14 @@ public class AtlasConfig extends WrappedConfig {
 
 	@Comment("How the bookmark list is ordered: KIND, DISTANCE, DATE or NAME")
 	public MarkerSort markerSort = MarkerSort.KIND;
+
+	@Comment("Whether ctrl-clicking the map sends you there: AUTO where the game allows teleporting, ON always, OFF never")
+	public Teleport teleport = Teleport.AUTO;
+
+	@Comment("The command the map sends to travel, without its leading slash")
+	@Comment("{x} {y} {z} are filled in; {dim} is the dimension the map is showing")
+	@Comment("Servers running Essentials usually need: minecraft:tp @s {x} {y} {z}")
+	public String teleportCommand = "tp @s {x} {y} {z}";
 
 	@Comment("Which calendar dates a mark: REIGN for the server's cycles, unias and years, DAYS for the world's own day count")
 	public Reckoning reckoning = Reckoning.REIGN;

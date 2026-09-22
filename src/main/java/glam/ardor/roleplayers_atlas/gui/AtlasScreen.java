@@ -1481,6 +1481,21 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			}
 		}
 
+		// Ctrl-LMB on a bookmark travels to it, the same as ctrl-clicking the
+		// mark itself on the map.
+		if (mouseState == GLFW.GLFW_MOUSE_BUTTON_1 && state.is(NORMAL)
+			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
+			&& glam.ardor.roleplayers_atlas.MapTeleport.allowed()) {
+			for (Map.Entry<BookmarkButton, Landmark> entry : bookmarkLandmarks.entrySet()) {
+				if (!entry.getKey().isMouseOver((int) mouseX, (int) mouseY)) continue;
+				BlockPos target = glam.ardor.roleplayers_atlas.MapTeleport.targetOf(entry.getValue());
+				if (target == null) continue;
+				glam.ardor.roleplayers_atlas.MapTeleport.to(SurveyorClient.tryGetSummary(dim), dim, target.getX(), target.getY() != 0 ? target.getY() : null, target.getZ());
+				close();
+				return true;
+			}
+		}
+
 		// RMB on a bookmark in the list toggles its guide arrow (LMB pans there).
 		if (mouseState == GLFW.GLFW_MOUSE_BUTTON_2 && state.is(NORMAL)) {
 			for (Map.Entry<BookmarkButton, Landmark> entry : bookmarkLandmarks.entrySet()) {
@@ -1492,6 +1507,20 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		}
 
 		if (super.mouseClicked(mouseX, mouseY, mouseState)) return true;
+
+		// Ctrl-click travels: to whatever mark is under the cursor, or to the
+		// spot itself. Only where the game lets the player teleport at all.
+		if (state.is(NORMAL) && mouseState == GLFW.GLFW_MOUSE_BUTTON_1 && isMouseOverMap
+			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
+			&& glam.ardor.roleplayers_atlas.MapTeleport.allowed()) {
+			BlockPos target = hoveredLandmark != null ? glam.ardor.roleplayers_atlas.MapTeleport.targetOf(hoveredLandmark) : null;
+			int x = target != null ? target.getX() : screenXToWorldX(mouseX);
+			int z = target != null ? target.getZ() : screenYToWorldZ(mouseY);
+			Integer y = target != null && target.getY() != 0 ? target.getY() : null;
+			glam.ardor.roleplayers_atlas.MapTeleport.to(SurveyorClient.tryGetSummary(dim), dim, x, y, z);
+			close();
+			return true;
+		}
 
 		// LMB pressed on a marker/territory on the map: remember it — the guide
 		// arrow toggles on release, unless the press turned into a map drag.
@@ -2435,6 +2464,14 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		if (flashText != null && net.minecraft.util.Util.getMeasuringTimeMs() < flashUntil) {
 			lines.addAll(textRenderer.wrapLines(flashText, room));
 		}
+		// Holding ctrl over the map says where that click would send you — and
+		// says nothing at all where travel isn't allowed.
+		if (state.is(NORMAL) && isMouseOverMap && RoleplayersAtlas.CONFIG.showHints
+			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
+			&& glam.ardor.roleplayers_atlas.MapTeleport.allowed()) {
+			lines.addAll(textRenderer.wrapLines(Text.translatable("gui.roleplayers_atlas.teleport.hint",
+				screenXToWorldX(mouseX), screenYToWorldZ(mouseY)).formatted(net.minecraft.util.Formatting.GOLD), room));
+		}
 		if (hintKey != null && RoleplayersAtlas.CONFIG.showHints) {
 			// Undoing past where the road already ended is worth saying out loud:
 			// those points were drawn on another day and are being taken away.
@@ -2607,6 +2644,11 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 				tooltip.add(Text.translatable("gui.roleplayers_atlas.marker.routeLength", blocks).formatted(Formatting.GRAY));
 			}
 			tooltip.addAll(dateLines(hoveredLandmark));
+			// Said only where it is true: on a server that grants nobody the
+			// command, an invitation to travel would be a lie.
+			if (state.is(NORMAL) && glam.ardor.roleplayers_atlas.MapTeleport.allowed() && glam.ardor.roleplayers_atlas.MapTeleport.targetOf(hoveredLandmark) != null) {
+				tooltip.add(Text.translatable("gui.roleplayers_atlas.teleport.markerHint").formatted(Formatting.DARK_GRAY));
+			}
 			if (!tooltip.isEmpty()) context.drawTooltip(textRenderer, tooltip, tooltipX, tooltipY);
 		} else if (hoveredFriend != null) {
 			boolean self = hoveredFriend.username().equals(MinecraftClient.getInstance().player.getGameProfile().getName());
