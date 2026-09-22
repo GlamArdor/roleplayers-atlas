@@ -183,10 +183,9 @@ public class ShareModal extends Component {
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
-			double mouseY = click.y();
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
-			return super.mouseClicked(click, doubled);
+			return super.mouseClicked(mouseX, mouseY, button);
 		}
 	}
 
@@ -230,10 +229,9 @@ public class ShareModal extends Component {
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
-			double mouseY = click.y();
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
-			return super.mouseClicked(click, doubled);
+			return super.mouseClicked(mouseX, mouseY, button);
 		}
 	}
 
@@ -322,7 +320,7 @@ public class ShareModal extends Component {
 		chosenSets.clear();
 		chosenSets.addAll(glam.ardor.roleplayers_atlas.XaeroImport.sets(xaeroWaypoints).keySet());
 		rebuildSetBox();
-		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
 	}
 
 	private void rebuildSetBox() {
@@ -612,7 +610,7 @@ public class ShareModal extends Component {
 		int written = glam.ardor.roleplayers_atlas.XaeroImport.importWaypoints(chosen, dim, setsAsLayers);
 		if (player != null) {
 			player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.xaeroImported", written), false);
-			MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
+			MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
 		}
 		if (getParent() instanceof AtlasScreen screen) {
 			screen.rebuildLayerTabs();

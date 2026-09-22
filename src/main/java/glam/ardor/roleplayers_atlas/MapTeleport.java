@@ -121,7 +121,7 @@ public final class MapTeleport {
 		if (command.isEmpty()) return;
 		// A map open on another world sends you there as well, unless the
 		// command already says which world it means.
-		if (dim != null && !dim.equals(player.getEntityWorld().getRegistryKey()) && !RoleplayersAtlas.CONFIG.teleportCommand.contains("{dim}")) {
+		if (dim != null && !dim.equals(player.getWorld().getRegistryKey()) && !RoleplayersAtlas.CONFIG.teleportCommand.contains("{dim}")) {
 			command = "execute in " + dim.getValue() + " run " + command;
 		}
 		client.getNetworkHandler().sendChatCommand(command);

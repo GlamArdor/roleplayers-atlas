@@ -1484,7 +1484,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		// Ctrl-LMB on a bookmark travels to it, the same as ctrl-clicking the
 		// mark itself on the map.
 		if (mouseState == GLFW.GLFW_MOUSE_BUTTON_1 && state.is(NORMAL)
-			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
+			&& hasControlDown()
 			&& glam.ardor.roleplayers_atlas.MapTeleport.allowed()) {
 			for (Map.Entry<BookmarkButton, Landmark> entry : bookmarkLandmarks.entrySet()) {
 				if (!entry.getKey().isMouseOver((int) mouseX, (int) mouseY)) continue;
@@ -1511,7 +1511,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		// Ctrl-click travels: to whatever mark is under the cursor, or to the
 		// spot itself. Only where the game lets the player teleport at all.
 		if (state.is(NORMAL) && mouseState == GLFW.GLFW_MOUSE_BUTTON_1 && isMouseOverMap
-			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
+			&& hasControlDown()
 			&& glam.ardor.roleplayers_atlas.MapTeleport.allowed()) {
 			BlockPos target = hoveredLandmark != null ? glam.ardor.roleplayers_atlas.MapTeleport.targetOf(hoveredLandmark) : null;
 			int x = target != null ? target.getX() : screenXToWorldX(mouseX);
@@ -2467,7 +2467,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		// Holding ctrl over the map says where that click would send you — and
 		// says nothing at all where travel isn't allowed.
 		if (state.is(NORMAL) && isMouseOverMap && RoleplayersAtlas.CONFIG.showHints
-			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
+			&& hasControlDown()
 			&& glam.ardor.roleplayers_atlas.MapTeleport.allowed()) {
 			lines.addAll(textRenderer.wrapLines(Text.translatable("gui.roleplayers_atlas.teleport.hint",
 				screenXToWorldX(mouseX), screenYToWorldZ(mouseY)).formatted(net.minecraft.util.Formatting.GOLD), room));
