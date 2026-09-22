@@ -143,6 +143,22 @@ public final class AtlasClothConfig {
 			.build();
 		marks.addEntry(sortEntry);
 		LIVE.add(() -> config.markerSort = sortEntry.getValue());
+		// Travelling by map: whether it is offered, and what it says to do it.
+		var teleportEntry = e.startEnumSelector(label("teleport"), AtlasConfig.Teleport.class, config.teleport)
+			.setDefaultValue(AtlasConfig.Teleport.AUTO)
+			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.teleport." + v.name().toLowerCase()))
+			.setTooltip(tip("teleport"))
+			.setSaveConsumer(v -> config.teleport = v)
+			.build();
+		marks.addEntry(teleportEntry);
+		LIVE.add(() -> config.teleport = teleportEntry.getValue());
+		var teleportCommandEntry = e.startStrField(label("teleportCommand"), config.teleportCommand)
+			.setDefaultValue("tp @s {x} {y} {z}")
+			.setTooltip(tip("teleportCommand"))
+			.setSaveConsumer(v -> config.teleportCommand = v)
+			.build();
+		marks.addEntry(teleportCommandEntry);
+		LIVE.add(() -> config.teleportCommand = teleportCommandEntry.getValue());
 		var reckoningEntry = e.startEnumSelector(label("reckoning"), AtlasConfig.Reckoning.class, config.reckoning)
 			.setDefaultValue(AtlasConfig.Reckoning.REIGN)
 			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.reckoning." + v.name().toLowerCase()))

@@ -164,7 +164,26 @@ public class MarkerModal extends Component {
 	protected String noteText = "";
 	protected boolean noteFocused = false;
 	protected static final int NOTE_W = BUTTON_WIDTH * 2 + BUTTON_SPACING;
-	protected static final int NOTE_H = 60;
+	protected static final int NOTE_H_FULL = 60;
+	protected static final int NOTE_H_COMPACT = 28;
+
+	// Laid out top to bottom for the height the screen actually has (see layoutDialog).
+	protected int noteH = NOTE_H_FULL;
+	private int rowGap = 3;
+	private int titleY;
+	private int nameBaseY;
+	private int textureBaseY;
+	private int colorBaseY;
+	private int layerRowBaseY;
+	private int noteBaseY;
+	private int confirmY;
+	private int extraY;
+	private final int[] settingsRowY = new int[3];
+	private int scrollTop;
+	private int scrollBottom;
+	private int scrollY;
+	private int maxScroll;
+	private final Map<net.minecraft.client.gui.widget.ClickableWidget, Integer> widgetBaseY = new LinkedHashMap<>();
 	protected ScrollBoxComponent textureScrollBox;
 	protected ToggleButtonRadioGroup<TexturePreviewButton<MarkerTexture>> textureRadioGroup;
 	protected ScrollBoxComponent colorScrollBox;
@@ -209,33 +228,114 @@ public class MarkerModal extends Component {
 		return Text.translatable("gui.roleplayers_atlas.marker.zoneTitle", Text.translatable(zoneTitleEnabled ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
-	/** Marks that carry a map label get an extra row (rotation/shadow), so everything below shifts down. */
-	private boolean hasLabelControls() {
-		return isTerritory() || isSimple();
+	/** How many two-wide rows of settings this kind of mark shows. */
+	private int settingsRowCount() {
+		return isSpawn() ? 1 : isTerritory() ? 3 : 2;
 	}
 
-	/** Where the confirm row sits — the spawn mark's dialog is much shorter. */
-	private int bottomY() {
-		return isSpawn() ? 78 : isSimple() ? 171 : isTerritory() ? 205 : 182;
-	}
-
-	/** The layer/date row — pushed down by one row where the label controls exist. */
-	private int labelRowY() {
-		return this.height / 2 + (isSimple() ? 81 : isTerritory() ? 115 : 92);
+	/** A road can be lengthened and a zone reshaped — but not while it is still being drawn. */
+	private boolean hasExtraButton() {
+		if (baseLandmark == null) return false;
+		if (isRoute()) return !baseLandmark.id().getPath().equals("newroute");
+		if (isTerritory()) return !baseLandmark.id().getPath().equals("newterritory");
+		return false;
 	}
 
 	/**
-	 * The confirm row, but never below the screen: at a normal GUI scale it sits
-	 * center-relative as before, and only clamps up to the bottom edge when the
-	 * dialog would otherwise run off (high GUI scale / small window), so "Готово"
-	 * and "Изменить границы" stay on screen instead of being cut off.
+	 * Walks the dialog from top to bottom, one row after another, and — when
+	 * {@code apply} is set — writes down where every row landed. Returns the
+	 * height the whole dialog needs.
+	 *
+	 * <p>The old layout hung every row off a fixed offset from the screen centre,
+	 * which ran off the bottom edge at large GUI scales: the confirm row clamped
+	 * up to the screen edge and ended up underneath the note box.
 	 */
-	private int confirmRowY() {
-		return Math.min(this.height / 2 + bottomY(), this.height - 46);
+	private int flowLayout(int startY, boolean apply) {
+		int y = startY;
+		if (apply) titleY = y;
+		y += 9 + 6;
+		if (!isSpawn()) {
+			if (apply) nameBaseY = y;
+			y += 20 + 10;
+		}
+		if (!isTerritory() && !isSimple()) {
+			if (apply) textureBaseY = y;
+			y += TexturePreviewButton.FRAME_SIZE + TYPE_SPACING + 10;
+		}
+		if (apply) colorBaseY = y;
+		y += TexturePreviewButton.FRAME_SIZE + TYPE_SPACING + 8;
+		for (int i = 0; i < settingsRowCount(); i++) {
+			if (apply) settingsRowY[i] = y;
+			y += 20 + rowGap;
+		}
+		if (!isSpawn()) {
+			if (apply) layerRowBaseY = y;
+			y += 20 + rowGap;
+			if (apply) noteBaseY = y + 1;
+			y += noteH + 7;
+		}
+		if (apply) confirmY = y;
+		y += 20;
+		if (hasExtraButton()) {
+			if (apply) extraY = y + 4;
+			y += 24;
+		}
+		return y - startY;
+	}
+
+	/**
+	 * Fits the dialog to the screen: the roomy layout when it fits, a tightened
+	 * one (shorter note box, closer rows) when it doesn't, and — only if even
+	 * that overflows — a scrolling middle with the title and the confirm row
+	 * pinned to the edges.
+	 */
+	private void layoutDialog() {
+		int available = this.height - 8;
+		int needed = 0;
+		for (int pass = 0; pass < 2; pass++) {
+			noteH = pass == 0 ? NOTE_H_FULL : NOTE_H_COMPACT;
+			rowGap = pass == 0 ? 3 : 2;
+			needed = flowLayout(0, false);
+			if (needed <= available) break;
+		}
+		if (needed <= available) {
+			flowLayout(Math.max(4, (this.height - needed) / 2), true);
+			maxScroll = 0;
+			scrollY = 0;
+			scrollTop = 0;
+			scrollBottom = this.height;
+			return;
+		}
+		// Too tall even tightened: pin the title and the confirm row, scroll the rest.
+		flowLayout(4, true);
+		int fixedBottom = 20 + (hasExtraButton() ? 24 : 0);
+		confirmY = this.height - 4 - fixedBottom;
+		if (hasExtraButton()) extraY = confirmY + 24;
+		scrollTop = titleY + 15;
+		scrollBottom = confirmY - 6;
+		int contentBottom = isSpawn() ? settingsRowY[settingsRowCount() - 1] + 20 : noteBaseY + noteH;
+		maxScroll = Math.max(0, contentBottom - scrollBottom);
+		scrollY = Math.min(scrollY, maxScroll);
+	}
+
+	/** Moves the scrolling middle; the title and the confirm row never move. */
+	private void applyScroll() {
+		for (Map.Entry<net.minecraft.client.gui.widget.ClickableWidget, Integer> entry : widgetBaseY.entrySet()) {
+			entry.getKey().setY(entry.getValue() - scrollY);
+		}
+		if (textureScrollBox != null) textureScrollBox.setGuiCoords(textureScrollBox.getGuiX(), textureBaseY - scrollY);
+		if (colorScrollBox != null) colorScrollBox.setGuiCoords(colorScrollBox.getGuiX(), colorBaseY - scrollY);
+	}
+
+	/** Registers a widget as part of the scrolling middle and places it. */
+	private <T extends net.minecraft.client.gui.widget.ClickableWidget> T scrolling(T widget, int baseY) {
+		widgetBaseY.put(widget, baseY);
+		widget.setY(baseY - scrollY);
+		return widget;
 	}
 
 	private int noteBoxY() {
-		return this.height / 2 + (isSimple() ? 105 : isTerritory() ? 139 : 116);
+		return noteBaseY - scrollY;
 	}
 
 	private int noteBoxX() {
@@ -275,15 +375,15 @@ public class MarkerModal extends Component {
 	private void renderNoteBox(DrawContext context) {
 		int x = noteBoxX();
 		int y = noteBoxY();
-		context.fill(x - 1, y - 1, x + NOTE_W + 1, y + NOTE_H + 1, noteFocused ? 0xFFFFFFFF : 0xFFA0A0A0);
-		context.fill(x, y, x + NOTE_W, y + NOTE_H, 0xFF000000);
+		context.fill(x - 1, y - 1, x + NOTE_W + 1, y + noteH + 1, noteFocused ? 0xFFFFFFFF : 0xFFA0A0A0);
+		context.fill(x, y, x + NOTE_W, y + noteH, 0xFF000000);
 		if (noteText.isEmpty() && !noteFocused) {
 			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.note"), x + 4, y + 4, 0xFF707070, false);
 			return;
 		}
 		java.util.List<String> lines = wrapNote(noteText, NOTE_W - 10);
 		if (lines.isEmpty()) lines = new java.util.ArrayList<>(java.util.List.of(""));
-		int maxLines = (NOTE_H - 8) / 9;
+		int maxLines = (noteH - 8) / 9;
 		int start = Math.max(0, lines.size() - maxLines);
 		boolean cursorBlink = noteFocused && (net.minecraft.util.Util.getMeasuringTimeMs() / 400) % 2 == 0;
 		for (int i = start; i < lines.size(); i++) {
@@ -294,7 +394,8 @@ public class MarkerModal extends Component {
 	}
 
 	private boolean isOverNoteBox(double mouseX, double mouseY) {
-		return mouseX >= noteBoxX() && mouseX < noteBoxX() + NOTE_W && mouseY >= noteBoxY() && mouseY < noteBoxY() + NOTE_H;
+		if (maxScroll > 0 && (mouseY < scrollTop || mouseY >= scrollBottom)) return false;
+		return mouseX >= noteBoxX() && mouseX < noteBoxX() + NOTE_W && mouseY >= noteBoxY() && mouseY < noteBoxY() + noteH;
 	}
 
 	private Text layerText() {
@@ -411,6 +512,8 @@ public class MarkerModal extends Component {
 	public void init() { // set up in here because it scales to parent size
 		removeAllChildren();
 		super.init();
+		widgetBaseY.clear();
+		layoutDialog();
 
 		addDrawableChild(btnDone = ButtonWidget.builder(Text.translatable("gui.done"), (button) -> {
 			if (isSpawn()) {
@@ -483,9 +586,9 @@ public class MarkerModal extends Component {
 			ClientPlayerEntity player = MinecraftClient.getInstance().player;
 			if (player != null) MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
 			closeChild();
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmRowY(), BUTTON_WIDTH, 20).build());
+		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmY, BUTTON_WIDTH, 20).build());
 		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), (button) -> closeChild())
-			.dimensions(this.width / 2 + BUTTON_SPACING / 2, confirmRowY(), BUTTON_WIDTH, 20).build());
+			.dimensions(this.width / 2 + BUTTON_SPACING / 2, confirmY, BUTTON_WIDTH, 20).build());
 		// A road walked further than it was drawn: pick the pencil back up at its
 		// far end rather than starting again.
 		addDrawableChild(btnExtend = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.route.extend"), (button) -> {
@@ -493,7 +596,7 @@ public class MarkerModal extends Component {
 				closeChild();
 				screen.startExtendingRoute(baseLandmark);
 			}
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmRowY() + 24, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
+		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, extraY, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
 		// A zone that grew or shrank since it was drawn: take the brush back to it
 		// rather than rubbing it out and painting the whole thing again.
 		addDrawableChild(btnEditArea = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.territory.edit"), (button) -> {
@@ -501,7 +604,7 @@ public class MarkerModal extends Component {
 				closeChild();
 				screen.startEditingTerritory(baseLandmark);
 			}
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmRowY() + 24, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
+		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, extraY, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
 		int settingsLeft = this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2;
 		int settingsRight = settingsLeft + BUTTON_WIDTH + BUTTON_SPACING;
 		// The label-controls row (rotation/shadow) is added only for the marks
@@ -512,7 +615,7 @@ public class MarkerModal extends Component {
 			btnLayer = null;
 			btnDate = null;
 		} else {
-			addDrawableChild(btnLayer = ButtonWidget.builder(layerText(), button -> {
+			addDrawableChild(btnLayer = scrolling(ButtonWidget.builder(layerText(), button -> {
 				List<glam.ardor.roleplayers_atlas.MarkerLayers.MapLayer> allLayers = glam.ardor.roleplayers_atlas.MarkerLayers.all();
 				int index = 0;
 				for (int i = 0; i < allLayers.size(); i++) {
@@ -520,12 +623,12 @@ public class MarkerModal extends Component {
 				}
 				markerLayer = allLayers.get((index + 1) % allLayers.size()).id();
 				button.setMessage(layerText());
-			}).dimensions(settingsLeft, labelRowY(), BUTTON_WIDTH, 20).build());
+			}).dimensions(settingsLeft, layerRowBaseY, BUTTON_WIDTH, 20).build(), layerRowBaseY));
 			// Dating shares the layer row: every kind of mark can carry a date.
-			addDrawableChild(btnDate = ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled), button -> {
+			addDrawableChild(btnDate = scrolling(ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled), button -> {
 				dateEnabled = !dateEnabled;
 				button.setMessage(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled));
-			}).dimensions(settingsRight, labelRowY(), BUTTON_WIDTH, 20).build());
+			}).dimensions(settingsRight, layerRowBaseY, BUTTON_WIDTH, 20).build(), layerRowBaseY));
 		}
 		if (isSpawn()) {
 			// Only how it looks: the icon row, the ink row and how strongly it shows.
@@ -533,7 +636,7 @@ public class MarkerModal extends Component {
 			btnHideLabel = null;
 			radiusSlider = null;
 			btnDistance = null;
-			addDrawableChild(opacitySlider = new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, this.height / 2 + 46, BUTTON_WIDTH, 20));
+			addDrawableChild(opacitySlider = scrolling(new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
 		} else if (isSimple()) {
 			// Inscription/route settings: just the ink color row and opacity —
 			// plus, for a route, whether it tells you how long it is.
@@ -541,52 +644,52 @@ public class MarkerModal extends Component {
 			btnHideLabel = null;
 			radiusSlider = null;
 			if (isRoute()) {
-				addDrawableChild(opacitySlider = new OpacitySlider(settingsLeft, this.height / 2 + 34, BUTTON_WIDTH, 20));
-				addDrawableChild(btnDistance = ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.distanceToggle", showDistance), button -> {
+				addDrawableChild(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+				addDrawableChild(btnDistance = scrolling(ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.distanceToggle", showDistance), button -> {
 					showDistance = !showDistance;
 					button.setMessage(onOff("gui.roleplayers_atlas.marker.distanceToggle", showDistance));
-				}).dimensions(settingsRight, this.height / 2 + 34, BUTTON_WIDTH, 20).build());
+				}).dimensions(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
 			} else {
 				btnDistance = null;
-				addDrawableChild(opacitySlider = new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, this.height / 2 + 34, BUTTON_WIDTH, 20));
+				addDrawableChild(opacitySlider = scrolling(new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
 			}
 			// Label row: a route only hides its backing ribbon; a pen inscription
 			// can also be turned.
 			if (isRoute()) {
-				addDrawableChild(btnShadow = ButtonWidget.builder(shadowText(), button -> {
+				addDrawableChild(btnShadow = scrolling(ButtonWidget.builder(shadowText(), button -> {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
-				}).dimensions(this.width / 2 - BUTTON_WIDTH / 2, this.height / 2 + 58, BUTTON_WIDTH, 20).build());
+				}).dimensions(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
 			} else {
-				addDrawableChild(rotationSlider = new RotationSlider(settingsLeft, this.height / 2 + 58, BUTTON_WIDTH, 20));
-				addDrawableChild(btnShadow = ButtonWidget.builder(shadowText(), button -> {
+				addDrawableChild(rotationSlider = scrolling(new RotationSlider(settingsLeft, settingsRowY[1], BUTTON_WIDTH, 20), settingsRowY[1]));
+				addDrawableChild(btnShadow = scrolling(ButtonWidget.builder(shadowText(), button -> {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
-				}).dimensions(settingsRight, this.height / 2 + 58, BUTTON_WIDTH, 20).build());
+				}).dimensions(settingsRight, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
 			}
 		} else {
 			btnDistance = null;
-			addDrawableChild(btnZoneTitle = ButtonWidget.builder(zoneTitleText(), button -> {
+			addDrawableChild(btnZoneTitle = scrolling(ButtonWidget.builder(zoneTitleText(), button -> {
 				zoneTitleEnabled = !zoneTitleEnabled;
 				button.setMessage(zoneTitleText());
-			}).dimensions(settingsLeft, this.height / 2 + 46, BUTTON_WIDTH, 20).build());
-			addDrawableChild(radiusSlider = new RadiusSlider(settingsRight, this.height / 2 + 46, BUTTON_WIDTH, 20));
-			addDrawableChild(opacitySlider = new OpacitySlider(settingsLeft, this.height / 2 + 69, BUTTON_WIDTH, 20));
-			addDrawableChild(btnHideLabel = ButtonWidget.builder(hideLabelText(), button -> {
+			}).dimensions(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
+			addDrawableChild(radiusSlider = scrolling(new RadiusSlider(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+			addDrawableChild(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[1], BUTTON_WIDTH, 20), settingsRowY[1]));
+			addDrawableChild(btnHideLabel = scrolling(ButtonWidget.builder(hideLabelText(), button -> {
 				hideLabel = !hideLabel;
 				button.setMessage(hideLabelText());
-			}).dimensions(settingsRight, this.height / 2 + 69, BUTTON_WIDTH, 20).build());
+			}).dimensions(settingsRight, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
 			// Territory names are written across the land, so they get the turn and
 			// shadow controls; a plain point marker keeps the old two-row layout.
 			if (isTerritory()) {
-				addDrawableChild(rotationSlider = new RotationSlider(settingsLeft, this.height / 2 + 92, BUTTON_WIDTH, 20));
-				addDrawableChild(btnShadow = ButtonWidget.builder(shadowText(), button -> {
+				addDrawableChild(rotationSlider = scrolling(new RotationSlider(settingsLeft, settingsRowY[2], BUTTON_WIDTH, 20), settingsRowY[2]));
+				addDrawableChild(btnShadow = scrolling(ButtonWidget.builder(shadowText(), button -> {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
-				}).dimensions(settingsRight, this.height / 2 + 92, BUTTON_WIDTH, 20).build());
+				}).dimensions(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
 			}
 		}
-		textField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, (this.width - 200) / 2, this.height / 2 - 65, 200, 20, Text.translatable("gui.roleplayers_atlas.marker.label"));
+		textField = scrolling(new TextFieldWidget(MinecraftClient.getInstance().textRenderer, (this.width - 200) / 2, nameBaseY, 200, 20, Text.translatable("gui.roleplayers_atlas.marker.label")), nameBaseY);
 		textField.setEditable(true);
 		textField.setFocusUnlocked(true);
 		textField.setFocused(true);
@@ -609,7 +712,7 @@ public class MarkerModal extends Component {
 			int typesOnScreen = Math.min(typeCount, 7);
 			int typeScrollWidth = typesOnScreen * (TexturePreviewButton.FRAME_SIZE + TYPE_SPACING) - TYPE_SPACING;
 			textureScrollBox.getViewport().setSize(typeScrollWidth, TexturePreviewButton.FRAME_SIZE + TYPE_SPACING);
-			textureScrollBox.setGuiCoords((this.width - typeScrollWidth) / 2, this.height / 2 - 35);
+			textureScrollBox.setGuiCoords((this.width - typeScrollWidth) / 2, textureBaseY - scrollY);
 
 			textureRadioGroup = new ToggleButtonRadioGroup<>();
 			textureRadioGroup.addListener(button -> {
@@ -639,7 +742,7 @@ public class MarkerModal extends Component {
 		int colorScrollWidth = colorsOnScreen * (TexturePreviewButton.FRAME_SIZE + TYPE_SPACING) - TYPE_SPACING;
 		colorScrollBox.getViewport().setSize(colorScrollWidth, TexturePreviewButton.FRAME_SIZE + TYPE_SPACING);
 		// With the texture row hidden for territories, the color row moves up to fill the gap.
-		colorScrollBox.setGuiCoords((this.width - colorScrollWidth) / 2, this.height / 2 + (isTerritory() || isSimple() ? -12 : 10));
+		colorScrollBox.setGuiCoords((this.width - colorScrollWidth) / 2, colorBaseY - scrollY);
 
 		colorRadioGroup = new ToggleButtonRadioGroup<>();
 		colorRadioGroup.addListener(button -> {
@@ -677,6 +780,9 @@ public class MarkerModal extends Component {
 	public boolean mouseClicked(Click click, boolean doubled) {
 		double mouseX = click.x(), mouseY = click.y();
 		int button = click.button();
+		// A row scrolled out of the middle is not there to be clicked, even though
+		// the widget itself still sits at those coordinates.
+		if (maxScroll > 0 && mouseY < confirmY && (mouseY < scrollTop || mouseY >= scrollBottom)) return true;
 		if (isSpawn()) return super.mouseClicked(click, doubled);
 		noteFocused = isOverNoteBox(mouseX, mouseY);
 		if (noteFocused && textField != null) {
@@ -736,7 +842,7 @@ public class MarkerModal extends Component {
 		// Manual dim instead of renderBackground: 1.21.6+ only allows one
 		// background blur per frame, and the parent screen already used it.
 		context.fill(0, 0, this.width, this.height, 0x66000000);
-		drawCentered(context, isSpawn() ? Text.translatable("gui.roleplayers_atlas.spawn.name") : Text.translatable("gui.roleplayers_atlas.marker.label"), this.height / 2 - 80, 0xDDDDDD, true);
+		drawCentered(context, isSpawn() ? Text.translatable("gui.roleplayers_atlas.spawn.name") : Text.translatable("gui.roleplayers_atlas.marker.label"), titleY, 0xDDDDDD, true);
 		// Inscriptions must not be empty — they are nothing but their text.
 		btnDone.active = !isPenLabel() || !textField.getText().isBlank();
 		btnCancel.render(context, mouseX, mouseY, partialTick);
@@ -747,6 +853,9 @@ public class MarkerModal extends Component {
 		// Nothing to reshape on a zone that is still being painted for the first time.
 		btnEditArea.visible = isTerritory() && baseLandmark != null && !baseLandmark.id().getPath().equals("newterritory");
 		if (btnEditArea.visible) btnEditArea.render(context, mouseX, mouseY, partialTick);
+		// Everything between the title and the confirm row scrolls when the screen
+		// is too short to hold it; it is clipped so it never covers either of them.
+		if (maxScroll > 0) context.enableScissor(0, scrollTop, this.width, scrollBottom);
 		if (!isSpawn()) {
 			textField.render(context, mouseX, mouseY, partialTick);
 			renderNoteBox(context);
@@ -772,6 +881,33 @@ public class MarkerModal extends Component {
 			colorScrollBox.getGuiY() + colorScrollBox.getHeight(),
 			0x88101010, 0x99101010);
 		super.render(context, mouseX, mouseY, partialTick);
+		if (maxScroll > 0) {
+			context.disableScissor();
+			// A plain bar on the right edge of the scrolling middle, so it is
+			// visible that there is more of the dialog above or below.
+			int trackH = scrollBottom - scrollTop;
+			int barH = Math.max(16, trackH * trackH / (trackH + maxScroll));
+			int barY = scrollTop + (trackH - barH) * scrollY / maxScroll;
+			int barX = this.width / 2 + NOTE_W / 2 + 6;
+			context.fill(barX, scrollTop, barX + 3, scrollBottom, 0x44000000);
+			context.fill(barX, barY, barX + 3, barY + barH, 0xAAE8D9B0);
+		}
+	}
+
+	@Override
+	public boolean mouseScrolled(double mx, double my, double dx, double dy) {
+		// The icon and ink rows scroll sideways under the cursor first; only what
+		// they leave alone moves the dialog itself.
+		if (super.mouseScrolled(mx, my, dx, dy)) return true;
+		if (maxScroll > 0 && my >= scrollTop && my < scrollBottom) {
+			int wanted = Math.max(0, Math.min(maxScroll, scrollY - (int) Math.round(dy * 12)));
+			if (wanted != scrollY) {
+				scrollY = wanted;
+				applyScroll();
+			}
+			return true;
+		}
+		return false;
 	}
 
 	public interface IMarkerTypeSelectListener {
