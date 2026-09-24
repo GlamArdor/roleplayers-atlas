@@ -31,7 +31,7 @@ import java.util.Map;
  * The server never tells the client where a player's respawn point is.
  * {@code ServerPlayerEntity#setSpawnPoint} only stores it and prints "Respawn
  * point set", and the spawn packet the vanilla compass follows is built from
- * {@code ServerWorld#getSpawnPos} — the <em>world</em> spawn. So the point has
+ * {@code ServerWorld#getSpawnPos} – the <em>world</em> spawn. So the point has
  * to be inferred, and the inference has to hold for a spawn set by a plugin the
  * client knows nothing about.
  * <p>
@@ -130,15 +130,15 @@ public final class SpawnMarker {
 	 * Called every client tick. Both sources run together, and they cover for
 	 * each other:
 	 * <ol>
-	 *   <li>Reappearing after death — wherever the player comes back is their
+	 *   <li>Reappearing after death – wherever the player comes back is their
 	 *       respawn point by definition, no matter what set it: a bed, an
 	 *       anchor, {@code /spawnpoint}, or a plugin the client knows nothing
 	 *       about. Right everywhere, but silent until the first death.</li>
-	 *   <li>Lying down in a bed — the same act that sets the respawn in vanilla,
+	 *   <li>Lying down in a bed – the same act that sets the respawn in vanilla,
 	 *       and the only one that shows without dying first. Servers where
 	 *       sleeping leaves the spawn alone make this a lie, which is what
 	 *       {@code hearthFollowsBeds} is there to switch off.</li>
-	 *   <li>The world spawn — stands in until either of the above happens.</li>
+	 *   <li>The world spawn – stands in until either of the above happens.</li>
 	 * </ol>
 	 */
 	public static void tick(MinecraftClient client) {
@@ -192,7 +192,7 @@ public final class SpawnMarker {
 		return landmark != null && ID.equals(landmark.id());
 	}
 
-	/** The mark itself, rebuilt on demand — it is never stored as a landmark. */
+	/** The mark itself, rebuilt on demand – it is never stored as a landmark. */
 	public static Landmark get(RegistryKey<World> dim) {
 		BlockPos at = pos(dim);
 		if (at == null) return null;

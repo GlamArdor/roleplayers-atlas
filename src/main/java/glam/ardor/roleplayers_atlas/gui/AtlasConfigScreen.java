@@ -38,7 +38,7 @@ public class AtlasConfigScreen extends Screen {
 
 	private final Screen parent;
 	private final AtlasConfig config = RoleplayersAtlas.CONFIG;
-	// Snapshots from the moment the screen opened, not from the last rebuild —
+	// Snapshots from the moment the screen opened, not from the last rebuild –
 	// init() runs again on every resize and reset.
 	private final AtlasConfig.FallbackHandling wasFallback;
 	private final int[] wasElevations;
@@ -120,7 +120,7 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(intSlider("elevationMid", config.elevationMid, -64, 320, v -> config.elevationMid = v, this::blocks));
 		list.addWidget(intSlider("elevationHigh", config.elevationHigh, -64, 320, v -> config.elevationHigh = v, this::blocks));
 		list.addWidget(intSlider("elevationPeak", config.elevationPeak, -64, 320, v -> config.elevationPeak = v, this::blocks));
-		// CRASH is a resource pack author's tool — it stops the game dead on a
+		// CRASH is a resource pack author's tool – it stops the game dead on a
 		// biome with no texture. Left out of the cycle so a player can't pick it
 		// by accident; the config file still takes it.
 		AtlasConfig.FallbackHandling[] fallbacks = Arrays.stream(AtlasConfig.FallbackHandling.values())

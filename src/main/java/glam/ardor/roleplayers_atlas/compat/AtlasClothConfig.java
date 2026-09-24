@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * categories down the side and a search box over all of them, a reset button
  * on every row, and the world left visible behind the list.
  * <p>
- * Cloth is optional, so nothing outside this class may name it — the mod has to
+ * Cloth is optional, so nothing outside this class may name it – the mod has to
  * keep working for players who don't have it. {@link AtlasModMenu} checks first
  * and only then calls in here, which is what keeps the class from being loaded
  * at all when Cloth is absent.
@@ -74,7 +74,7 @@ public final class AtlasClothConfig {
 		builder.setTransparentBackground(true);
 		// One long list with the categories down the side, rather than tabs.
 		// Tabbed, the search box only ever looks inside the tab you are standing
-		// in, so finding a setting means knowing which tab it lives in first —
+		// in, so finding a setting means knowing which tab it lives in first –
 		// which is exactly what a search is for.
 		builder.setGlobalized(true);
 		builder.setGlobalizedExpanded(true);
@@ -200,7 +200,7 @@ public final class AtlasClothConfig {
 		terrain.addEntry(intField(e, "elevationMid", config.elevationMid, 20, v -> config.elevationMid = v));
 		terrain.addEntry(intField(e, "elevationHigh", config.elevationHigh, 50, v -> config.elevationHigh = v));
 		terrain.addEntry(intField(e, "elevationPeak", config.elevationPeak, 90, v -> config.elevationPeak = v));
-		// CRASH is a resource pack author's tool — it stops the game dead on a
+		// CRASH is a resource pack author's tool – it stops the game dead on a
 		// biome with no texture. Left out of the list so a player can't pick it
 		// by accident; the config file still takes it.
 		AtlasConfig.FallbackHandling[] fallbacks = Arrays.stream(AtlasConfig.FallbackHandling.values())

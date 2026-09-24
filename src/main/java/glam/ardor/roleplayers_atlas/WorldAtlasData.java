@@ -56,8 +56,8 @@ public class WorldAtlasData {
 	 * The same, but told which world's data it is about to be handed.
 	 * <p>
 	 * A dimension key is not a world. Sent from a lobby to the main server, a
-	 * player never disconnects — the proxy simply swaps what is behind
-	 * {@code minecraft:overworld} — so the map went on showing the lobby's land
+	 * player never disconnects – the proxy simply swaps what is behind
+	 * {@code minecraft:overworld} – so the map went on showing the lobby's land
 	 * and the lobby's marks, and those marks could not be deleted because they
 	 * no longer existed in the world they were being deleted from.
 	 * <p>
@@ -76,7 +76,7 @@ public class WorldAtlasData {
 	/** The world this data belongs to, to tell it from another wearing the same name. */
 	private WorldSummary boundSummary = null;
 
-	/** Which dimension this data is for — needed to look up what was drawn on it. */
+	/** Which dimension this data is for – needed to look up what was drawn on it. */
 	private RegistryKey<World> dimension = null;
 
 	/**
@@ -107,7 +107,7 @@ public class WorldAtlasData {
 		return chunkBiomes.get(pos);
 	}
 
-	/** Whether anything has been drawn here — painting empty page would show nothing. */
+	/** Whether anything has been drawn here – painting empty page would show nothing. */
 	public boolean hasTile(ChunkPos pos) {
 		return biomeTiles.containsKey(pos);
 	}
@@ -131,7 +131,7 @@ public class WorldAtlasData {
 		tileScope.set(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
 		isFinished = false;
 		refreshCities();
-		// The world changed under us — every remembered step refers to the old one.
+		// The world changed under us – every remembered step refers to the old one.
 		AtlasUndo.clear();
 		invalidateTileBatches();
 		if (MinecraftClient.getInstance().currentScreen instanceof AtlasScreen as) as.updateBookmarkerList();
@@ -194,7 +194,7 @@ public class WorldAtlasData {
 	 * <p>
 	 * The old tiles are left in place while it happens, so the map redraws
 	 * rather than blinking empty. Used when a setting changes what a biome
-	 * should look like — without it the change only showed on land explored
+	 * should look like – without it the change only showed on land explored
 	 * afterwards, which reads as the setting doing nothing.
 	 */
 	public void retile() {
@@ -257,7 +257,7 @@ public class WorldAtlasData {
 	 * <p>
 	 * Split out from the world tick because the atlas pauses the game: with the
 	 * map open nothing else ticks, so a correction made while looking at it
-	 * would sit in the queue until the screen was closed — which reads as the
+	 * would sit in the queue until the screen was closed – which reads as the
 	 * correction having done nothing. The screen calls this itself.
 	 */
 	public void drawQueued(WorldSummary summary, int limit) {
@@ -311,7 +311,7 @@ public class WorldAtlasData {
 	/** How close you have to come to something you were told about to call it seen. */
 	private static final double VERIFY_RANGE = 24.0;
 
-	/** How close counts as having got there — near enough that the arrow has nothing left to say. */
+	/** How close counts as having got there – near enough that the arrow has nothing left to say. */
 	private static final double ARRIVE_RANGE = 16.0;
 
 	/**
@@ -360,7 +360,7 @@ public class WorldAtlasData {
 
 	/**
 	 * Turns hearsay into knowledge. A mark copied from someone else's scroll
-	 * stays faint until its owner has actually stood next to it — at which
+	 * stays faint until its owner has actually stood next to it – at which
 	 * point it firms up and records the day it was checked. Territories count
 	 * as reached once you're inside them; everything else, by distance.
 	 */
@@ -404,7 +404,7 @@ public class WorldAtlasData {
 		return tileScope;
 	}
 
-	/** Chunks with resolved terrain tiles — the explored area. */
+	/** Chunks with resolved terrain tiles – the explored area. */
 	public java.util.Set<ChunkPos> exploredChunks() {
 		return biomeTiles.keySet();
 	}
@@ -491,7 +491,7 @@ public class WorldAtlasData {
 	}
 
 	/**
-	 * Graves are made by Surveyor, which dates them by the world's time of day —
+	 * Graves are made by Surveyor, which dates them by the world's time of day –
 	 * a clock a server can freeze or reset, so every death can end up reading
 	 * "day 1". They get the atlas' own game-time day instead, written into the
 	 * grave once so it stays put and travels with an exported scroll.
@@ -534,7 +534,7 @@ public class WorldAtlasData {
 		// Surveyor drops a removal for a mark it doesn't have without a word, so
 		// a stale one would sit there being clicked at forever. Say so instead.
 		if (!summary.landmarks().contains(landmark.owner(), landmark.id())) {
-			RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] {} isn't in this world's data — dropping it from the map instead.", landmark.id());
+			RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] {} isn't in this world's data – dropping it from the map instead.", landmark.id());
 			onLandmarksRemoved(summary, com.google.common.collect.ImmutableMultimap.of(landmark.owner(), landmark.id()));
 			return true;
 		}
@@ -574,7 +574,7 @@ public class WorldAtlasData {
 		structureMarkers.forEach((landmark, texture) -> {
 			if (tileChunks >= texture.nearClip() && tileChunks <= texture.farClip()) map.put(landmark, texture);
 		});
-		// The respawn point isn't stored anywhere — it joins the map here, which
+		// The respawn point isn't stored anywhere – it joins the map here, which
 		// is enough for it to render, be hovered and carry a guide arrow.
 		Landmark spawn = SpawnMarker.get(dimensionOf());
 		if (spawn != null) map.put(spawn, SpawnMarker.texture());

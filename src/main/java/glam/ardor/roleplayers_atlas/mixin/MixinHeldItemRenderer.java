@@ -76,8 +76,8 @@ public class MixinHeldItemRenderer {
 	}
 
 	// Field mode: reuse the vanilla equip offset to animate the book being
-	// drawn up into the hands, and to choreograph the hand shift: first half —
-	// the book is lowered from both hands, second half — it rises small in the
+	// drawn up into the hands, and to choreograph the hand shift: first half –
+	// the book is lowered from both hands, second half – it rises small in the
 	// off hand while the main hand raises its real item.
 	@ModifyVariable(method = "renderFirstPersonItem", at = @At("HEAD"), argsOnly = true, ordinal = 3)
 	private float roleplayers_atlas$drawAnimation(float equipProgress, AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack stack, float equipProgressArg, MatrixStack matrices, OrderedRenderCommandQueue vertexConsumers, int light) {

@@ -233,7 +233,7 @@ public class MarkerModal extends Component {
 		return isSpawn() ? 1 : isTerritory() ? 3 : 2;
 	}
 
-	/** A road can be lengthened and a zone reshaped — but not while it is still being drawn. */
+	/** A road can be lengthened and a zone reshaped – but not while it is still being drawn. */
 	private boolean hasExtraButton() {
 		if (baseLandmark == null) return false;
 		if (isRoute()) return !baseLandmark.id().getPath().equals("newroute");
@@ -242,8 +242,8 @@ public class MarkerModal extends Component {
 	}
 
 	/**
-	 * Walks the dialog from top to bottom, one row after another, and — when
-	 * {@code apply} is set — writes down where every row landed. Returns the
+	 * Walks the dialog from top to bottom, one row after another, and – when
+	 * {@code apply} is set – writes down where every row landed. Returns the
 	 * height the whole dialog needs.
 	 *
 	 * <p>The old layout hung every row off a fixed offset from the screen centre,
@@ -285,8 +285,8 @@ public class MarkerModal extends Component {
 
 	/**
 	 * Fits the dialog to the screen: the roomy layout when it fits, a tightened
-	 * one (shorter note box, closer rows) when it doesn't, and — only if even
-	 * that overflows — a scrolling middle with the title and the confirm row
+	 * one (shorter note box, closer rows) when it doesn't, and – only if even
+	 * that overflows – a scrolling middle with the title and the confirm row
 	 * pinned to the edges.
 	 */
 	private void layoutDialog() {
@@ -411,7 +411,7 @@ public class MarkerModal extends Component {
 		return Text.translatable(key, Text.translatable(value ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
-	/** "Тень: ВКЛ/ВЫКЛ" — the label's shadow (or a route's backing ribbon). */
+	/** "Тень: ВКЛ/ВЫКЛ" – the label's shadow (or a route's backing ribbon). */
 	private Text shadowText() {
 		return onOff("gui.roleplayers_atlas.marker.shadow", !labelNoShadow);
 	}
@@ -484,14 +484,14 @@ public class MarkerModal extends Component {
 		return baseLandmark != null && Boolean.TRUE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.PEN_LABEL));
 	}
 
-	/** Routes render as a dashed path — no icon, no zone settings. */
+	/** Routes render as a dashed path – no icon, no zone settings. */
 	protected boolean isRoute() {
 		return baseLandmark != null && baseLandmark.contains(glam.ardor.roleplayers_atlas.AtlasComponents.ROUTE);
 	}
 
 	/**
 	 * The respawn mark. It isn't a landmark anyone owns, so there is nothing to
-	 * name, file into a layer, annotate or date — only how it looks is the
+	 * name, file into a layer, annotate or date – only how it looks is the
 	 * player's to choose, and that lives in the config.
 	 */
 	protected boolean isSpawn() {
@@ -531,8 +531,8 @@ public class MarkerModal extends Component {
 			MutableText label = Text.literal(textField.getText());
 			WorldLandmarks landmarks = summary.landmarks();
 			if (landmarks != null) {
-				// What was there before this dialog opened, so the whole edit — or
-				// the whole creation — can be taken back in one step.
+				// What was there before this dialog opened, so the whole edit – or
+				// the whole creation – can be taken back in one step.
 				Landmark previous = landmarks.contains(baseLandmark.owner(), baseLandmark.id()) ? baseLandmark : null;
 				boolean territory = baseLandmark.contains(LandmarkComponentTypes.CHUNKS) && !baseLandmark.contains(LandmarkComponentTypes.POS);
 				boolean penLabel = isPenLabel();
@@ -555,7 +555,7 @@ public class MarkerModal extends Component {
 					}
 					copy.set(LandmarkComponentTypes.COLOR, selectedColor.getEntityColor());
 					copy.set(LandmarkComponentTypes.NAME, label);
-					// Inscriptions and routes have no zone settings — only color and
+					// Inscriptions and routes have no zone settings – only color and
 					// opacity. Everything is written explicitly: the copy inherits the
 					// old landmark's components, so defaults must overwrite stale values.
 					if (!simple) {
@@ -638,7 +638,7 @@ public class MarkerModal extends Component {
 			btnDistance = null;
 			addDrawableChild(opacitySlider = scrolling(new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
 		} else if (isSimple()) {
-			// Inscription/route settings: just the ink color row and opacity —
+			// Inscription/route settings: just the ink color row and opacity –
 			// plus, for a route, whether it tells you how long it is.
 			btnZoneTitle = null;
 			btnHideLabel = null;
@@ -843,7 +843,7 @@ public class MarkerModal extends Component {
 		// background blur per frame, and the parent screen already used it.
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, isSpawn() ? Text.translatable("gui.roleplayers_atlas.spawn.name") : Text.translatable("gui.roleplayers_atlas.marker.label"), titleY, 0xDDDDDD, true);
-		// Inscriptions must not be empty — they are nothing but their text.
+		// Inscriptions must not be empty – they are nothing but their text.
 		btnDone.active = !isPenLabel() || !textField.getText().isBlank();
 		btnCancel.render(context, mouseX, mouseY, partialTick);
 		btnDone.render(context, mouseX, mouseY, partialTick);

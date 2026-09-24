@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Map snapshots: saving map images to the screenshots folder — either a crop
+ * Map snapshots: saving map images to the screenshots folder – either a crop
  * of the current view (captured between frames, when the finished frame with
  * the GUI is in the framebuffer) or the whole explored map composed on the CPU
  * from the same subtile batches the GUI renders. Landmark categories are
@@ -141,7 +141,7 @@ public final class ParchmentExport {
 			.withClickEvent(new net.minecraft.text.ClickEvent.OpenFile(file.toAbsolutePath())));
 	}
 
-	/** Same, for files nothing can open on their own — the click reveals the folder instead. */
+	/** Same, for files nothing can open on their own – the click reveals the folder instead. */
 	public static Text folderLink(Path file) {
 		Path folder = file.toAbsolutePath().getParent();
 		return Text.literal(file.getFileName().toString()).styled(style -> style
@@ -151,7 +151,7 @@ public final class ParchmentExport {
 
 	// Decoration for saved map images: the cartographer's name, the date, and a
 	// carved wooden border. Chosen in the snapshot dialog, applied to whichever
-	// image comes out — a cropped view or the whole stitched map.
+	// image comes out – a cropped view or the whole stitched map.
 	private static boolean stampAuthor = false;
 	private static boolean stampTime = false;
 	private static boolean stampFrame = false;
@@ -205,7 +205,7 @@ public final class ParchmentExport {
 
 	/**
 	 * The vanilla item frame, rebuilt at any size: birch rails lit from the top
-	 * left, and the dark recess the item sits in — here, the map. Colours are
+	 * left, and the dark recess the item sits in – here, the map. Colours are
 	 * taken straight from the item frame sprite so the border reads as the same
 	 * object rather than as an invented ornament.
 	 */
@@ -219,7 +219,7 @@ public final class ParchmentExport {
 			for (int x = 0; x < width; x++) {
 				if (x >= mapX && x < mapX + mapW && y >= mapY && y < mapY + mapH) continue;
 				int speck = speckle(x, y, scale);
-				// How far outside the map this pixel lies — the mat wraps it, the
+				// How far outside the map this pixel lies – the mat wraps it, the
 				// wood sits at the image's own edge, and the wide strip left
 				// between the two along the bottom carries the caption.
 				int outX = Math.max(mapX - x, x - (mapX + mapW - 1));
@@ -420,7 +420,7 @@ public final class ParchmentExport {
 		}
 
 		// Names: territories at their centroid, routes at the path middle,
-		// inscriptions at their position — dark plate + tinted text.
+		// inscriptions at their position – dark plate + tinted text.
 		if (zones) {
 			allMarkers.forEach((landmark, texture) -> {
 				if (!RoleplayersAtlas.layerVisible(landmark)) return;

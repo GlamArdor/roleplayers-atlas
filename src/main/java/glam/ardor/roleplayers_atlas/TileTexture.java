@@ -18,7 +18,7 @@ public record TileTexture(Identifier id, boolean innerBorder, Set<TileTexture> t
 	/**
 	 * What a chunk is drawn with when nothing at all is known about its biome.
 	 * <p>
-	 * Read fresh every time rather than settled once at class load — otherwise
+	 * Read fresh every time rather than settled once at class load – otherwise
 	 * changing the setting did nothing until the game was restarted, which is
 	 * not what "unrecognised biomes" looks like it promises.
 	 */

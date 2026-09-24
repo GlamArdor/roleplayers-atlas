@@ -10,12 +10,12 @@ import java.time.ZonedDateTime;
  * <p>
  * Three units, all of them fixed to the Moscow clock the server runs on:
  * <ul>
- *   <li><b>Цикл</b> — one setting and rising of the sun, two elven hours. Two
+ *   <li><b>Цикл</b> – one setting and rising of the sun, two elven hours. Two
  *       real hours long, so twelve of them fill a real day: 00:00–01:59 is the
  *       first, 22:00–23:59 the twelfth.</li>
- *   <li><b>Уния</b> — an elven day, twelve cycles. One real day, and it carries
+ *   <li><b>Уния</b> – an elven day, twelve cycles. One real day, and it carries
  *       that day's number: 15 September is the 15th unia.</li>
- *   <li><b>Год</b> — an elven month, nominally thirty unias. One real calendar
+ *   <li><b>Год</b> – an elven month, nominally thirty unias. One real calendar
  *       month, counted from the expedition: August 2026 is year 225, September
  *       2026 is 226, and so on backwards and forwards without limit.</li>
  * </ul>

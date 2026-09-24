@@ -166,7 +166,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 		// The hearth is held back and drawn after everything else. Markers come
 		// out of a hash map in no fixed order, and the hearth is rebuilt fresh
 		// every frame, so sharing a spot with another mark had the two trading
-		// places from frame to frame — which reads as flickering.
+		// places from frame to frame – which reads as flickering.
 		Landmark spawnMark = null;
 		MarkerTexture spawnTexture = null;
 		for (Map.Entry<Landmark, MarkerTexture> entry : markers.entrySet()) {
@@ -209,7 +209,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 			}
 		}
 
-		// Player arrows fade in only after the book fully opens — drawn during
+		// Player arrows fade in only after the book fully opens – drawn during
 		// the page swing they poke through the moving flap.
 		float arrowAlpha = AtlasHoldMode.labelAlpha();
 		if (fullPass && arrowAlpha > 0.01F) {

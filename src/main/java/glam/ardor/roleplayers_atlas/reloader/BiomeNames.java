@@ -11,7 +11,7 @@ import java.util.Set;
 
 /**
  * Works out what a biome should look like from its name, for biomes that carry
- * no tags at all — which datapack biomes on a plugin server routinely don't.
+ * no tags at all – which datapack biomes on a plugin server routinely don't.
  * <p>
  * Nothing but lookup tables, so it can be reasoned about (and checked) without
  * a running game.
@@ -247,7 +247,7 @@ public final class BiomeNames {
 			"lukewarm", BiomeKeys.DEEP_LUKEWARM_OCEAN.getValue(),
 			"tepid", BiomeKeys.DEEP_LUKEWARM_OCEAN.getValue(),
 			"mild", BiomeKeys.DEEP_LUKEWARM_OCEAN.getValue())),
-		// An island is coastline unless the name says what grows on it — the
+		// An island is coastline unless the name says what grows on it – the
 		// shore is the last thing you would draw a tropical island as.
 		Map.entry(BiomeKeys.BEACH.getValue(), Map.ofEntries(
 			Map.entry("stony", BiomeKeys.STONY_SHORE.getValue()),
@@ -305,7 +305,7 @@ public final class BiomeNames {
 			Map.entry("soul", BiomeKeys.SOUL_SAND_VALLEY.getValue()),
 			// "windswept" is the one word that does mean bare stone.
 			Map.entry("windswept", BiomeKeys.WINDSWEPT_HILLS.getValue()),
-			// Hills and fields are shapes, not cover — whatever grows on them is
+			// Hills and fields are shapes, not cover – whatever grows on them is
 			// said by the word in front, and that is what should be drawn.
 			Map.entry("forest", BiomeKeys.FOREST.getValue()),
 			Map.entry("wood", BiomeKeys.FOREST.getValue()),
@@ -404,7 +404,7 @@ public final class BiomeNames {
 		// "the_end" alone says where but not what; the dimension is the answer.
 		if (found == null) return end ? BiomeKeys.THE_END.getValue() : nether ? BiomeKeys.NETHER_WASTES.getValue() : null;
 
-		// Words standing before the noun narrow it down, and they stack — each
+		// Words standing before the noun narrow it down, and they stack – each
 		// pass reconsiders the whole name against what it has become so far.
 		for (int pass = 0; pass < 4; pass++) {
 			Map<String, Identifier> refinements = REFINEMENTS.get(found);
@@ -426,7 +426,7 @@ public final class BiomeNames {
 		return found;
 	}
 
-	/** Refinements match a whole word, or a word grown from one — "wooded" from "wood". */
+	/** Refinements match a whole word, or a word grown from one – "wooded" from "wood". */
 	private static @Nullable Identifier lookup(Map<String, Identifier> refinements, String word) {
 		Identifier exact = refinements.get(word);
 		if (exact != null) return exact;

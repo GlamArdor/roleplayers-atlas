@@ -238,7 +238,7 @@ public interface AtlasRenderer {
 				int lineSize = tilePixels() / 16;
 				// Handheld page: no scissor exists in world rendering, so the chunk
 				// quads are clipped geometrically to the map area instead of fading
-				// out early — territories run right up to the page border.
+				// out early – territories run right up to the page border.
 				int clipX1 = 0, clipY1 = 0, clipX2 = size, clipY2 = size;
 				if (clipToPage) {
 					clipX1 = Math.max(0, (int) Math.ceil((MAP_BORDER_WIDTH - markerX) / effectiveScale));
@@ -415,7 +415,7 @@ public interface AtlasRenderer {
 		if (count == 0) return;
 		// Ink picked against the territory fill for contrast, with an
 		// opposite-tone shadow (set via the text style, so it is still a single
-		// text pass — no glyph z-fighting) instead of a backing plate.
+		// text pass – no glyph z-fighting) instead of a backing plate.
 		Integer territoryColor = landmark.get(LandmarkComponentTypes.COLOR);
 		int fillRgb = territoryColor == null ? 0xFFFFFF : territoryColor;
 		double luma = 0.299 * ((fillRgb >> 16) & 0xFF) + 0.587 * ((fillRgb >> 8) & 0xFF) + 0.114 * (fillRgb & 0xFF);
@@ -501,7 +501,7 @@ public interface AtlasRenderer {
 			if (segLen < 0.01) continue;
 
 			// Only the on-page part of the segment is walked; off-page spans are
-			// skipped wholesale — a zoomed-in route otherwise costs tens of
+			// skipped wholesale – a zoomed-in route otherwise costs tens of
 			// thousands of iterations per frame and hangs the render thread.
 			double tEnter = 0;
 			double tExit = 1;
@@ -667,7 +667,7 @@ public interface AtlasRenderer {
 			double[] qx = new double[4];
 			double[] qy = new double[4];
 			for (int k = 0; k < nodes - 1; k++) {
-				// Wound the way the renderers expect (near, far, far, near) —
+				// Wound the way the renderers expect (near, far, far, near) –
 				// the other way round the quads face away and get culled.
 				qx[0] = ribbon.get(k)[0] + normals[k][0] * plateNear;
 				qy[0] = ribbon.get(k)[1] + normals[k][1] * plateNear;

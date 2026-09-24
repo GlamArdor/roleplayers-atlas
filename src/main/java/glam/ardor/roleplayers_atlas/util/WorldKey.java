@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
  * Not the server's address: behind a proxy the lobby and the world it sends you
  * on to answer to the same one, so anything filed under it would leak from one
  * into the other. Surveyor tells worlds apart by their biome seed and names its
- * save folder after it — the same distinction, already made, so the atlas
+ * save folder after it – the same distinction, already made, so the atlas
  * borrows it rather than inventing a second one.
  */
 public final class WorldKey {

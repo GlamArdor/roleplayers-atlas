@@ -79,7 +79,7 @@ public class RoleplayersAtlas implements ClientModInitializer {
 
 	/**
 	 * The book the player appears to be holding while the atlas is out. It is
-	 * never in anyone's inventory — the hold mode conjures it for the duration
+	 * never in anyone's inventory – the hold mode conjures it for the duration
 	 * and the renderer swaps it in, so the atlas needs no item to exist.
 	 */
 	public static ItemStack virtualAtlasStack() {

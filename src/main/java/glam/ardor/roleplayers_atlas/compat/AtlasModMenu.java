@@ -11,8 +11,8 @@ import net.minecraft.client.gui.screen.Screen;
 /**
  * ModMenu integration: opens the atlas settings.
  * <p>
- * Cloth Config gives the better screen — searchable, categories down the side,
- * a reset on every row — but it is only suggested, not required, so the
+ * Cloth Config gives the better screen – searchable, categories down the side,
+ * a reset on every row – but it is only suggested, not required, so the
  * built-in list stays behind as a fallback. The Cloth-facing class is only
  * named inside the try, so it is never loaded on a client that doesn't have
  * Cloth, and a Cloth major version bump degrades to our own screen instead of

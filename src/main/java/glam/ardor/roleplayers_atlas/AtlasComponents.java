@@ -37,10 +37,10 @@ public final class AtlasComponents {
 	/** Whether a route shows its length on hover; absent means shown. */
 	public static final LandmarkComponentType<Boolean> SHOW_DISTANCE = LandmarkComponentTypes.register(RoleplayersAtlas.id("show_distance"), Codec.BOOL, b -> Text.literal(String.valueOf(b)));
 
-	/** The game day the mark was drawn on — see {@link AtlasTime} for why game time and not time of day. */
+	/** The game day the mark was drawn on – see {@link AtlasTime} for why game time and not time of day. */
 	public static final LandmarkComponentType<Long> DAY = LandmarkComponentTypes.register(RoleplayersAtlas.id("day"), Codec.LONG, d -> Text.literal(String.valueOf(d)));
 
-	/** The real-world moment the mark was drawn, epoch millis. A caption only — never an ordering key. */
+	/** The real-world moment the mark was drawn, epoch millis. A caption only – never an ordering key. */
 	public static final LandmarkComponentType<Long> REAL_TIME = LandmarkComponentTypes.register(RoleplayersAtlas.id("real_time"), Codec.LONG, t -> Text.literal(String.valueOf(t)));
 
 	/** Whether the date stamp is shown; absent means shown. */
@@ -52,7 +52,7 @@ public final class AtlasComponents {
 	/** The game day the owner stood at a mark they had only heard of; absent means still unverified. */
 	public static final LandmarkComponentType<Long> CONFIRMED_DAY = LandmarkComponentTypes.register(RoleplayersAtlas.id("confirmed_day"), Codec.LONG, d -> Text.literal(String.valueOf(d)));
 
-	/** The real-world moment that walk happened, epoch millis — what the server's reckoning dates it by. Absent on marks verified before the reckoning existed. */
+	/** The real-world moment that walk happened, epoch millis – what the server's reckoning dates it by. Absent on marks verified before the reckoning existed. */
 	public static final LandmarkComponentType<Long> CONFIRMED_REAL_TIME = LandmarkComponentTypes.register(RoleplayersAtlas.id("confirmed_real_time"), Codec.LONG, t -> Text.literal(String.valueOf(t)));
 
 	/** Extra rotation of the mark's map label, in degrees; absent means none. Used by territory names and pen inscriptions. */

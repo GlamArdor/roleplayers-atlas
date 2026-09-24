@@ -122,7 +122,7 @@ public final class MapShare {
 			root.put("Terrain", terrainList);
 		}
 
-		// How the sender decided the map should read. Only their own word travels —
+		// How the sender decided the map should read. Only their own word travels –
 		// corrections they inherited from a third scroll stay where they came from,
 		// so a sheet never gets passed along under the wrong name.
 		if (includeCorrections) {
@@ -142,7 +142,7 @@ public final class MapShare {
 				chunkList.add(entry);
 			});
 			// Towns drawn by hand travel in the same sheet: they are the same kind
-			// of thing — the cartographer's own reading of the land, written over
+			// of thing – the cartographer's own reading of the land, written over
 			// what the game had to say about it.
 			NbtList cityList = new NbtList();
 			CityPaint.ownCells(dim).forEach((pos, tile) -> {
@@ -157,7 +157,7 @@ public final class MapShare {
 				corrections.put("Biomes", biomeList);
 				corrections.put("Chunks", chunkList);
 				corrections.put("Cities", cityList);
-				// Unsigned, the sheet is filed under the scroll's own name instead —
+				// Unsigned, the sheet is filed under the scroll's own name instead –
 				// it still has to go somewhere it can be torn out of again.
 				if (signed) corrections.putString("Author", AtlasTime.selfName());
 				root.put("Corrections", corrections);
@@ -174,7 +174,7 @@ public final class MapShare {
 
 	/**
 	 * Stamps a landmark with the cartographer's seal for export. A mark that
-	 * already names a source keeps it — passing a scroll along shouldn't erase
+	 * already names a source keeps it – passing a scroll along shouldn't erase
 	 * whose knowledge it was to begin with.
 	 */
 	private static Landmark sign(Landmark landmark) {
@@ -208,7 +208,7 @@ public final class MapShare {
 	 * <p>
 	 * Taking a scroll in was blind: you learned what was on it by having it
 	 * already written into your own map. This reads the same file and counts,
-	 * which is cheap — the marks are parsed anyway, and terrain is only tallied,
+	 * which is cheap – the marks are parsed anyway, and terrain is only tallied,
 	 * not decoded.
 	 */
 	public record Preview(String dimension, boolean sameDimension, int markers, int labels, int routes, int territories,
@@ -238,7 +238,7 @@ public final class MapShare {
 						if (source != null && !source.isBlank()) authors.add(source);
 					}
 				}
-				// Counted from the id, which carries the kind — no need to build
+				// Counted from the id, which carries the kind – no need to build
 				// the landmark to know whether it is a road or a zone.
 				String path = id.getPath();
 				if (path.startsWith("route/")) routes++;
@@ -379,7 +379,7 @@ public final class MapShare {
 	/**
 	 * Takes in how the sender read the land. Their sheet is filed under their
 	 * name and consulted only where the reader has said nothing themselves, so a
-	 * scroll can never quietly overrule a correction its reader made — and the
+	 * scroll can never quietly overrule a correction its reader made – and the
 	 * whole sheet can be torn out again in one go.
 	 */
 	private static int importCorrections(NbtCompound root, Path file, RegistryKey<World> dim, boolean takeCities) {

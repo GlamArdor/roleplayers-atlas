@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Flat white copies of marker textures (alpha preserved, RGB forced to white),
  * registered lazily. Tinting one of these gives a silhouette in exactly the
- * requested color — a plain multiply over the original texture could never get
+ * requested color – a plain multiply over the original texture could never get
  * brighter than the texture's own pixels.
  */
 public final class SilhouetteTextures {

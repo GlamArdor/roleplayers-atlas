@@ -11,7 +11,7 @@ import net.minecraft.world.World;
  * Writes the explored map to disk every so often.
  * <p>
  * Surveyor only saves a client's world data when the connection ends cleanly,
- * so a crash — or Alt+F4 — threw away everything walked since joining. An
+ * so a crash – or Alt+F4 – threw away everything walked since joining. An
  * evening's exploring is too much to lose to a task manager.
  * <p>
  * Saving is cheap when nothing changed: Surveyor returns immediately unless the
@@ -46,7 +46,7 @@ public final class MapAutosave {
 		try {
 			ClientSummary summary = ClientSummary.of(handler);
 			if (summary == null) return;
-			// leaveWorld is Surveyor's own "write this dimension out now" — it
+			// leaveWorld is Surveyor's own "write this dimension out now" – it
 			// saves and nothing else, so it is safe to call while still there.
 			for (RegistryKey<World> dimension : SurveyorClient.getSummaries(handler).keySet()) {
 				summary.leaveWorld(dimension);

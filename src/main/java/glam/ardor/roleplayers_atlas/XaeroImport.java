@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * <p>Nobody wants to place the same fifty waypoints twice, and an atlas that
  * starts empty is an atlas nobody switches to. Xaero keeps its waypoints in
- * plain text — one line each, the format written at the top of every file — so
+ * plain text – one line each, the format written at the top of every file – so
  * they can simply be read and copied in.
  *
  * <p>Only the waypoints. The terrain Xaero has drawn lives in a binary format
@@ -72,7 +72,7 @@ public final class XaeroImport {
 		return FabricLoader.getInstance().getGameDir().resolve(FOLDER);
 	}
 
-	/** Whether there is anything at all to offer — the button says nothing when Xaero was never installed. */
+	/** Whether there is anything at all to offer – the button says nothing when Xaero was never installed. */
 	public static boolean present() {
 		return Files.isDirectory(root());
 	}
@@ -217,7 +217,7 @@ public final class XaeroImport {
 	 * Writes the chosen waypoints in as marks of our own.
 	 *
 	 * <p>Each one keeps its name, its height and its colour, and is filed into a
-	 * layer named after the Xaero set it came from when asked for — a set is the
+	 * layer named after the Xaero set it came from when asked for – a set is the
 	 * same idea as a layer, and losing that grouping would be losing half of
 	 * what was being carried over.
 	 */

@@ -33,7 +33,7 @@ public class ScreenshotModal extends Component {
 	private static boolean includeZones = true;
 	private static boolean includeRoutes = true;
 	private static boolean includeLabels = true;
-	// Scroll furniture — off by default, since a plain map image is still the
+	// Scroll furniture – off by default, since a plain map image is still the
 	// common case and the border changes the picture's size.
 	private static boolean stampAuthor = false;
 	private static boolean stampTime = false;
@@ -103,7 +103,7 @@ public class ScreenshotModal extends Component {
 			closeChild();
 		}).dimensions(this.width / 2 - 102, this.height / 2 + 66, 204, 20).build());
 		addDrawableChild(btnFull = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.screenshot.full"), button -> {
-			// Stitched from real in-game renders — pixel identical to the map.
+			// Stitched from real in-game renders – pixel identical to the map.
 			ParchmentExport.setDecoration(stampAuthor, stampTime, stampFrame);
 			if (getParent() instanceof AtlasScreen screen) screen.scheduleFullCapture(includeMarkers, includeZones, includeRoutes, includeLabels);
 			closeChild();

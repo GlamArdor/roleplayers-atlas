@@ -88,7 +88,7 @@ public class TerrainTiling {
 	 * staircase, because a chunk one column past the line flipped whole. Drawing
 	 * lots instead, weighted by the columns themselves, lets a chunk that is
 	 * mostly valley still come out as valley while its neighbours along the edge
-	 * scatter — so the change reads as ground rising rather than as a step.
+	 * scatter – so the change reads as ground rising rather than as a step.
 	 * <p>
 	 * The draw is fixed by the chunk's position, so a tile keeps the tier it was
 	 * given: redrawn, reloaded, or seen by another player of the same map.
@@ -129,7 +129,7 @@ public class TerrainTiling {
 			}
 		}
 		if (bestFrequency == 0) return null;
-		// Which land it is stays a matter of majority — only how high it reads is
+		// Which land it is stays a matter of majority – only how high it reads is
 		// softened. The last row holds water, ice and the like, which have no
 		// height to speak of and are left alone.
 		if (elevationOrdinal < TileElevation.values().length) {

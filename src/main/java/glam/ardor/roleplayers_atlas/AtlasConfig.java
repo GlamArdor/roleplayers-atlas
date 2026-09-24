@@ -39,7 +39,7 @@ public class AtlasConfig extends WrappedConfig {
 
 	/**
 	 * Where the quick-mark key lands. Under your feet is the obvious one; where
-	 * you are looking is the useful one — a peak on the horizon can be marked
+	 * you are looking is the useful one – a peak on the horizon can be marked
 	 * from the valley you are standing in, without walking to it first.
 	 */
 	public enum QuickMark {
@@ -50,7 +50,7 @@ public class AtlasConfig extends WrappedConfig {
 	/**
 	 * Which calendar dates a mark.
 	 * <p>
-	 * REIGN is the reckoning kept on Reign RP — cycles, unias and years, worked
+	 * REIGN is the reckoning kept on Reign RP – cycles, unias and years, worked
 	 * out from the real moment the mark was drawn. DAYS is the world's own day
 	 * count, which is what the atlas used before the server opened.
 	 */
@@ -62,7 +62,7 @@ public class AtlasConfig extends WrappedConfig {
 	/**
 	 * Whether the map can send you somewhere.
 	 * <p>
-	 * AUTO offers it only where the game says you may teleport — singleplayer
+	 * AUTO offers it only where the game says you may teleport – singleplayer
 	 * with cheats, or an operator's seat on a server. ON is for servers that
 	 * hand the command out through a permissions plugin without the operator
 	 * rank the client can see; OFF keeps the map a map.
@@ -93,7 +93,7 @@ public class AtlasConfig extends WrappedConfig {
 
 	/**
 	 * Puts every option back the way it shipped. The tracked value is what gets
-	 * written to disk, but the mod reads the plain field, so both are set — a
+	 * written to disk, but the mod reads the plain field, so both are set – a
 	 * reset that only touched one of them would either not apply until a
 	 * restart or not survive one.
 	 */

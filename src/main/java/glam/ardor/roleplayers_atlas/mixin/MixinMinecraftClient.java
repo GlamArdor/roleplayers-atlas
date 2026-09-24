@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public class MixinMinecraftClient {
 	// Escape puts the field-mode atlas away instead of opening the pause menu.
-	// pauseOnly=true means an automatic pause (e.g. focus loss) — let those through.
+	// pauseOnly=true means an automatic pause (e.g. focus loss) – let those through.
 	@Inject(method = "openGameMenu", at = @At("HEAD"), cancellable = true)
 	private void roleplayers_atlas$closeFieldModeOnEscape(boolean pauseOnly, CallbackInfo ci) {
 		if (!pauseOnly && AtlasHoldMode.isActive() && !AtlasHoldMode.isClosing()) {

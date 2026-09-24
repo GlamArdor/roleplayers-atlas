@@ -35,7 +35,7 @@ public final class AtlasSounds {
 	private static long lastRedrawMs = 0;
 
 	/**
-	 * The map being redrawn under the player's hands — a correction applied, a
+	 * The map being redrawn under the player's hands – a correction applied, a
 	 * setting changed. Throttled hard: hundreds of tiles can settle at once and
 	 * the point is to hear that something is happening, not to hear each one.
 	 */
@@ -80,7 +80,7 @@ public final class AtlasSounds {
 		play(SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), 0.4F, 1.5F);
 	}
 
-	/** Something you had only been told about turns out to be real — a quiet confirming chime. */
+	/** Something you had only been told about turns out to be real – a quiet confirming chime. */
 	public static void hearsayConfirmed() {
 		play(SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 0.3F, 1.2F);
 	}

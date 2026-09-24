@@ -22,7 +22,7 @@ import java.util.OptionalInt;
  * Travelling by map, where the game allows it.
  *
  * <p>The atlas is a client mod and cannot move anybody by itself: it sends the
- * same command a player would type, which is why the command is an option —
+ * same command a player would type, which is why the command is an option –
  * a server running Essentials answers to {@code minecraft:tp}, and some hand
  * travel out through a warp of their own.
  */
@@ -40,7 +40,7 @@ public final class MapTeleport {
 	 * tree the server sent this client, which lists exactly the commands this
 	 * player may run. That covers singleplayer with cheats, an operator's seat,
 	 * and a permissions plugin handing the command to one rank and not another
-	 * — none of which the client's own permission level would tell apart.
+	 * – none of which the client's own permission level would tell apart.
 	 */
 	public static boolean allowed() {
 		return switch (RoleplayersAtlas.CONFIG.teleport) {
@@ -75,7 +75,7 @@ public final class MapTeleport {
 	}
 
 	/**
-	 * The floor the atlas drew at this spot, read back out of the survey — so
+	 * The floor the atlas drew at this spot, read back out of the survey – so
 	 * clicking a hillside lands on the hillside rather than inside it. Empty
 	 * where that chunk has never been walked.
 	 */

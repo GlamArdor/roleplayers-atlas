@@ -17,7 +17,7 @@ public final class AtlasHoldMode {
 	private static final long ARM_MS = 300;
 	private static final long OPEN_START_MS = 500;
 	private static final long OPEN_MS = 600;
-	// Closing timeline, ms — the opening mirrored: the cover swings shut, the
+	// Closing timeline, ms – the opening mirrored: the cover swings shut, the
 	// off hand lets go, the book is lowered away.
 	private static final long CLOSE_COVER_MS = 500;
 	private static final long CLOSE_ARM_START_MS = 350;
@@ -94,7 +94,7 @@ public final class AtlasHoldMode {
 	}
 
 	/**
-	 * 0..1 hand shift: 0 — the open book fills both hands, 1 — it sits small in
+	 * 0..1 hand shift: 0 – the open book fills both hands, 1 – it sits small in
 	 * the off hand while the main hand holds its item. Advances lazily towards
 	 * its target each query; when a deferred close is waiting, the moment the
 	 * book returns to both hands the closing animation starts.

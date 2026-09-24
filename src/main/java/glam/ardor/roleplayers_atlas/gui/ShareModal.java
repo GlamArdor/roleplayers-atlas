@@ -149,7 +149,7 @@ public class ShareModal extends Component {
 			int y = getGuiY();
 			int top = listTop();
 			int bottom = top + LIST_H;
-			// The viewport only culls fully-outside children — partially visible
+			// The viewport only culls fully-outside children – partially visible
 			// rows must clip themselves to the box.
 			if (y + getHeight() <= top || y >= bottom) return;
 			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
@@ -554,8 +554,8 @@ public class ShareModal extends Component {
 		setBox = new ScrollBoxComponent(true, ROW_H);
 		setBox.getViewport().setSize(PANE_W, LIST_H);
 
-		// Import mode's two headers: where the marks are coming from, and — for
-		// Xaero's — whether its sets become layers of ours.
+		// Import mode's two headers: where the marks are coming from, and – for
+		// Xaero's – whether its sets become layers of ours.
 		addDrawableChild(btnSource = ButtonWidget.builder(sourceText(), button -> {
 			fromXaero = !fromXaero;
 			button.setMessage(sourceText());
@@ -581,7 +581,7 @@ public class ShareModal extends Component {
 			Util.getOperatingSystem().open(MapShare.scrollsDir());
 		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.folder.tooltip")))
 			.dimensions(0, bottomY, BTN_W, 20).build());
-		// Nothing is written until this is pressed — the row above only reads.
+		// Nothing is written until this is pressed – the row above only reads.
 		addDrawableChild(btnTakeIn = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.takeIn"), button -> {
 			if (fromXaero) doXaeroImport();
 			else if (selectedFile != null) doImport(selectedFile);
@@ -838,7 +838,7 @@ public class ShareModal extends Component {
 		double mouseX = click.x(), mouseY = click.y();
 		int button = click.button();
 		// Nothing in this component tree hands out focus, and a text field that
-		// never gets it silently swallows every keystroke — so it claims and
+		// never gets it silently swallows every keystroke – so it claims and
 		// releases focus on click itself.
 		if (!importMode && nameField.isVisible()) {
 			boolean overName = nameField.isMouseOver(mouseX, mouseY);
@@ -851,7 +851,7 @@ public class ShareModal extends Component {
 	@Override
 	public boolean keyPressed(KeyInput input) {
 		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
-		// Escape steps back out of the dialog — first out of the file list, then
+		// Escape steps back out of the dialog – first out of the file list, then
 		// out of the window. Left to the screen behind it, it would shut the book.
 		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
 			if (importMode) switchMode(false);
@@ -876,7 +876,7 @@ public class ShareModal extends Component {
 	public void closeChild() {
 		super.closeChild();
 		// Only boxes still attached: a component with no parent takes closeChild to
-		// mean "close the screen", and the lists not currently on show have none —
+		// mean "close the screen", and the lists not currently on show have none –
 		// which shut the whole atlas every time this window was dismissed.
 		for (ScrollBoxComponent box : columns) {
 			if (box != null && box.getParent() != null) box.closeChild();

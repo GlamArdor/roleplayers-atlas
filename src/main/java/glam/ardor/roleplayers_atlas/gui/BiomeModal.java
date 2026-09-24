@@ -94,7 +94,7 @@ import java.util.Map;
  * Correcting how a biome is drawn.
  * <p>
  * The atlas guesses at biomes it has no picture for, and guessing is sometimes
- * wrong. Only the person looking at the map can tell — so this lists every
+ * wrong. Only the person looking at the map can tell – so this lists every
  * biome the world has, says plainly where each one's look came from, and lets
  * that be overruled.
  * <p>
@@ -116,7 +116,7 @@ public class BiomeModal extends Component {
 	private static final int BTN3_W = (LIST_W - SP * 2) / 3;
 	/**
 	 * The gap above the list, matched to the one below it. The scroll box hangs
-	 * its arrows in both, overlapping each end by the same few pixels — a page
+	 * its arrows in both, overlapping each end by the same few pixels – a page
 	 * that breathes evenly reads better than one that gives the arrow all the
 	 * room it asks for at the top and none at the bottom.
 	 */
@@ -202,7 +202,7 @@ public class BiomeModal extends Component {
 			if (!query.isEmpty() && !biome.toString().toLowerCase(Locale.ROOT).contains(query)) return;
 			entries.add(new Entry(biome, source));
 		});
-		// The one that was clicked first, then anything guessed, then the rest —
+		// The one that was clicked first, then anything guessed, then the rest –
 		// what needs attention should not have to be hunted for.
 		entries.sort(Comparator
 			.comparingInt((Entry e) -> e.biome.equals(focus) ? 0 : switch (e.source) {
@@ -482,7 +482,7 @@ public class BiomeModal extends Component {
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
 			if (!isMouseOver(mouseX, mouseY)) return false;
-			// Only the word on the right tears the sheet out — the rest of the row
+			// Only the word on the right tears the sheet out – the rest of the row
 			// is there to be read, and a whole sheet is too much to lose by a slip.
 			if (mouseX < getGuiX() + getWidth() - 46) return false;
 			return super.mouseClicked(click, doubled);
@@ -502,7 +502,7 @@ public class BiomeModal extends Component {
 		drawTile(context, texture, x, y, TILE_SIZE);
 	}
 
-	/** The same at any size — the grid draws them large enough to actually read. */
+	/** The same at any size – the grid draws them large enough to actually read. */
 	static void drawTile(DrawContext context, TileTexture texture, int x, int y, int size) {
 		int half = size / 2;
 		context.fill(x, y, x + size, y + size, PAPER);
@@ -516,7 +516,7 @@ public class BiomeModal extends Component {
 	 * A biome's name as a person would say it.
 	 * <p>
 	 * Vanilla ships a translation for every one of its own; a datapack biome
-	 * usually ships none, so its path is tidied into words instead — better than
+	 * usually ships none, so its path is tidied into words instead – better than
 	 * showing a raw key, and honest about there being nothing better to show.
 	 */
 	static Text friendlyName(Identifier biome) {

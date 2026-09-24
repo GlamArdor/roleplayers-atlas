@@ -29,7 +29,7 @@ public enum TileElevation {
 	 * sea. The thresholds are the player's to set: a world built high would
 	 * otherwise read as one endless peak.
 	 * <p>
-	 * Thresholds out of order simply skip a tier rather than misbehaving — the
+	 * Thresholds out of order simply skip a tier rather than misbehaving – the
 	 * cascade takes the first one that matches.
 	 */
 	public static TileElevation fromBlocksAboveSea(int elevation) {

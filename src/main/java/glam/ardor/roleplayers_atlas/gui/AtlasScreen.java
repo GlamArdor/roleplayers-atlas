@@ -296,7 +296,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 	private static final int SIDE_BUTTON_ROW = BookmarkButton.HEIGHT + 1;
 	/** Low enough that the scroll arrow, when there is one, lands on the book's edge rather than off it. */
 	private static final int SIDE_BUTTONS_TOP = 16;
-	/** Tools in the right column — see where they are added. */
+	/** Tools in the right column – see where they are added. */
 	private static final int SIDE_BUTTON_COUNT = 12;
 
 	/**
@@ -692,7 +692,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			boolean territoryLandmark = !landmark.contains(LandmarkComponentTypes.POS) && landmark.contains(LandmarkComponentTypes.CHUNKS);
 			Text fallbackName = Text.translatable(route ? "gui.roleplayers_atlas.unnamedRoute" : territoryLandmark ? "gui.roleplayers_atlas.unnamedZone" : penLabel ? "gui.roleplayers_atlas.unnamedLabel" : "gui.roleplayers_atlas.unnamedMarker");
 			// Searched by note as well as by name. The note is where the substance
-			// of a mark lives — "здесь брод" is written there, not in the title.
+			// of a mark lives – "здесь брод" is written there, not in the title.
 			if (!searchQuery.isEmpty()) {
 				String named = landmark.getOrDefault(LandmarkComponentTypes.NAME, fallbackName).getString().toLowerCase(java.util.Locale.ROOT);
 				String note = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.NOTE, "").toLowerCase(java.util.Locale.ROOT);
@@ -868,7 +868,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 				: "gui.roleplayers_atlas.unnamedMarker"));
 	}
 
-	/** Rebuilds the layer filter tabs (dynamic — the player creates layers) and repositions the bookmark list below them. */
+	/** Rebuilds the layer filter tabs (dynamic – the player creates layers) and repositions the bookmark list below them. */
 	public void rebuildLayerTabs() {
 		for (BookmarkButton tab : layerTabs) removeChild(tab);
 		layerTabs.clear();
@@ -959,7 +959,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 
 	/**
 	 * Full-map export: pans the real map view cell by cell, captures each
-	 * finished frame between ticks and stitches them — the result is pixel
+	 * finished frame between ticks and stitches them – the result is pixel
 	 * identical to the in-game map, curved labels included.
 	 */
 	private static final class FullMapExport {
@@ -1183,7 +1183,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 
 	/**
 	 * The dating footer of a tooltip. A mark copied from someone else's scroll
-	 * is attributed to whoever drew it and dated by their hand — the stamp is
+	 * is attributed to whoever drew it and dated by their hand – the stamp is
 	 * their claim, not something this client recomputes.
 	 */
 	private static java.util.List<Text> dateLines(Landmark landmark) {
@@ -1356,7 +1356,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		// doesn't land there, silently, the way a pencil skips a gap.
 		if (worldAtlasData == null || !worldAtlasData.hasTile(chunk)) return;
 		// Only a cell that actually changed makes a sound. Dragging back and
-		// forth across ground already painted should be silent — the brush is
+		// forth across ground already painted should be silent – the brush is
 		// not doing anything, so it should not be heard doing it.
 		if (pendingPatch.add(chunk)) glam.ardor.roleplayers_atlas.AtlasSounds.paintTerritory(false);
 	}
@@ -1417,7 +1417,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 
 	/**
 	 * Rings a set of cells on the map. Used to show corrections and hand-drawn
-	 * towns while their tool is out — a correction made weeks ago is otherwise
+	 * towns while their tool is out – a correction made weeks ago is otherwise
 	 * impossible to find again, and undoing it means remembering where it was.
 	 */
 	private void outlineCells(net.minecraft.client.gui.DrawContext context, java.util.Collection<ChunkPos> cells, int lineSize, int fill, int ink) {
@@ -1435,7 +1435,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		}
 	}
 
-	/** The area is marked out — open the picker to say what it should become. */
+	/** The area is marked out – open the picker to say what it should become. */
 	private void finishBiomePatch() {
 		if (pendingPatch.isEmpty()) return;
 		biomeModal.setPatchData(dim, new java.util.HashSet<>(pendingPatch));
@@ -1534,7 +1534,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			pendingRoute.clear();
 			folk.sisby.surveyor.WorldSummary summary = SurveyorClient.tryGetSummary(dim);
 			if (summary != null && summary.landmarks() != null) {
-				// The id carries the path's middle, which has just moved — so the
+				// The id carries the path's middle, which has just moved – so the
 				// entry is written under a new one and the old is taken away.
 				String name = old.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString();
 				Identifier newId = RoleplayersAtlas.id("route/" + center.getX() + "/" + center.getZ() + "/" + Integer.toHexString(name.hashCode()));
@@ -1594,7 +1594,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			if (!cells.isEmpty()) {
 				Map<RegionPos, java.util.BitSet> shape = glam.ardor.roleplayers_atlas.util.TerritoryUtil.chunksToRegions(cells);
 				ColumnPos center = glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(shape);
-				// The id carries the zone's middle, which may have just moved — so
+				// The id carries the zone's middle, which may have just moved – so
 				// the entry is written under a new one and the old is taken away.
 				String name = old.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString();
 				Identifier newId = RoleplayersAtlas.id("territory/" + center.x() + "/" + center.z() + "/" + Integer.toHexString(name.hashCode()));
@@ -1697,7 +1697,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			return true;
 		}
 
-		// LMB pressed on a marker/territory on the map: remember it — the guide
+		// LMB pressed on a marker/territory on the map: remember it – the guide
 		// arrow toggles on release, unless the press turned into a map drag.
 		if (state.is(NORMAL) && mouseState == GLFW.GLFW_MOUSE_BUTTON_1 && isMouseOverMap && hoveredLandmark != null
 			&& (hoveredLandmark.contains(LandmarkComponentTypes.POS) || hoveredLandmark.contains(LandmarkComponentTypes.CHUNKS))
@@ -1860,7 +1860,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		return false;
 	}
 
-	/** A line said once and then gone — what was just taken back, and the like. */
+	/** A line said once and then gone – what was just taken back, and the like. */
 	private Text flashText = null;
 	private long flashUntil = 0L;
 
@@ -1927,7 +1927,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			return true;
 		}
 		// A window open on top of the book gets every key to itself. Without this
-		// the book's own shortcuts — Enter, Delete, Tab, the arrows — fired behind
+		// the book's own shortcuts – Enter, Delete, Tab, the arrows – fired behind
 		// the dialog, and Enter never reached the Done button it belonged to.
 		Component modal = openModal();
 		if (modal != null) {
@@ -2000,7 +2000,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			}
 			case GLFW.GLFW_KEY_ESCAPE -> {
 				// Escape steps out of whatever tool is in hand before it closes the
-				// book — losing an unfinished drawing to a stray keypress, and the
+				// book – losing an unfinished drawing to a stray keypress, and the
 				// map with it, is a poor trade.
 				if (!state.is(NORMAL)) {
 					// Town strokes are already on the map; leaving the tool is what
@@ -2030,7 +2030,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		updateMouse(mouseX, mouseY);
 		if (super.mouseScrolled(mouseX, mouseY, dx, dy)) return true;
 		// A window is up and the wheel missed its lists: it still belongs to the
-		// window. Letting it through zoomed the map behind — so scrolling past the
+		// window. Letting it through zoomed the map behind – so scrolling past the
 		// end of a list quietly rearranged the page you were choosing from.
 		if (openModal() != null) return true;
 		if (dy != 0) {
@@ -2358,7 +2358,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		renderTiles(AtlasPainter.gui(context), MAX_LIGHT, state.is(DELETING_MARKER) ? 0x80FFFFFF : 0xFFFFFFFF);
 
 		// Overlay the frame so that edges of the map are smooth (skipped while
-		// exporting — its vignette would stripe the stitched cells):
+		// exporting – its vignette would stripe the stitched cells):
 		if (!isExporting()) {
 			if (fullscreen) {
 				int left_width = bookWidth / 2 - 15;
@@ -2382,7 +2382,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		hoveredLandmark = null;
 		hoveredFriend = null;
 		// Nothing on the map is hovered while a window is up. The dimmed backdrop
-		// is not a surface — reaching through it lit up marks underneath and threw
+		// is not a surface – reaching through it lit up marks underneath and threw
 		// their tooltips over the top of the window that was meant to be in front.
 		if (!state.is(HIDING_MARKERS) && openModal() == null) {
 			if (isMouseOverMap) {
@@ -2518,7 +2518,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		}
 
 		if (state.is(PLACING_ROUTE) && !pendingRoute.isEmpty()) {
-			// The path so far is drawn the way it will be kept — curved. Drawing
+			// The path so far is drawn the way it will be kept – curved. Drawing
 			// the preview as a broken line instead put two different paths
 			// through the same points, which reads as a zigzag.
 			renderRoutePath(AtlasPainter.gui(context), pendingRoute, 0, MAX_LIGHT, 0.9F, 0x703A14, false);
@@ -2552,7 +2552,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		}
 
 		// While the biome tool is out, everything already painted is outlined in
-		// green — otherwise a correction made weeks ago is impossible to find
+		// green – otherwise a correction made weeks ago is impossible to find
 		// again, and undoing it means remembering where it was.
 		if (state.is(PICKING_BIOME) || state.is(PAINTING_BIOME)) {
 			int lineSize = Math.max(1, tilePixels / 16);
@@ -2602,8 +2602,8 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			}
 		}
 
-		// The town tool shows what has already been drawn — yours outlined amber,
-		// what came in on a scroll violet — and the cells marked out so far.
+		// The town tool shows what has already been drawn – yours outlined amber,
+		// what came in on a scroll violet – and the cells marked out so far.
 		if (state.is(PAINTING_CITY)) {
 			int lineSize = Math.max(1, tilePixels / 16);
 			outlineCells(context, glam.ardor.roleplayers_atlas.CityPaint.importedChunks(dim), lineSize, 0x229B6EC4, 0xB07A55A0);
@@ -2646,7 +2646,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		if (flashText != null && net.minecraft.util.Util.getMeasuringTimeMs() < flashUntil) {
 			lines.addAll(textRenderer.wrapLines(flashText, room));
 		}
-		// Holding ctrl over the map says where that click would send you — and
+		// Holding ctrl over the map says where that click would send you – and
 		// says nothing at all where travel isn't allowed.
 		if (state.is(NORMAL) && isMouseOverMap && RoleplayersAtlas.CONFIG.showHints
 			&& glam.ardor.roleplayers_atlas.util.AtlasInput.hasControlDown()
@@ -2782,7 +2782,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		}
 
 		if (isExporting()) {
-			// Progress bar in the top border strip — outside the captured map
+			// Progress bar in the top border strip – outside the captured map
 			// area, so it never lands in the stitched image.
 			int percent = fullExport.totalContent == 0 ? 100 : Math.min(100, fullExport.done * 100 / fullExport.totalContent);
 			int barW = 220;
@@ -2795,7 +2795,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 			fullExport.framesSincePos++;
 		} else if (searchOpen) {
 			// A small neat grey box right next to the magnifier tab, with the
-			// text inside it. Positioned here with live coordinates — at
+			// text inside it. Positioned here with live coordinates – at
 			// construction time the screen origin is still (0,0).
 			int boxX = getGuiX() + 12;
 			int boxY = searchTab.getGuiY() + 2;
@@ -2810,7 +2810,7 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 		int tooltipX = (int) getMouseX();
 		int tooltipY = (int) getMouseY();
 		if (hoveredLandmark != null) {
-			// A marker can carry a note without a name — the tooltip follows what
+			// A marker can carry a note without a name – the tooltip follows what
 			// there is to show rather than requiring a title.
 			java.util.List<Text> tooltip = new ArrayList<>();
 			Text name = hoveredLandmark.get(LandmarkComponentTypes.NAME);

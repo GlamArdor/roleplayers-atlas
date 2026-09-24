@@ -98,14 +98,14 @@ import java.util.Map;
  * The box of pieces a town is drawn from.
  * <p>
  * The atlas draws villages the game tells it about. A town players built is
- * invisible to it — so this hands the cartographer the same pieces the atlas
+ * invisible to it – so this hands the cartographer the same pieces the atlas
  * uses for villages: roads, crossroads, wells, houses, farms, market stalls,
  * lamps. Take one and it stays in hand; every cell the brush touches on the map
  * is built on there and then.
  * <p>
  * Two further faces behind it, as in the biome window: the ledger of what you
  * have drawn, and the ledger of what came in on other people's scrolls.
- * Anything drawn can be lifted again — nothing about the land underneath is
+ * Anything drawn can be lifted again – nothing about the land underneath is
  * touched.
  */
 public class CityModal extends Component {
@@ -211,7 +211,7 @@ public class CityModal extends Component {
 		String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
 		for (Identifier id : TileTextures.getInstance().getTextures().keySet()) {
 			if (!id.getPath().startsWith("structure/")) continue;
-			// Searched by what is written on screen as well as by the raw path —
+			// Searched by what is written on screen as well as by the raw path –
 			// nobody looking for a well is going to type "well_covered".
 			if (!query.isEmpty()
 				&& !id.getPath().toLowerCase(Locale.ROOT).contains(query)
@@ -285,7 +285,7 @@ public class CityModal extends Component {
 	 * Translated by its own last word, because the same well and the same
 	 * crossroad turn up in five kinds of village and there is no sense naming
 	 * each of them five times. Anything without a translation falls back to its
-	 * file name tidied into words — honest about there being nothing better.
+	 * file name tidied into words – honest about there being nothing better.
 	 */
 	static Text pieceName(Identifier piece) {
 		String path = piece.getPath();
@@ -297,7 +297,7 @@ public class CityModal extends Component {
 		return Text.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(leaf.replaceAll("[_-]", " ")));
 	}
 
-	/** Where it comes from — a plains village, a nether fortress — so two wells can be told apart. */
+	/** Where it comes from – a plains village, a nether fortress – so two wells can be told apart. */
 	static Text familyName(Identifier piece) {
 		String family = pieceFamily(piece);
 		String key = "tile.roleplayers_atlas.family." + family.replace('/', '.');

@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * CPU renderer for the vanilla bitmap font, used to write names onto exported
  * map images. Parses the default font's bitmap providers (ascii, accented,
- * nonlatin_european — covers Latin and Cyrillic) and blits tinted glyphs.
+ * nonlatin_european – covers Latin and Cyrillic) and blits tinted glyphs.
  */
 public final class MapFont {
 	private record Glyph(NativeImage tex, int u, int v, int cellW, int cellH, int height, int ascent, int advance) {

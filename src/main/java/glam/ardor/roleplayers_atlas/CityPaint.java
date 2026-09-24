@@ -29,13 +29,13 @@ import java.util.Set;
  * <p>
  * The atlas already draws a village the moment one is found, because the game
  * tells it where villages are. It has no way of knowing about the town three
- * players built by a river — nothing in the world says "this is a town", and no
+ * players built by a river – nothing in the world says "this is a town", and no
  * amount of looking at blocks would say it convincingly. So the cartographer
  * says it instead: a cell at a time, choosing from the same roads, wells,
  * houses and market stalls the atlas draws villages with.
  * <p>
  * This is a layer over the drawn map, not a change to it. Nothing about the
- * land is altered — lift the drawing and whatever the ground actually looks
+ * land is altered – lift the drawing and whatever the ground actually looks
  * like comes straight back. Kept per world and per dimension, because a town is
  * a place and places belong to one map.
  * <p>
@@ -251,7 +251,7 @@ public final class CityPaint {
 
 	/**
 	 * The one way drawn towns ever change outside a live stroke. Every caller
-	 * hands it what the named cells should say — a null meaning "nothing" — and
+	 * hands it what the named cells should say – a null meaning "nothing" – and
 	 * it files the exact opposite before doing it, so taking a step back and
 	 * going forward again are the same machinery rather than two.
 	 */

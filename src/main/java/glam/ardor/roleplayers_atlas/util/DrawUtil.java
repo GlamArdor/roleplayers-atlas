@@ -35,7 +35,7 @@ public class DrawUtil {
 
 	/**
 	 * A quad with free corners, clipped to the given rectangle. Rectangles can't
-	 * tile a strip that bends — neighbouring ones always leave a wedge open — so
+	 * tile a strip that bends – neighbouring ones always leave a wedge open – so
 	 * ribbons (route label plates) are built from quads that share their corners
 	 * with the next piece. The clip stands in for the GUI scissor, which the
 	 * render state below doesn't carry, and covers the handheld book too, where

@@ -21,7 +21,7 @@ import java.util.Deque;
  * correction to what it said before. Running one is done with recording turned
  * off, so undoing doesn't pile another step onto the stack.
  * <p>
- * The stack belongs to one world and is emptied when it changes — a step that
+ * The stack belongs to one world and is emptied when it changes – a step that
  * says "put this landmark back" means nothing in a world that never had it.
  */
 public final class AtlasUndo {
@@ -54,7 +54,7 @@ public final class AtlasUndo {
 	 * Files away how to take back what was just done.
 	 *
 	 * @param description what it was, in words, to be shown when it is taken back
-	 * @param undo        what to do to reverse it — itself a change, which files
+	 * @param undo        what to do to reverse it – itself a change, which files
 	 *                    its own inverse in turn
 	 */
 	public static void push(Text description, Runnable undo) {
@@ -119,7 +119,7 @@ public final class AtlasUndo {
 	 * <p>
 	 * Most of the atlas gets redo for free, because each way of changing the map
 	 * files its own inverse and so a step back is itself a step. Some things
-	 * aren't like that — taking a scroll in touches marks, layers, corrections
+	 * aren't like that – taking a scroll in touches marks, layers, corrections
 	 * and towns at once, and the way forward is simply to read the scroll again
 	 * rather than to reverse a reversal. For those, both directions are handed
 	 * over and the two are made to swap places each time one is used.

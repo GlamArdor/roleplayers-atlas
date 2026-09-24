@@ -28,7 +28,7 @@ import java.util.Set;
  * The player's corrections to how the map is drawn.
  * <p>
  * Two kinds, and the finer one wins. A <em>biome</em> correction says "draw
- * this biome as that one" and mends the whole world at once — the atlas guesses
+ * this biome as that one" and mends the whole world at once – the atlas guesses
  * at biomes it has no picture for, and only the person looking at the map can
  * say when a guess is wrong. A <em>patch</em> corrects named chunks and nothing
  * else, for the places a biome can't describe: a built city, a burnt field, a
@@ -44,7 +44,7 @@ import java.util.Set;
  * was there before and can't damage anything explored.
  * <p>
  * Kept per world, because a correction that suits one server's datapack means
- * nothing on another's, and patches are places — they belong to one map only.
+ * nothing on another's, and patches are places – they belong to one map only.
  */
 public final class BiomeOverrides {
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("roleplayers-atlas").resolve("biomes.json");
@@ -219,7 +219,7 @@ public final class BiomeOverrides {
 
 	/**
 	 * The one way patches ever change. Every caller hands it what the named cells
-	 * should say — a null meaning "nothing" — and it files the exact opposite
+	 * should say – a null meaning "nothing" – and it files the exact opposite
 	 * before doing it. That symmetry is what makes taking a step back and going
 	 * forward again the same machinery rather than two.
 	 */
@@ -240,7 +240,7 @@ public final class BiomeOverrides {
 
 	/**
 	 * Takes a whole scroll's worth of your own corrections back at once. One
-	 * write and one redraw for the lot — applied one at a time, a scroll with
+	 * write and one redraw for the lot – applied one at a time, a scroll with
 	 * fifty corrections on it would redraw the map fifty times.
 	 */
 	public static void setAll(Map<Identifier, Identifier> newBiomes, RegistryKey<World> dimension, Map<ChunkPos, Identifier> newCells) {

@@ -38,7 +38,7 @@ public final class ZoneTitles {
 
 	/**
 	 * Puts a title on screen, unless the same place announced itself less than
-	 * the cooldown ago — which is what stops it flickering when you step across a
+	 * the cooldown ago – which is what stops it flickering when you step across a
 	 * border and back.
 	 */
 	private static void show(String key, Text name, boolean grand) {

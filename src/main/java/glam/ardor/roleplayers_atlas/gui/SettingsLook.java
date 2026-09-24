@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 /**
  * Remembers which screen object is the atlas settings, so the blur-and-darkening
  * mixin can recognise it by identity rather than by guesswork. Only the screen
- * armed here loses its backdrop; every other screen — of this mod or any other —
+ * armed here loses its backdrop; every other screen – of this mod or any other –
  * keeps its background exactly as it was.
  */
 public final class SettingsLook {

@@ -68,7 +68,7 @@ public record MarkerTexture(Identifier id, Identifier accentId, Identifier item,
 		}
 	}
 
-	/** The texture's shape in one flat color — the tracked-marker outline glow. */
+	/** The texture's shape in one flat color – the tracked-marker outline glow. */
 	public void drawSilhouette(AtlasPainter painter, double markerX, double markerY, float z, float markerScale, int tileChunks, int argb, int light) {
 		Identifier silhouette = glam.ardor.roleplayers_atlas.util.SilhouetteTextures.get(id);
 		painter.push();

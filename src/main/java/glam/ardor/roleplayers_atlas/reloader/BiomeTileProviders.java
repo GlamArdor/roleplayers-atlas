@@ -79,14 +79,14 @@ public class BiomeTileProviders extends LegacyJsonDataLoader implements Identifi
 		return guessed != null ? guessed : null;
 	}
 
-	/** The looks a correction can choose from — every biome the atlas has a picture for. */
+	/** The looks a correction can choose from – every biome the atlas has a picture for. */
 	public java.util.Set<Identifier> availableLooks() {
 		return java.util.Collections.unmodifiableSet(tileProviders.keySet());
 	}
 
 	public TerrainTileProvider getTileProvider(Identifier providerId) {
 		// The player's own word comes before anything the atlas worked out,
-		// including an exact match — a server can put anything in any biome.
+		// including an exact match – a server can put anything in any biome.
 		Identifier manual = BiomeOverrides.get(providerId);
 		if (manual != null) {
 			TerrainTileProvider corrected = tileProviders.get(manual);
@@ -132,7 +132,7 @@ public class BiomeTileProviders extends LegacyJsonDataLoader implements Identifi
 					continue;
 				}
 				sources.put(biomeId, Source.NONE);
-				RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] No fallback could be found for {} — no tags, and nothing recognisable in the name.", biomeId);
+				RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] No fallback could be found for {} – no tags, and nothing recognisable in the name.", biomeId);
 				if (RoleplayersAtlas.CONFIG.fallbackFailHandling == AtlasConfig.FallbackHandling.CRASH) throw new IllegalStateException("Roleplayer's Atlas fallback biome registration failed! Fix the missing biome or change fallbackFailHandling in roleplayers-atlas.toml");
 			}
 		}

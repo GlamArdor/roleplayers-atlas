@@ -12,8 +12,8 @@ import java.time.format.DateTimeFormatter;
  * Dating for everything drawn on the map.
  * <p>
  * Two reckonings, chosen in the settings. On {@link AtlasConfig.Reckoning#REIGN}
- * a mark is dated in the server's own cycles, unias and years — see
- * {@link ReignCalendar} — worked out from the real moment it was drawn, which
+ * a mark is dated in the server's own cycles, unias and years – see
+ * {@link ReignCalendar} – worked out from the real moment it was drawn, which
  * is what the server's calendar is itself pinned to. On
  * {@link AtlasConfig.Reckoning#DAYS} it is dated by the world's day count, as
  * the atlas did before the server opened.
@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter;
  * and survives restarts.
  * <p>
  * The real-world moment is stored as an instant, so it reads correctly whoever
- * wrote the mark and in whatever zone — but it is only ever a caption, never
+ * wrote the mark and in whatever zone – but it is only ever a caption, never
  * something the mod sorts or reasons by.
  */
 public final class AtlasTime {
@@ -59,7 +59,7 @@ public final class AtlasTime {
 		return reckoning() == AtlasConfig.Reckoning.REIGN ? ReignCalendar.ZONE : ZoneId.systemDefault();
 	}
 
-	/** "15.09.2026, 22:00 MSK" — the out-of-character half of a stamp, brackets not included. */
+	/** "15.09.2026, 22:00 MSK" – the out-of-character half of a stamp, brackets not included. */
 	private static String realDateTime(long millis) {
 		if (millis <= 0) return "";
 		try {
@@ -79,7 +79,7 @@ public final class AtlasTime {
 	 * under the plain reckoning.
 	 * <p>
 	 * The server's reckoning is derived from the real moment, and a mark drawn
-	 * before this update — or a grave dug before it, which never had one — has
+	 * before this update – or a grave dug before it, which never had one – has
 	 * no real moment recorded. Its world day cannot be turned into a cycle: the
 	 * day counter says how long the world has been running, not when anyone was
 	 * looking at it. Rather than invent a date, such a mark says it was drawn
@@ -134,13 +134,13 @@ public final class AtlasTime {
 		return client.player == null ? "" : client.player.getGameProfile().name();
 	}
 
-	/** Whether a mark came from someone else's hand. Stays true after it's verified — who told you doesn't change. */
+	/** Whether a mark came from someone else's hand. Stays true after it's verified – who told you doesn't change. */
 	public static boolean isHearsay(folk.sisby.surveyor.landmark.Landmark landmark) {
 		String source = landmark.get(AtlasComponents.SOURCE);
 		return source != null && !source.isEmpty() && !source.equals(selfName());
 	}
 
-	/** Hearsay nobody has gone and checked yet — this is what the map draws faint. */
+	/** Hearsay nobody has gone and checked yet – this is what the map draws faint. */
 	public static boolean isUnverified(folk.sisby.surveyor.landmark.Landmark landmark) {
 		return isHearsay(landmark) && landmark.get(AtlasComponents.CONFIRMED_DAY) == null;
 	}

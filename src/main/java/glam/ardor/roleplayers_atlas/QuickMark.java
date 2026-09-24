@@ -23,7 +23,7 @@ import net.minecraft.world.RaycastContext;
  * <p>
  * The atlas is a book: it has to be taken out, opened, and aimed at the right
  * stretch of map. That is the right amount of ceremony for drawing a road and
- * far too much for "there — remember that". One key does the whole of it.
+ * far too much for "there – remember that". One key does the whole of it.
  * <p>
  * Two ways to aim, chosen in the settings. Under your feet is the plain one.
  * Where you are looking is the one that earns its keep: a peak on the horizon,
@@ -62,7 +62,7 @@ public final class QuickMark {
 			// all called by their numbers is a list nobody can read, but the
 			// numbers are still worth having when one of them is opened.
 			copy.set(AtlasComponents.NOTE, at.getX() + ", " + at.getZ());
-			// No place name shouted on screen for these — they are jotted down in
+			// No place name shouted on screen for these – they are jotted down in
 			// passing, not named places, and a walk past twenty of them would be
 			// nothing but announcements.
 			copy.set(AtlasComponents.ZONE_TITLE, false);

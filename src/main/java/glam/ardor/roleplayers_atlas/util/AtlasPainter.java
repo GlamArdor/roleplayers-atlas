@@ -80,8 +80,8 @@ public final class AtlasPainter {
 	}
 
 	/**
-	 * Glyph with an explicit shadow color: null — the vanilla dark shadow,
-	 * 0 — no shadow at all, otherwise that color. GUI: vanilla shadow via the
+	 * Glyph with an explicit shadow color: null – the vanilla dark shadow,
+	 * 0 – no shadow at all, otherwise that color. GUI: vanilla shadow via the
 	 * text style. World: the style-driven shadow can land on top of the glyph
 	 * in the baked text pipeline, so the shadow is drawn as its own shadowless
 	 * pass at a deeper z with the glyph shadowless above it.
@@ -108,8 +108,8 @@ public final class AtlasPainter {
 	}
 
 	/**
-	 * Light text on a translucent dark plate (name-tag style): one text pass —
-	 * no glyph z-fighting — and readable over any map background. In world mode
+	 * Light text on a translucent dark plate (name-tag style): one text pass –
+	 * no glyph z-fighting – and readable over any map background. In world mode
 	 * the plate sits at a deeper z than the glyphs so depth testing keeps their
 	 * order stable regardless of buffer flush order.
 	 */

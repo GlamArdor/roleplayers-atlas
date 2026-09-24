@@ -22,7 +22,7 @@ public class MixinRegionStructureSummary {
 	@Inject(method = "readStructurePieceNbt", at = @At("HEAD"), cancellable = true)
 	private static void roleplayers_atlas$fixJigsawPieceDetection(NbtCompound nbt, CallbackInfoReturnable<StructurePieceSummary> cir) {
 		String jigsawId = Registries.STRUCTURE_PIECE.getId(StructurePieceType.JIGSAW).toString();
-		// Data saved while the detection was broken lacks the element type key —
+		// Data saved while the detection was broken lacks the element type key –
 		// leave those pieces generic instead of crashing the constructor.
 		if (nbt.getString("id").map(jigsawId::equals).orElse(false) && JigsawPieceSummary.TYPE_KEYS.keySet().stream().anyMatch(nbt::contains)) {
 			cir.setReturnValue(new JigsawPieceSummary(nbt));

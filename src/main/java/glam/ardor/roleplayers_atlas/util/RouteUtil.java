@@ -43,7 +43,7 @@ public final class RouteUtil {
 	}
 
 	/**
-	 * The route's length in blocks — the length of the line as drawn on the map,
+	 * The route's length in blocks – the length of the line as drawn on the map,
 	 * measured flat. There is no height in a route's points, and a cartographer
 	 * measures the parchment rather than the ground under it.
 	 */

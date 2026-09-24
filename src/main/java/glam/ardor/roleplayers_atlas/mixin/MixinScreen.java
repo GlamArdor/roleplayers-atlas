@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Leaves the world visible behind the atlas settings screen.
  * <p>
  * The map redraws to these options, and a screen normally blurs and darkens
- * whatever is behind it — sensible for a menu, useless when the point of the
+ * whatever is behind it – sensible for a menu, useless when the point of the
  * menu is what is behind it. Only the screen armed in {@link SettingsLook} is
  * affected, recognised by identity: every other screen in the game keeps its
  * background exactly as it was.
