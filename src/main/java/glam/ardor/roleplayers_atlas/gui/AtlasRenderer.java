@@ -386,6 +386,8 @@ public interface AtlasRenderer {
 		if (labelAlpha <= 0.05F) return;
 		Text name = landmark.get(LandmarkComponentTypes.NAME);
 		if (name == null || name.getString().isEmpty()) return;
+		// Only the name keeps to its zoom range; the zone itself is always drawn.
+		if (!glam.ardor.roleplayers_atlas.LabelZoom.visible(landmark, getPixelsPerBlock())) return;
 		Set<ChunkPos> chunks = RegionPos.regionsToChunks(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>()));
 		if (chunks.isEmpty()) return;
 
