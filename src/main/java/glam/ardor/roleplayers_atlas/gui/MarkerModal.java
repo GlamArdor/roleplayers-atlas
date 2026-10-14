@@ -172,7 +172,7 @@ public class MarkerModal extends Component {
 	private boolean relayout = false;
 	/** New inscriptions start in the style the last one was written in. */
 	private static boolean lastLettering = false;
-	protected static final int CURVE_H = 64;
+	protected static final int CURVE_H = 80;
 
 	public static final int BUTTON_WIDTH = 120;
 	public static final int BUTTON_SPACING = 8;
@@ -607,14 +607,22 @@ public class MarkerModal extends Component {
 	 */
 	protected class CurveEditor extends net.minecraft.client.gui.widget.ClickableWidget {
 		private int dragging = -1;
+		/** Largest preview letter scale, and how far such a letter reaches off the curve. */
+		private static final double PREVIEW_MAX_SCALE = 1.5;
+		private static final int PREVIEW_LETTER_REACH = 10;
 
 		CurveEditor(int x, int y, int width, int height) {
 			super(x, y, width, height, Text.translatable("gui.roleplayers_atlas.marker.curve"));
 		}
 
-		/** Half the chord in the preview: wide enough to read, low enough that a full bend fits. */
+		/**
+		 * Half the chord in the preview: wide enough to read, low enough that a
+		 * full bend still leaves room for the letters riding on it. A parabola
+		 * through the three points can bulge a little past the points themselves,
+		 * hence the extra tenth.
+		 */
 		private double half() {
-			return Math.min((getWidth() - 24) / 2.0, (getHeight() / 2.0 - 4) * 100.0 / Lettering.MAX_BEND);
+			return Math.min((getWidth() - 24) / 2.0, (getHeight() / 2.0 - PREVIEW_LETTER_REACH) / (Lettering.MAX_BEND / 100.0 + 0.1));
 		}
 
 		private double centerX() {
@@ -632,6 +640,8 @@ public class MarkerModal extends Component {
 			context.fill(x, y, x + w, y + h, 0xFF000000);
 			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.curve"), x + 4, y + 3, 0xFF707070, false);
 			double half = half(), cx = centerX(), cy = centerY();
+			// Tilted letters at the ends of a steep bend can still poke out; the box clips them.
+			context.enableScissor(x, y, x + w, y + h);
 			// The straight line the bend is measured from, then the curve itself.
 			for (int px = (int) (cx - half); px <= cx + half; px += 4) context.fill(px, (int) cy, px + 2, (int) cy + 1, 0xFF303030);
 			double a = labelCurve[1] / 100.0, b = (labelCurve[2] - labelCurve[0]) / 200.0, c = (labelCurve[0] + labelCurve[2] - 2 * labelCurve[1]) / 200.0;
@@ -645,12 +655,13 @@ public class MarkerModal extends Component {
 			Text[] glyphs = Lettering.glyphs(name);
 			double raw = Lettering.rawLength(glyphs, Lettering.PEN_GAP);
 			if (raw > 0) {
-				double scale = Math.min(2.0, half * Lettering.arcLength(labelCurve) / raw);
+				double scale = Math.min(PREVIEW_MAX_SCALE, half * Lettering.arcLength(labelCurve) / raw);
 				AtlasPainter painter = AtlasPainter.gui(context);
 				for (Lettering.Glyph glyph : Lettering.layout(glyphs, scale, Lettering.PEN_GAP * scale, labelCurve, 0, false)) {
 					Lettering.draw(painter, glyph, cx, cy, scale, 0xFFF8ECD0, 0xC02E1A0C, 0xF000F0);
 				}
 			}
+			context.disableScissor();
 			int lit = dragging >= 0 ? dragging : isHovered() ? nearestHandle(mouseX) : -1;
 			for (int i = 0; i < 3; i++) {
 				int hx = (int) Math.round(cx + half * (i - 1));
@@ -1105,6 +1116,10 @@ public class MarkerModal extends Component {
 			closeChild();
 			return true;
 		}
+		// While the name is being typed, keys belong to it. Passed on to the
+		// dialog first, a space pressed the last button clicked – the style
+		// toggle flipped back every time a name had two words.
+		if (textField.isFocused()) return textField.keyPressed(input);
 		return super.keyPressed(input) || textField.keyPressed(input);
 	}
 
@@ -1116,6 +1131,7 @@ public class MarkerModal extends Component {
 			if (chr >= ' ' && noteText.length() < 512) noteText += chr;
 			return true;
 		}
+		if (textField.isFocused()) return textField.charTyped(input);
 		return super.charTyped(input) || textField.charTyped(input);
 	}
 
