@@ -450,7 +450,9 @@ public final class ParchmentExport {
 				if (name.isBlank()) return;
 				BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 				if (pos == null) return;
-				drawPlateText(image, name, (int) Math.round(toPxX.applyAsDouble(pos.getX())), (int) Math.round(toPxZ.applyAsDouble(pos.getZ())) - 4, landmark.get(LandmarkComponentTypes.COLOR), 1);
+				// Lettered inscriptions come out in capitals at twice the size, like territory names.
+				boolean lettered = Boolean.TRUE.equals(landmark.get(AtlasComponents.LABEL_LETTERING));
+				drawPlateText(image, lettered ? name.toUpperCase(java.util.Locale.ROOT) : name, (int) Math.round(toPxX.applyAsDouble(pos.getX())), (int) Math.round(toPxZ.applyAsDouble(pos.getZ())) - (lettered ? 8 : 4), landmark.get(LandmarkComponentTypes.COLOR), lettered ? 2 : 1);
 			});
 		}
 

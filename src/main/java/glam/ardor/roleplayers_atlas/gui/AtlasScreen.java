@@ -2412,6 +2412,15 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 						}
 						continue;
 					}
+					if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.PEN_LABEL))) {
+						// An inscription is pointed at by its writing, wherever the
+						// letters run, not by an icon it doesn't draw.
+						if (penLabelHit(landmark, mouseX - getGuiX(), mouseY - getGuiY()) && 6 < bestDistance) {
+							hoveredLandmark = landmark;
+							bestDistance = 6;
+						}
+						continue;
+					}
 					if (pos == null) {
 						Set<ChunkPos> chunks = RegionPos.regionsToChunks(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>()));
 						for (ChunkPos chunk : chunks) {
@@ -2496,8 +2505,8 @@ public class AtlasScreen extends Component implements AtlasRenderer {
 				// instead of piling up along the page edges.
 				renderMarker(AtlasPainter.gui(context), landmark, texture, 0, MAX_LIGHT, alpha, false, hovering, markerScale);
 				// At 8c and further markers crowd together, so labels only show
-				// for the hovered marker.
-				if (tileChunks < 8 || hovering) {
+				// for the hovered marker. Inscriptions carry their own zoom range.
+				if (tileChunks < 8 || hovering || Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.PEN_LABEL))) {
 					renderMarkerLabel(AtlasPainter.gui(context), landmark, state.is(PLACING_MARKER) ? 0.5F : 1.0F, MAX_LIGHT, markerScale);
 				}
 				if (!landmark.contains(LandmarkComponentTypes.POS) && landmark.contains(LandmarkComponentTypes.CHUNKS)) {

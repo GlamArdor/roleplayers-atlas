@@ -325,25 +325,41 @@ public interface AtlasRenderer {
 		double markerY = worldZToScreenY(pos.getZ()) - bookY();
 		net.minecraft.client.font.TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 		if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.PEN_LABEL))) {
-			// A pen inscription: italic text centered on its position, no icon,
-			// on the same translucent plate as marker name labels. The ink takes
-			// the marker's color.
-			Text styled = name.copy().formatted(net.minecraft.util.Formatting.ITALIC);
-			double half = textRenderer.getWidth(styled) / 2.0;
-			if (markerX - half < MAP_BORDER_WIDTH || markerX + half > MAP_BORDER_WIDTH + mapWidth()
-				|| markerY - 4 < MAP_BORDER_HEIGHT || markerY + 5 > MAP_BORDER_HEIGHT + mapHeight()) return;
+			// A pen inscription: no icon, just its text centred on its position,
+			// in the marker's color. Either italic on the usual name-tag plate or,
+			// lettered, in large spaced capitals along a curve.
+			if (!glam.ardor.roleplayers_atlas.LabelZoom.visible(landmark, getPixelsPerBlock())) return;
 			Integer color = landmark.get(LandmarkComponentTypes.COLOR);
 			int ink = color == null ? 0xF8ECD0 : color & 0xFFFFFF;
 			int penArgb = ((int) (labelAlpha * 255) << 24) | ink;
 			boolean penNoPlate = Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW));
 			int penRot = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
+			double penScale = penLabelScale(landmark);
+			// Shrunk past reading, a label is only a smudge on the map.
+			if (penScale < 0.3) return;
+			if (isLettered(landmark)) {
+				Lettering.Glyph[] placed = layoutPenLettering(landmark, name, penScale);
+				int shadow = penNoPlate ? 0 : ((int) (labelAlpha * 200) << 24) | Lettering.shadowFor(ink);
+				for (Lettering.Glyph glyph : placed) {
+					double px = markerX + glyph.x();
+					double py = markerY + glyph.y();
+					if (px < MAP_BORDER_WIDTH || px > MAP_BORDER_WIDTH + mapWidth() || py < MAP_BORDER_HEIGHT || py > MAP_BORDER_HEIGHT + mapHeight()) continue;
+					Lettering.draw(painter, glyph, markerX, markerY, penScale, penArgb, shadow, light);
+				}
+				return;
+			}
+			Text styled = name.copy().formatted(net.minecraft.util.Formatting.ITALIC);
+			double half = textRenderer.getWidth(styled) / 2.0;
+			if (markerX - half * penScale < MAP_BORDER_WIDTH || markerX + half * penScale > MAP_BORDER_WIDTH + mapWidth()
+				|| markerY - 4 * penScale < MAP_BORDER_HEIGHT || markerY + 5 * penScale > MAP_BORDER_HEIGHT + mapHeight()) return;
 			painter.push();
-			painter.translate(markerX, markerY - 4);
+			painter.translate(markerX, markerY);
 			if (penRot != 0) painter.rotateDegrees(penRot);
+			if (penScale != 1) painter.scale((float) penScale);
 			// No plate means bare ink (drawGlyph with a zero shadow); otherwise the
 			// usual translucent name-tag plate.
-			if (penNoPlate) painter.drawGlyph(styled, (float) -half, 0, penArgb, 0, light);
-			else painter.drawText(styled, (float) -half, 0, penArgb, light);
+			if (penNoPlate) painter.drawGlyph(styled, (float) -half, -4, penArgb, 0, light);
+			else painter.drawText(styled, (float) -half, -4, penArgb, light);
 			painter.pop();
 			return;
 		}
@@ -409,9 +425,8 @@ public interface AtlasRenderer {
 		double span = tMax - tMin + chunkPixels;
 		if (span < 44) return;
 
-		String text = name.getString().toUpperCase(java.util.Locale.ROOT);
-		net.minecraft.client.font.TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-		int count = text.length();
+		Text[] glyphs = Lettering.glyphs(name.getString());
+		int count = glyphs.length;
 		if (count == 0) return;
 		// Ink picked against the territory fill for contrast, with an
 		// opposite-tone shadow (set via the text style, so it is still a single
@@ -427,43 +442,88 @@ public interface AtlasRenderer {
 		// scale are still measured along the principal axis, so only the finished
 		// label spins about its centre.
 		int userRot = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
-		double drawDeg = deg + userRot;
-		double drawTheta = Math.toRadians(drawDeg);
-		double dcos = Math.cos(drawTheta), dsin = Math.sin(drawTheta);
-		Text[] glyphs = new Text[count];
-		int[] glyphWidths = new int[count];
-		int rawWidth = 0;
-		for (int i = 0; i < count; i++) {
-			glyphs[i] = Text.literal(String.valueOf(text.charAt(i))).formatted(net.minecraft.util.Formatting.BOLD);
-			glyphWidths[i] = textRenderer.getWidth(glyphs[i]);
-			rawWidth += glyphWidths[i];
-		}
+		double rawWidth = Lettering.rawLength(glyphs, 0);
 		if (rawWidth == 0) return;
 		double target = span * 0.72;
 		double scale = MathHelper.clamp(target / (rawWidth + 2.0 * (count - 1)), 0.85, 2.6);
 		double spacing = count > 1 ? MathHelper.clamp((target - rawWidth * scale) / (count - 1), 0, 8 * scale) : 0;
 		double total = rawWidth * scale + spacing * (count - 1);
 		double sagitta = MathHelper.clamp(span * 0.07, 2, 14);
+		// The size setting scales the fitted name; the curve, when the player has
+		// bent it by hand, replaces the automatic arch.
+		double sizeMul = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_SIZE, 100) / 100.0;
+		int[] curve = Lettering.curveOf(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_CURVE));
+		if (curve == null) curve = autoTerritoryCurve(sagitta, total);
 
 		int argb = ((int) (labelAlpha * 235) << 24) | inkColor;
-		double cursor = -total / 2;
-		for (int i = 0; i < count; i++) {
-			double charWidth = glyphWidths[i] * scale;
-			double t = cursor + charWidth / 2;
-			double u = total > 0 ? t / (total / 2) : 0;
-			double arcOffset = -sagitta * (1 - u * u);
-			double tilt = Math.toDegrees(Math.atan2(2 * sagitta * u / (total / 2), 1));
-			double px = meanX + dcos * t - dsin * arcOffset;
-			double py = meanY + dsin * t + dcos * arcOffset;
-			cursor += charWidth + spacing;
+		for (Lettering.Glyph glyph : Lettering.layout(glyphs, scale * sizeMul, spacing * sizeMul, curve, deg + userRot, false)) {
+			double px = meanX + glyph.x();
+			double py = meanY + glyph.y();
 			if (px < MAP_BORDER_WIDTH || px > MAP_BORDER_WIDTH + mapWidth() || py < MAP_BORDER_HEIGHT || py > MAP_BORDER_HEIGHT + mapHeight()) continue;
-			painter.push();
-			painter.translate(px, py);
-			painter.rotateDegrees((float) (drawDeg + tilt));
-			painter.scale((float) scale);
-			painter.drawGlyph(glyphs[i], -glyphWidths[i] / 2.0F, -4, argb, shadowArgb, light);
-			painter.pop();
+			Lettering.draw(painter, glyph, meanX, meanY, scale * sizeMul, argb, shadowArgb, light);
 		}
+	}
+
+	/** The gentle arch a territory name gets until the player bends it: the middle lifted by the sagitta. */
+	static int[] autoTerritoryCurve(double sagitta, double total) {
+		return new int[]{0, total > 0 ? (int) Math.round(sagitta / (total / 2) * 100) : 0, 0};
+	}
+
+	/** Whether a pen inscription is lettered along a curve rather than written on a plate. */
+	static boolean isLettered(Landmark landmark) {
+		return Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_LETTERING));
+	}
+
+	/**
+	 * Scale an inscription is drawn at: its size setting, times the map's own
+	 * scale unless it is pinned to a size on screen. Plates keep their size by
+	 * default, lettering grows with the map like the land it names.
+	 */
+	default double penLabelScale(Landmark landmark) {
+		boolean lettered = isLettered(landmark);
+		double scale = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_SIZE, 100) / 100.0;
+		if (lettered) scale *= Lettering.PEN_BASE_SCALE;
+		Boolean fixed = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_FIXED_SIZE);
+		if (fixed == null ? !lettered : fixed) return scale;
+		return scale * getPixelsPerBlock();
+	}
+
+	private static Lettering.Glyph[] layoutPenLettering(Landmark landmark, Text name, double scale) {
+		int[] curve = Lettering.curveOf(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_CURVE));
+		if (curve == null) curve = Lettering.DEFAULT_CURVE;
+		int rotation = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
+		return Lettering.layout(Lettering.glyphs(name.getString()), scale, Lettering.PEN_GAP * scale, curve, rotation, true);
+	}
+
+	/**
+	 * Whether a point, in book space, lands on a pen inscription as it is drawn
+	 * – on any of its letters, or inside its plate. Hidden inscriptions are not
+	 * there to be pointed at.
+	 */
+	default boolean penLabelHit(Landmark landmark, double x, double y) {
+		Text name = landmark.get(LandmarkComponentTypes.NAME);
+		BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
+		if (name == null || name.getString().isEmpty() || pos == null) return false;
+		if (!glam.ardor.roleplayers_atlas.LabelZoom.visible(landmark, getPixelsPerBlock())) return false;
+		double scale = penLabelScale(landmark);
+		if (scale < 0.3) return false;
+		double cx = worldXToScreenX(pos.getX()) - bookX();
+		double cy = worldZToScreenY(pos.getZ()) - bookY();
+		if (isLettered(landmark)) {
+			double reach = 5 * scale;
+			for (Lettering.Glyph glyph : layoutPenLettering(landmark, name, scale)) {
+				double dx = x - cx - glyph.x(), dy = y - cy - glyph.y();
+				double r = Math.max(reach, glyph.width() * scale / 2);
+				if (dx * dx + dy * dy < r * r) return true;
+			}
+			return false;
+		}
+		double rad = Math.toRadians(-landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0));
+		double dx = x - cx, dy = y - cy;
+		double lx = (dx * Math.cos(rad) - dy * Math.sin(rad)) / scale;
+		double ly = (dx * Math.sin(rad) + dy * Math.cos(rad)) / scale;
+		double half = MinecraftClient.getInstance().textRenderer.getWidth(name.copy().formatted(net.minecraft.util.Formatting.ITALIC)) / 2.0 + 2;
+		return Math.abs(lx) <= half && ly >= -6 && ly <= 6;
 	}
 
 	/**

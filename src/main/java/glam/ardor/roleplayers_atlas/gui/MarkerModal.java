@@ -47,6 +47,7 @@ import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.input.CharInput;
+import glam.ardor.roleplayers_atlas.util.AtlasPainter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.input.KeyInput;
@@ -150,6 +151,28 @@ public class MarkerModal extends Component {
 	protected boolean labelNoShadow = false;
 	protected net.minecraft.client.gui.widget.SliderWidget rotationSlider;
 	protected ButtonWidget btnShadow;
+	// Lettering: big spaced capitals along a curve, for inscriptions (and the
+	// curve, size and zoom range for territory names too).
+	protected boolean labelLettering = false;
+	protected int[] labelCurve = Lettering.DEFAULT_CURVE.clone();
+	/** A territory keeps its automatic arch until the curve is bent by hand. */
+	protected boolean curveSet = false;
+	protected int labelSize = 100;
+	protected boolean labelFixedSize = true;
+	protected int zoomMin = glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL - 1;
+	protected int zoomMax = glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL + 1;
+	protected ButtonWidget btnLettering;
+	protected ButtonWidget btnFixedSize;
+	protected net.minecraft.client.gui.widget.SliderWidget sizeSlider;
+	protected ZoomSlider zoomMinSlider;
+	protected ZoomSlider zoomMaxSlider;
+	protected CurveEditor curveEditor;
+	/** The name as typed, carried over when the dialog lays itself out again. */
+	private String nameDraft = null;
+	private boolean relayout = false;
+	/** New inscriptions start in the style the last one was written in. */
+	private static boolean lastLettering = false;
+	protected static final int CURVE_H = 64;
 
 	public static final int BUTTON_WIDTH = 120;
 	public static final int BUTTON_SPACING = 8;
@@ -178,7 +201,8 @@ public class MarkerModal extends Component {
 	private int noteBaseY;
 	private int confirmY;
 	private int extraY;
-	private final int[] settingsRowY = new int[3];
+	private int curveBaseY;
+	private final int[] settingsRowY = new int[5];
 	private int scrollTop;
 	private int scrollBottom;
 	private int scrollY;
@@ -214,6 +238,20 @@ public class MarkerModal extends Component {
 		this.showDistance = !Boolean.FALSE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DISTANCE));
 		this.labelRotation = baseLandmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
 		this.labelNoShadow = Boolean.TRUE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW));
+		boolean fresh = baseLandmark.id().getPath().startsWith("new");
+		Boolean storedLettering = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_LETTERING);
+		this.labelLettering = storedLettering != null ? storedLettering : fresh && isPenLabel() && lastLettering;
+		int[] storedCurve = Lettering.curveOf(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_CURVE));
+		this.curveSet = storedCurve != null;
+		this.labelCurve = storedCurve != null ? storedCurve : isTerritory() ? new int[]{0, 20, 0} : Lettering.DEFAULT_CURVE.clone();
+		this.labelSize = baseLandmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_SIZE, 100);
+		Boolean storedFixed = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_FIXED_SIZE);
+		this.labelFixedSize = storedFixed != null ? storedFixed : !labelLettering;
+		Integer storedMin = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ZOOM_MIN);
+		this.zoomMin = storedMin == null ? glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL - 1 : Math.max(glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL - 1, Math.min(glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL, storedMin));
+		int max = glam.ardor.roleplayers_atlas.LabelZoom.maxOf(baseLandmark);
+		this.zoomMax = Math.max(glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL, Math.min(glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL + 1, max));
+		this.nameDraft = null;
 		this.noteFocused = false;
 		if (isSpawn()) {
 			selectedTexture = glam.ardor.roleplayers_atlas.SpawnMarker.texture();
@@ -230,7 +268,12 @@ public class MarkerModal extends Component {
 
 	/** How many two-wide rows of settings this kind of mark shows. */
 	private int settingsRowCount() {
-		return isSpawn() ? 1 : isTerritory() ? 3 : 2;
+		return isSpawn() ? 1 : isTerritory() ? 5 : isPenLabel() ? 4 : 2;
+	}
+
+	/** Whether the dialog shows the three-point curve: lettered inscriptions and territory names. */
+	private boolean showsCurve() {
+		return isTerritory() || (isPenLabel() && labelLettering);
 	}
 
 	/** A road can be lengthened and a zone reshaped – but not while it is still being drawn. */
@@ -267,6 +310,10 @@ public class MarkerModal extends Component {
 		for (int i = 0; i < settingsRowCount(); i++) {
 			if (apply) settingsRowY[i] = y;
 			y += 20 + rowGap;
+		}
+		if (showsCurve()) {
+			if (apply) curveBaseY = y + 1;
+			y += CURVE_H + rowGap + 2;
 		}
 		if (!isSpawn()) {
 			if (apply) layerRowBaseY = y;
@@ -470,6 +517,203 @@ public class MarkerModal extends Component {
 		}
 	}
 
+	private Text letteringText() {
+		return Text.translatable("gui.roleplayers_atlas.marker.lettering", Text.translatable(labelLettering ? "gui.roleplayers_atlas.marker.lettering.letters" : "gui.roleplayers_atlas.marker.lettering.plate"));
+	}
+
+	/** "Shown from … up to …": the closest and the farthest zoom the label is drawn at. */
+	private void addZoomRow(int left, int right, int y) {
+		addDrawableChild(zoomMinSlider = scrolling(new ZoomSlider(left, y, BUTTON_WIDTH, 20, true), y));
+		addDrawableChild(zoomMaxSlider = scrolling(new ZoomSlider(right, y, BUTTON_WIDTH, 20, false), y));
+	}
+
+	private class SizeSlider extends net.minecraft.client.gui.widget.SliderWidget {
+		private static final int MIN = 25, MAX = 400, STEP = 5;
+
+		SizeSlider(int x, int y, int width, int height) {
+			super(x, y, width, height, Text.empty(), (Math.max(MIN, Math.min(MAX, labelSize)) - MIN) / (double) (MAX - MIN));
+			updateMessage();
+		}
+
+		@Override
+		protected void updateMessage() {
+			setMessage(Text.translatable("gui.roleplayers_atlas.marker.size", labelSize));
+		}
+
+		@Override
+		protected void applyValue() {
+			labelSize = MIN + (int) Math.round(value * (MAX - MIN) / STEP) * STEP;
+			updateMessage();
+		}
+	}
+
+	/**
+	 * One end of the zoom range. Each slider runs one step past the settable
+	 * levels, and that step means "no limit" on its side.
+	 */
+	protected class ZoomSlider extends net.minecraft.client.gui.widget.SliderWidget {
+		private final boolean closest;
+
+		ZoomSlider(int x, int y, int width, int height, boolean closest) {
+			super(x, y, width, height, Text.empty(), 0);
+			this.closest = closest;
+			sync();
+		}
+
+		private int low() {
+			return closest ? glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL - 1 : glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL;
+		}
+
+		private int high() {
+			return closest ? glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL : glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL + 1;
+		}
+
+		void sync() {
+			value = ((closest ? zoomMin : zoomMax) - low()) / (double) (high() - low());
+			updateMessage();
+		}
+
+		@Override
+		protected void updateMessage() {
+			setMessage(Text.translatable(closest ? "gui.roleplayers_atlas.marker.zoomFrom" : "gui.roleplayers_atlas.marker.zoomTo",
+				glam.ardor.roleplayers_atlas.LabelZoom.describe(closest ? zoomMin : zoomMax)));
+		}
+
+		@Override
+		protected void applyValue() {
+			int level = low() + (int) Math.round(value * (high() - low()));
+			// The two ends can't cross: dragging one past the other pushes it along.
+			if (closest) {
+				zoomMin = level;
+				if (zoomMax < zoomMin && zoomMaxSlider != null) {
+					zoomMax = Math.max(zoomMin, glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL);
+					zoomMaxSlider.sync();
+				}
+			} else {
+				zoomMax = level;
+				if (zoomMin > zoomMax && zoomMinSlider != null) {
+					zoomMin = zoomMax;
+					zoomMinSlider.sync();
+				}
+			}
+			updateMessage();
+		}
+	}
+
+	/**
+	 * The bend of a lettered label, drawn as the label itself along its curve
+	 * with a handle at the start, the middle and the end. Each handle is dragged
+	 * up or down; right-click puts the default bend back.
+	 */
+	protected class CurveEditor extends net.minecraft.client.gui.widget.ClickableWidget {
+		private int dragging = -1;
+
+		CurveEditor(int x, int y, int width, int height) {
+			super(x, y, width, height, Text.translatable("gui.roleplayers_atlas.marker.curve"));
+		}
+
+		/** Half the chord in the preview: wide enough to read, low enough that a full bend fits. */
+		private double half() {
+			return Math.min((getWidth() - 24) / 2.0, (getHeight() / 2.0 - 4) * 100.0 / Lettering.MAX_BEND);
+		}
+
+		private double centerX() {
+			return getX() + getWidth() / 2.0;
+		}
+
+		private double centerY() {
+			return getY() + getHeight() / 2.0;
+		}
+
+		@Override
+		protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+			int x = getX(), y = getY(), w = getWidth(), h = getHeight();
+			context.fill(x - 1, y - 1, x + w + 1, y + h + 1, isHovered() || dragging >= 0 ? 0xFFFFFFFF : 0xFFA0A0A0);
+			context.fill(x, y, x + w, y + h, 0xFF000000);
+			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.curve"), x + 4, y + 3, 0xFF707070, false);
+			double half = half(), cx = centerX(), cy = centerY();
+			// The straight line the bend is measured from, then the curve itself.
+			for (int px = (int) (cx - half); px <= cx + half; px += 4) context.fill(px, (int) cy, px + 2, (int) cy + 1, 0xFF303030);
+			double a = labelCurve[1] / 100.0, b = (labelCurve[2] - labelCurve[0]) / 200.0, c = (labelCurve[0] + labelCurve[2] - 2 * labelCurve[1]) / 200.0;
+			for (int i = 0; i <= 60; i++) {
+				double u = -1 + i / 30.0;
+				int px = (int) Math.round(cx + half * u);
+				int py = (int) Math.round(cy - half * (a + b * u + c * u * u));
+				context.fill(px, py, px + 1, py + 1, 0xFF606060);
+			}
+			String name = textField != null && !textField.getText().isBlank() ? textField.getText() : Text.translatable("gui.roleplayers_atlas.marker.curve.sample").getString();
+			Text[] glyphs = Lettering.glyphs(name);
+			double raw = Lettering.rawLength(glyphs, Lettering.PEN_GAP);
+			if (raw > 0) {
+				double scale = Math.min(2.0, half * Lettering.arcLength(labelCurve) / raw);
+				AtlasPainter painter = AtlasPainter.gui(context);
+				for (Lettering.Glyph glyph : Lettering.layout(glyphs, scale, Lettering.PEN_GAP * scale, labelCurve, 0, false)) {
+					Lettering.draw(painter, glyph, cx, cy, scale, 0xFFF8ECD0, 0xC02E1A0C, 0xF000F0);
+				}
+			}
+			int lit = dragging >= 0 ? dragging : isHovered() ? nearestHandle(mouseX) : -1;
+			for (int i = 0; i < 3; i++) {
+				int hx = (int) Math.round(cx + half * (i - 1));
+				int hy = (int) Math.round(cy - half * labelCurve[i] / 100.0);
+				context.fill(hx - 3, hy - 3, hx + 4, hy + 4, 0xFF2E1A0C);
+				context.fill(hx - 2, hy - 2, hx + 3, hy + 3, i == lit ? 0xFFFFE080 : 0xFFE8D9B0);
+			}
+			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.curve.hint"), x + 4, y + h - 11, 0xFF505050, false);
+		}
+
+		private int nearestHandle(double mouseX) {
+			double rel = (mouseX - centerX()) / half();
+			return rel < -0.5 ? 0 : rel > 0.5 ? 2 : 1;
+		}
+
+		private void dragTo(double mouseY) {
+			int bend = (int) Math.round((centerY() - mouseY) / half() * 100.0);
+			bend = Math.max(-Lettering.MAX_BEND, Math.min(Lettering.MAX_BEND, bend));
+			// A little give around the straight line, so flat is easy to hit.
+			if (Math.abs(bend) <= 2) bend = 0;
+			labelCurve[dragging] = bend;
+			curveSet = true;
+		}
+
+		@Override
+		public boolean mouseClicked(Click click, boolean doubled) {
+			if (!this.active || !this.visible || !isMouseOver(click.x(), click.y())) return false;
+			if (click.button() == 1) {
+				labelCurve = isTerritory() ? new int[]{0, 20, 0} : Lettering.DEFAULT_CURVE.clone();
+				curveSet = false;
+				playDownSound(MinecraftClient.getInstance().getSoundManager());
+				return true;
+			}
+			return super.mouseClicked(click, doubled);
+		}
+
+		@Override
+		public void onClick(Click click, boolean doubled) {
+			dragging = nearestHandle(click.x());
+			dragTo(click.y());
+		}
+
+		@Override
+		protected void onDrag(Click click, double offsetX, double offsetY) {
+			if (dragging >= 0) dragTo(click.y());
+		}
+
+		@Override
+		public void onRelease(Click click) {
+			dragging = -1;
+		}
+
+		@Override
+		public void playDownSound(net.minecraft.client.sound.SoundManager soundManager) {
+			soundManager.play(PositionedSoundInstance.ui(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+		}
+
+		@Override
+		protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {
+			appendDefaultNarrations(builder);
+		}
+	}
+
 	void addMarkerListener(IMarkerTypeSelectListener listener) {
 		markerListeners.add(listener);
 	}
@@ -571,6 +815,19 @@ public class MarkerModal extends Component {
 					// label; the turn only on names written across the map.
 					if (territory || simple) copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_NO_SHADOW, labelNoShadow);
 					if (territory || (simple && !route)) copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, labelRotation);
+					if (penLabel) {
+						copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_LETTERING, labelLettering);
+						copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_FIXED_SIZE, labelFixedSize);
+					}
+					if (territory || penLabel) {
+						copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_SIZE, labelSize);
+						if (zoomMin < glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL) copy.remove(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ZOOM_MIN);
+						else copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ZOOM_MIN, zoomMin);
+						copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ZOOM_MAX, zoomMax > glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL ? glam.ardor.roleplayers_atlas.LabelZoom.UNLIMITED : zoomMax);
+						// A territory left unbent keeps arching itself to fit its land.
+						if (penLabel || curveSet) copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_CURVE, List.of(labelCurve[0], labelCurve[1], labelCurve[2]));
+						else copy.remove(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_CURVE);
+					}
 					// A mark keeps the date it was first drawn on; editing it later
 					// doesn't rewrite history, it only decides whether to show it.
 					copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.SHOW_DATE, dateEnabled);
@@ -579,6 +836,7 @@ public class MarkerModal extends Component {
 					Long drawnReal = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.REAL_TIME);
 					copy.set(glam.ardor.roleplayers_atlas.AtlasComponents.REAL_TIME, drawnReal != null ? drawnReal : glam.ardor.roleplayers_atlas.AtlasTime.realMillis());
 				});
+				if (penLabel) lastLettering = labelLettering;
 				WorldAtlasData.swapLandmark(summary.dimension(), previous, written,
 					Text.translatable(previous == null ? "gui.roleplayers_atlas.undo.markerAdded" : "gui.roleplayers_atlas.undo.markerEdited", label));
 			}
@@ -611,6 +869,12 @@ public class MarkerModal extends Component {
 		// that carry a drawn label; everything else leaves these null.
 		rotationSlider = null;
 		btnShadow = null;
+		btnLettering = null;
+		btnFixedSize = null;
+		sizeSlider = null;
+		zoomMinSlider = null;
+		zoomMaxSlider = null;
+		curveEditor = null;
 		if (isSpawn()) {
 			btnLayer = null;
 			btnDate = null;
@@ -651,7 +915,20 @@ public class MarkerModal extends Component {
 				}).dimensions(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
 			} else {
 				btnDistance = null;
-				addDrawableChild(opacitySlider = scrolling(new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+				addDrawableChild(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+				// Plate or lettering. The dialog lays itself out again on a change:
+				// only lettering has a curve to bend.
+				addDrawableChild(btnLettering = scrolling(ButtonWidget.builder(letteringText(), button -> {
+					labelLettering = !labelLettering;
+					labelFixedSize = !labelLettering;
+					relayout = true;
+				}).dimensions(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
+				addDrawableChild(sizeSlider = scrolling(new SizeSlider(settingsLeft, settingsRowY[2], BUTTON_WIDTH, 20), settingsRowY[2]));
+				addDrawableChild(btnFixedSize = scrolling(ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.scalesWithMap", !labelFixedSize), button -> {
+					labelFixedSize = !labelFixedSize;
+					button.setMessage(onOff("gui.roleplayers_atlas.marker.scalesWithMap", !labelFixedSize));
+				}).dimensions(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
+				addZoomRow(settingsLeft, settingsRight, settingsRowY[3]);
 			}
 			// Label row: a route only hides its backing ribbon; a pen inscription
 			// can also be turned.
@@ -687,14 +964,19 @@ public class MarkerModal extends Component {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
 				}).dimensions(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
+				addDrawableChild(sizeSlider = scrolling(new SizeSlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[3], BUTTON_WIDTH, 20), settingsRowY[3]));
+				addZoomRow(settingsLeft, settingsRight, settingsRowY[4]);
 			}
+		}
+		if (showsCurve()) {
+			addDrawableChild(curveEditor = scrolling(new CurveEditor(noteBoxX(), curveBaseY, NOTE_W, CURVE_H), curveBaseY));
 		}
 		textField = scrolling(new TextFieldWidget(MinecraftClient.getInstance().textRenderer, (this.width - 200) / 2, nameBaseY, 200, 20, Text.translatable("gui.roleplayers_atlas.marker.label")), nameBaseY);
 		textField.setEditable(true);
 		textField.setFocusUnlocked(true);
 		textField.setFocused(true);
 		textField.setPlaceholder(Text.translatable("gui.roleplayers_atlas.marker.label"));
-		textField.setText(baseLandmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString());
+		textField.setText(nameDraft != null ? nameDraft : baseLandmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString());
 
 		// The note is a large multiline box below the layer button (see render).
 
@@ -839,6 +1121,13 @@ public class MarkerModal extends Component {
 
 	@Override
 	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		// Switching plate/lettering adds or drops the curve row, so the dialog is
+		// laid out again – here, outside the click that asked for it.
+		if (relayout) {
+			relayout = false;
+			nameDraft = textField.getText();
+			init();
+		}
 		// Manual dim instead of renderBackground: 1.21.6+ only allows one
 		// background blur per frame, and the parent screen already used it.
 		context.fill(0, 0, this.width, this.height, 0x66000000);
@@ -868,6 +1157,12 @@ public class MarkerModal extends Component {
 		if (btnLayer != null) btnLayer.render(context, mouseX, mouseY, partialTick);
 		if (rotationSlider != null) rotationSlider.render(context, mouseX, mouseY, partialTick);
 		if (btnShadow != null) btnShadow.render(context, mouseX, mouseY, partialTick);
+		if (btnLettering != null) btnLettering.render(context, mouseX, mouseY, partialTick);
+		if (btnFixedSize != null) btnFixedSize.render(context, mouseX, mouseY, partialTick);
+		if (sizeSlider != null) sizeSlider.render(context, mouseX, mouseY, partialTick);
+		if (zoomMinSlider != null) zoomMinSlider.render(context, mouseX, mouseY, partialTick);
+		if (zoomMaxSlider != null) zoomMaxSlider.render(context, mouseX, mouseY, partialTick);
+		if (curveEditor != null) curveEditor.render(context, mouseX, mouseY, partialTick);
 		opacitySlider.render(context, mouseX, mouseY, partialTick);
 		// Darker background for marker type selector
 		if (textureScrollBox != null) {

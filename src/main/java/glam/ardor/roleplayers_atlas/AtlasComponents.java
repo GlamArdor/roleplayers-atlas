@@ -61,6 +61,28 @@ public final class AtlasComponents {
 	/** Whether the label's shadow (or the dark backing behind a route name) is hidden. */
 	public static final LandmarkComponentType<Boolean> LABEL_NO_SHADOW = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_no_shadow"), Codec.BOOL, b -> Text.literal(String.valueOf(b)));
 
+	/** A pen inscription written in large spaced capitals along a curve, like a territory name, instead of on a plate. */
+	public static final LandmarkComponentType<Boolean> LABEL_LETTERING = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_lettering"), Codec.BOOL, b -> Text.literal(String.valueOf(b)));
+
+	/**
+	 * The bend of a lettered label: how far its start, middle and end sit above
+	 * the straight line, in percent of half its length. Absent means the
+	 * default arc (an automatic one for territories).
+	 */
+	public static final LandmarkComponentType<java.util.List<Integer>> LABEL_CURVE = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_curve"), Codec.INT.listOf(), c -> Text.literal(c.toString()));
+
+	/** Size of the label in percent; absent means 100. */
+	public static final LandmarkComponentType<Integer> LABEL_SIZE = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_size"), Codec.INT, i -> Text.literal(i + "%"));
+
+	/** Whether an inscription keeps its size on screen instead of growing and shrinking with the map. */
+	public static final LandmarkComponentType<Boolean> LABEL_FIXED_SIZE = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_fixed_size"), Codec.BOOL, b -> Text.literal(String.valueOf(b)));
+
+	/** Closest zoom the label shows at, as a {@link LabelZoom} level; absent means no limit. */
+	public static final LandmarkComponentType<Integer> LABEL_ZOOM_MIN = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_zoom_min"), Codec.INT, i -> Text.literal(String.valueOf(i)));
+
+	/** Farthest zoom the label shows at, as a {@link LabelZoom} level; absent means the kind's default. */
+	public static final LandmarkComponentType<Integer> LABEL_ZOOM_MAX = LandmarkComponentTypes.register(RoleplayersAtlas.id("label_zoom_max"), Codec.INT, i -> Text.literal(String.valueOf(i)));
+
 	private AtlasComponents() {
 	}
 
