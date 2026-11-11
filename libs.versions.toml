@@ -14,7 +14,7 @@ fapi = "0.141.6+1.21.11"
 # Upstream Surveyor has no 1.21.11 build: it stops at 1.2.1+1.22 for 1.21.8 and
 # resumes at 26.1. This is our own port of that same 1.2.1, built from
 # Downloads\Reign\Surveyor and published to mavenLocal.
-surveyor = "1.2.1+1.21.11-ra.1"
+surveyor = "1.2.1+1.21.11-ra.2"
 clothConfig = "21.11.153"
 
 [plugins]
