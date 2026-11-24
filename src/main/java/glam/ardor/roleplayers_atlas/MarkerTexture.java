@@ -2,7 +2,7 @@ package glam.ardor.roleplayers_atlas;
 
 import glam.ardor.roleplayers_atlas.util.AtlasPainter;
 import glam.ardor.roleplayers_atlas.util.DrawBatcher;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -60,7 +60,7 @@ public record MarkerTexture(Identifier id, Identifier accentId, Identifier item,
 		return textureWidth * textureHeight / (double) (1 << mipLevel);
 	}
 
-	public void drawIcon(GuiGraphics context, int x, int y, float[] accent) {
+	public void drawIcon(GuiGraphicsExtractor context, int x, int y, float[] accent) {
 		context.blit(RenderPipelines.GUI_TEXTURED, id, x, y, 0, 0, textureWidth, textureHeight, textureWidth, textureHeight, fullTextureWidth(), textureHeight);
 		if (accentId != null && accent != null) {
 			int accentArgb = ARGB.color(255, (int) (accent[0] * 255), (int) (accent[1] * 255), (int) (accent[2] * 255));

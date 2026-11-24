@@ -1,10 +1,11 @@
 package glam.ardor.roleplayers_atlas.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import glam.ardor.roleplayers_atlas.ParchmentExport;
 import glam.ardor.roleplayers_atlas.WorldAtlasData;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
 import java.nio.file.Path;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.input.KeyEvent;
 
@@ -98,12 +99,12 @@ public class ScreenshotModal extends Component {
 
 	@Override
 	public boolean keyPressed(KeyEvent input) {
-		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+		int keyCode = input.key(), scanCode = input.keycode(), modifiers = input.modifiers();
+		if (keyCode == InputConstants.KEY_ESCAPE) {
 			closeChild();
 			return true;
 		}
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+		if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
 			btnView.onPress(input);
 			return true;
 		}
@@ -111,19 +112,19 @@ public class ScreenshotModal extends Component {
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.screenshot"), this.height / 2 - 56, 0xDDDDDD, true);
-		btnMarkers.render(context, mouseX, mouseY, partialTick);
-		btnZones.render(context, mouseX, mouseY, partialTick);
-		btnRoutes.render(context, mouseX, mouseY, partialTick);
-		btnLabels.render(context, mouseX, mouseY, partialTick);
-		btnAuthor.render(context, mouseX, mouseY, partialTick);
-		btnTime.render(context, mouseX, mouseY, partialTick);
-		btnFrame.render(context, mouseX, mouseY, partialTick);
-		btnView.render(context, mouseX, mouseY, partialTick);
-		btnFull.render(context, mouseX, mouseY, partialTick);
-		btnCancel.render(context, mouseX, mouseY, partialTick);
-		super.render(context, mouseX, mouseY, partialTick);
+		btnMarkers.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnZones.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnRoutes.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnLabels.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnAuthor.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnTime.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnFrame.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnView.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnFull.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnCancel.extractRenderState(context, mouseX, mouseY, partialTick);
+		super.extractRenderState(context, mouseX, mouseY, partialTick);
 	}
 }

@@ -4,32 +4,31 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 /**
  * Bridges the two rendering paths that survive in 1.21.6+:
- * GUI drawing must go through {@link GuiGraphics} (2D matrices, deferred render
- * state), while in-world drawing (the handheld atlas) still uses a
- * {@link PoseStack} with a {@link MultiBufferSource}.
+ * GUI drawing must go through {@link GuiGraphicsExtractor} (2D matrices, deferred render
+ * state), while in-world drawing (the handheld atlas) uses a {@link PoseStack}
+ * with {@link WorldBuffers}, which feed the frame's submit queue.
  */
 public final class AtlasPainter {
-	private final GuiGraphics context;
+	private final GuiGraphicsExtractor context;
 	private final PoseStack matrices;
-	private final MultiBufferSource vertexConsumers;
+	private final WorldBuffers vertexConsumers;
 
-	private AtlasPainter(GuiGraphics context, PoseStack matrices, MultiBufferSource vertexConsumers) {
+	private AtlasPainter(GuiGraphicsExtractor context, PoseStack matrices, WorldBuffers vertexConsumers) {
 		this.context = context;
 		this.matrices = matrices;
 		this.vertexConsumers = vertexConsumers;
 	}
 
-	public static AtlasPainter gui(GuiGraphics context) {
+	public static AtlasPainter gui(GuiGraphicsExtractor context) {
 		return new AtlasPainter(context, null, null);
 	}
 
-	public static AtlasPainter world(PoseStack matrices, MultiBufferSource vertexConsumers) {
+	public static AtlasPainter world(PoseStack matrices, WorldBuffers vertexConsumers) {
 		return new AtlasPainter(null, matrices, vertexConsumers);
 	}
 
@@ -37,7 +36,7 @@ public final class AtlasPainter {
 		return context != null;
 	}
 
-	public GuiGraphics context() {
+	public GuiGraphicsExtractor context() {
 		return context;
 	}
 
@@ -45,7 +44,7 @@ public final class AtlasPainter {
 		return matrices;
 	}
 
-	public MultiBufferSource vertexConsumers() {
+	public WorldBuffers vertexConsumers() {
 		return vertexConsumers;
 	}
 
@@ -71,7 +70,7 @@ public final class AtlasPainter {
 
 	public void rotateDegrees(float degrees) {
 		if (isGui()) context.pose().rotate((float) Math.toRadians(degrees));
-		else matrices.mulPose(Axis.ZP.rotationDegrees(degrees));
+		else matrices.rotate(Axis.ZP.rotationDegrees(degrees));
 	}
 
 	/** Plain shadowed text without the plate, used for territory lettering. */
@@ -91,18 +90,18 @@ public final class AtlasPainter {
 		boolean noShadow = shadowArgb != null && shadowArgb == 0;
 		if (isGui()) {
 			Component styled = shadowArgb == null || noShadow ? text : text.copy().withStyle(s -> s.withShadowColor(shadowArgb));
-			context.drawString(textRenderer, styled, (int) x, (int) y, argb, !noShadow);
+			context.text(textRenderer, styled, (int) x, (int) y, argb, !noShadow);
 		} else if (shadowArgb == null || noShadow) {
 			matrices.pushPose();
 			matrices.translate(0.0, 0.0, -0.7);
-			textRenderer.drawInBatch(text, x, y, argb, !noShadow, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			vertexConsumers.text(matrices, text, x, y, argb, !noShadow, light);
 			matrices.popPose();
 		} else {
 			matrices.pushPose();
 			matrices.translate(0.0, 0.0, -0.65);
-			textRenderer.drawInBatch(text, x + 1, y + 1, shadowArgb, false, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			vertexConsumers.text(matrices, text, x + 1, y + 1, shadowArgb, false, light);
 			matrices.translate(0.0, 0.0, -0.05);
-			textRenderer.drawInBatch(text, x, y, argb, false, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			vertexConsumers.text(matrices, text, x, y, argb, false, light);
 			matrices.popPose();
 		}
 	}
@@ -122,14 +121,14 @@ public final class AtlasPainter {
 			context.pose().pushMatrix();
 			context.pose().translate(x, y);
 			context.fill(-2, -1, width + 1, 9, background);
-			context.drawString(textRenderer, text, 0, 0, argb, false);
+			context.text(textRenderer, text, 0, 0, argb, false);
 			context.pose().popMatrix();
 		} else {
 			int width = textRenderer.width(text);
-			DrawUtil.fill(this, net.minecraft.client.renderer.rendertype.RenderTypes.textBackground(), -0.5F, light, (int) x - 2, (int) y - 1, (int) x + width + 1, (int) y + 9, alpha / 255.0F * 0.45F, new float[]{0.125F, 0.078F, 0.035F});
+			DrawUtil.fill(this, DrawUtil.plate(false), -0.5F, light, (int) x - 2, (int) y - 1, (int) x + width + 1, (int) y + 9, alpha / 255.0F * 0.45F, new float[]{0.125F, 0.078F, 0.035F});
 			matrices.pushPose();
 			matrices.translate(0.0, 0.0, -0.6);
-			textRenderer.drawInBatch(text, x, y, argb, false, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			vertexConsumers.text(matrices, text, x, y, argb, false, light);
 			matrices.popPose();
 		}
 	}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "roleplayers_atlas_selftest",
+  "version": "0",
+  "name": "Roleplayer's Atlas self-test",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["glam.ardor.roleplayers_atlas.selftest.SelfTest"]
+  },
+  "depends": {
+    "roleplayers_atlas": "*"
+  }
+}

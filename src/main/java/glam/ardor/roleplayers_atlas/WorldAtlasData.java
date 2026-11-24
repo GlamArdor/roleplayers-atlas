@@ -39,7 +39,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.Structure;
 
 public class WorldAtlasData {
-	public static final Map<ResourceKey<Level>, WorldAtlasData> WORLDS = new HashMap<>();
+	public static final Map<ResourceKey<Level>, WorldAtlasData> WORLDS = new java.util.concurrent.ConcurrentHashMap<>();
 
 	public static WorldAtlasData getOrCreate(ResourceKey<Level> dimension) {
 		return WORLDS.computeIfAbsent(dimension, k -> {
@@ -132,7 +132,7 @@ public class WorldAtlasData {
 		// The world changed under us – every remembered step refers to the old one.
 		AtlasUndo.clear();
 		invalidateTileBatches();
-		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().gui.screen() instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
 	public static boolean isEmpty(ResourceKey<Level> dimension) {
@@ -267,7 +267,7 @@ public class WorldAtlasData {
 			if (pos == null) break;
 			TileChoice tile = summary.dimension() == Level.NETHER ? TerrainTiling.terrainToTileNether(summary, pos) : TerrainTiling.terrainToTile(summary, pos);
 			if (tile != null) {
-				tileScope.extendTo(pos.x, pos.z);
+				tileScope.extendTo(pos.x(), pos.z());
 				// A patch names this one chunk and outranks anything worked out
 				// from its biome. The height tier still applies on top, so a
 				// painted forest still climbs its hills.
@@ -323,7 +323,7 @@ public class WorldAtlasData {
 		if (client.player == null || !client.player.level().dimension().equals(summary.dimension())) return;
 		double px = client.player.getX();
 		double pz = client.player.getZ();
-		ChunkPos playerChunk = new ChunkPos(client.player.blockPosition());
+		ChunkPos playerChunk = ChunkPos.containing(client.player.blockPosition());
 		boolean any = false;
 		for (Landmark landmark : getAllMarkers(1).keySet()) {
 			String key = RoleplayersAtlas.trackKey(landmark);
@@ -335,7 +335,7 @@ public class WorldAtlasData {
 		if (any) {
 			TrackedMarkersStore.save();
 			AtlasSounds.arrived();
-			if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
+			if (Minecraft.getInstance().gui.screen() instanceof AtlasScreen as) as.updateBookmarkerList();
 		}
 	}
 
@@ -368,7 +368,7 @@ public class WorldAtlasData {
 		if (client.player == null || !client.player.level().dimension().equals(summary.dimension())) return;
 		double px = client.player.getX();
 		double pz = client.player.getZ();
-		ChunkPos playerChunk = new ChunkPos(client.player.blockPosition());
+		ChunkPos playerChunk = ChunkPos.containing(client.player.blockPosition());
 		for (Map.Entry<Landmark, MarkerTexture> entry : getEditableLandmarks().entrySet()) {
 			Landmark landmark = entry.getKey();
 			if (!AtlasTime.isUnverified(landmark)) continue;
@@ -513,7 +513,7 @@ public class WorldAtlasData {
 
 	public void onLandmarksAdded(WorldSummary summary, Multimap<UUID, Identifier> landmarks) {
 		landmarks.forEach((type, pos) -> this.addLandmark(summary, summary.landmarks().get(type, pos)));
-		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().gui.screen() instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
 	public void onLandmarksRemoved(WorldSummary summary, Multimap<UUID, Identifier> landmarks) {
@@ -523,7 +523,7 @@ public class WorldAtlasData {
 				if (landmarkMarkers.get(type).isEmpty()) landmarkMarkers.remove(type);
 			}
 		});
-		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().gui.screen() instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
 	public boolean deleteLandmark(ResourceKey<Level> dimension, Landmark landmark) {
@@ -555,7 +555,7 @@ public class WorldAtlasData {
 		if (remove != null) summary.landmarks().remove(remove.owner(), remove.id());
 		if (put != null) summary.landmarks().put(put);
 		AtlasUndo.push(description, () -> swapLandmark(dimension, put, remove, description));
-		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().gui.screen() instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
 	public Map<Landmark, MarkerTexture> getEditableLandmarks() {

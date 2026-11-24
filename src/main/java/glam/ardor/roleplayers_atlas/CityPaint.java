@@ -398,7 +398,7 @@ public final class CityPaint {
 			from.forEach((dimension, drawn) -> {
 				if (drawn.isEmpty()) return;
 				Map<String, String> written = new LinkedHashMap<>();
-				drawn.forEach((pos, tile) -> written.put(pos.x + "," + pos.z, tile.toString()));
+				drawn.forEach((pos, tile) -> written.put(pos.x() + "," + pos.z(), tile.toString()));
 				out.chunks.put(dimension.toString(), written);
 			});
 		}

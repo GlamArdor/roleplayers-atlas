@@ -20,7 +20,7 @@ public final class AtlasInput {
 	private static boolean pressed(int leftKey, int rightKey) {
 		var window = Minecraft.getInstance().getWindow();
 		if (window == null) return false;
-		return InputConstants.isKeyDown(window, leftKey) || InputConstants.isKeyDown(window, rightKey);
+		return InputConstants.isKeyDown(leftKey) || InputConstants.isKeyDown(rightKey);
 	}
 
 	public static boolean hasShiftDown() {

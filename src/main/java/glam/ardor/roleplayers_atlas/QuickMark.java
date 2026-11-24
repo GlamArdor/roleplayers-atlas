@@ -41,7 +41,7 @@ public final class QuickMark {
 		if (player == null || client.level == null) return;
 		WorldSummary summary = SurveyorClient.tryGetSummary(client.level.dimension());
 		if (summary == null || summary.landmarks() == null) {
-			player.displayClientMessage(Component.translatable("gui.roleplayers_atlas.quickMark.failed").withStyle(net.minecraft.ChatFormatting.GRAY), true);
+			player.sendOverlayMessage(Component.translatable("gui.roleplayers_atlas.quickMark.failed").withStyle(net.minecraft.ChatFormatting.GRAY));
 			return;
 		}
 
@@ -73,7 +73,7 @@ public final class QuickMark {
 		WorldAtlasData.swapLandmark(client.level.dimension(), null, written, Component.translatable("gui.roleplayers_atlas.undo.markerAdded", name));
 
 		client.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.2F));
-		player.displayClientMessage(Component.translatable("gui.roleplayers_atlas.quickMark.placed", at.getX(), at.getZ()), true);
+		player.sendOverlayMessage(Component.translatable("gui.roleplayers_atlas.quickMark.placed", at.getX(), at.getZ()));
 	}
 
 	/**

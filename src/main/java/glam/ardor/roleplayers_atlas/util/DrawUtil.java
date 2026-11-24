@@ -3,12 +3,24 @@ package glam.ardor.roleplayers_atlas.util;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import glam.ardor.roleplayers_atlas.mixin.MixinDrawContext;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 
 public class DrawUtil {
+	private static final Identifier WHITE = Identifier.fromNamespaceAndPath("roleplayers_atlas", "textures/gui/white.png");
+
+	/**
+	 * Flat translucent plates in the world. 26.x dropped the untextured
+	 * text-background layers, so the plates go through the text layers with a
+	 * white texture instead, which also keeps them in the same pass as glyphs.
+	 */
+	public static RenderType plate(boolean seeThrough) {
+		return seeThrough ? RenderTypes.textSeeThrough(WHITE) : RenderTypes.text(WHITE);
+	}
+
 	public static void drawCenteredWithRotation(AtlasPainter painter, Identifier texture, double x, double y, float z, float scale, int textureWidth, int textureHeight, float rotation, int light, int argb) {
 		painter.push();
 		painter.translate(x, y);
@@ -27,10 +39,10 @@ public class DrawUtil {
 		VertexConsumer vertexConsumer = painter.vertexConsumers().getBuffer(layer);
 		Matrix4f matrix4f = painter.matrices().last().pose();
 
-		vertexConsumer.addVertex(matrix4f, x1, y1, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
-		vertexConsumer.addVertex(matrix4f, x1, y2, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
-		vertexConsumer.addVertex(matrix4f, x2, y2, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
-		vertexConsumer.addVertex(matrix4f, x2, y1, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x1, y1, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x1, y2, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x2, y2, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x2, y1, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
 	}
 
 	/**
@@ -94,15 +106,15 @@ public class DrawUtil {
 			float[] ys = {(float) y0, (float) y1, (float) y2, (float) y3};
 			int argb = ARGB.color((int) (alpha * 255), (int) (color[0] * 255), (int) (color[1] * 255), (int) (color[2] * 255));
 			((MixinDrawContext) (Object) painter.context()).roleplayers_atlas$getState()
-				.submitGuiElement(AtlasQuadRenderState.of(new Matrix3x2f(painter.context().pose()), xs, ys, argb));
+				.addGuiElement(AtlasQuadRenderState.of(new Matrix3x2f(painter.context().pose()), xs, ys, argb));
 			return;
 		}
 		VertexConsumer vertexConsumer = painter.vertexConsumers().getBuffer(layer);
 		Matrix4f matrix4f = painter.matrices().last().pose();
 
-		vertexConsumer.addVertex(matrix4f, (float) x0, (float) y0, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
-		vertexConsumer.addVertex(matrix4f, (float) x1, (float) y1, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
-		vertexConsumer.addVertex(matrix4f, (float) x2, (float) y2, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
-		vertexConsumer.addVertex(matrix4f, (float) x3, (float) y3, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x0, (float) y0, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x1, (float) y1, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x2, (float) y2, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x3, (float) y3, z).setColor(color[0], color[1], color[2], alpha).setUv(0.5F, 0.5F).setLight(light);
 	}
 }

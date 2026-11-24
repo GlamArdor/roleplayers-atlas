@@ -2,7 +2,7 @@ package glam.ardor.roleplayers_atlas.gui.core;
 
 import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -31,7 +31,7 @@ public class ScrollBoxComponent extends Component {
 		this.addChild(viewport);
 	}
 
-	public void renderArrow(GuiGraphics context, int mouseX, int mouseY, boolean prev) {
+	public void renderArrow(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean prev) {
 		int x = !vertical ? (prev ? getGuiX() - ARROW_SIZE : getGuiX() + getWidth()) : getGuiX() + (getWidth() - ARROW_SIZE) / 2;
 		int y = vertical ? (prev ? getGuiY() - ARROW_SIZE : getGuiY() + getHeight()) : getGuiY() + (getHeight() - ARROW_SIZE) / 2;
 		boolean hovered = new Rect2i(x, y, ARROW_SIZE, ARROW_SIZE).contains(mouseX, mouseY);
@@ -41,8 +41,8 @@ public class ScrollBoxComponent extends Component {
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
-		super.render(context, mouseX, mouseY, partialTick);
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
+		super.extractRenderState(context, mouseX, mouseY, partialTick);
 		if (scrollPos > 0) renderArrow(context, mouseX, mouseY, true);
 		if (scrollPos < getContentSize() - getViewportSize()) renderArrow(context, mouseX, mouseY, false);
 	}

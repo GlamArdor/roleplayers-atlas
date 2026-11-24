@@ -89,13 +89,20 @@ public class RoleplayersAtlas implements ClientModInitializer {
 		return stack;
 	}
 
+	/** Runs now on the client thread, or queues it there from any other. */
+	private static void onClient(Runnable task) {
+		Minecraft client = Minecraft.getInstance();
+		if (client.isSameThread()) task.run();
+		else client.execute(task);
+	}
+
 	public static AtlasScreen openAtlasScreen() {
-		if (Minecraft.getInstance().screen == null) {
+		if (Minecraft.getInstance().gui.screen() == null) {
 			AtlasScreen screen = new AtlasScreen();
 			screen.init();
 			screen.prepareToOpen();
 			screen.tick();
-			Minecraft.getInstance().setScreen(screen);
+			Minecraft.getInstance().gui.setScreen(screen);
 			return screen;
 		}
 		return null;
@@ -121,11 +128,28 @@ public class RoleplayersAtlas implements ClientModInitializer {
 
 		// getOrCreate(summary), not the dimension: a proxy can put a different
 		// world behind the same dimension without the client ever disconnecting.
-		SurveyorClientEvents.Register.terrainUpdated(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onTerrainUpdated(s, k));
-		SurveyorClientEvents.Register.structuresAdded(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onStructuresAdded(s, k));
-		SurveyorClientEvents.Register.landmarksAdded(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onLandmarksAdded(s, k));
-		SurveyorClientEvents.Register.landmarksRemoved(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onLandmarksRemoved(s, k));
-		ClientTickEvents.END_WORLD_TICK.register((w -> SurveyorClient.getSummaries(Minecraft.getInstance().getConnection()).values().forEach(s -> WorldAtlasData.getOrCreate(s).tick(s))));
+		// In singleplayer Surveyor raises these on the integrated server's thread
+		// while the render thread is reading the same data, which on 26.3 crashed
+		// the server with a ConcurrentModificationException right after joining.
+		// The work is handed to the client thread, on a copy of what changed.
+		SurveyorClientEvents.Register.terrainUpdated(id("world_data"), (s, k) -> {
+			java.util.Map<folk.sisby.surveyor.util.RegionPos, java.util.BitSet> copy = new java.util.HashMap<>();
+			k.forEach((region, bits) -> copy.put(region, (java.util.BitSet) bits.clone()));
+			onClient(() -> WorldAtlasData.getOrCreate(s).onTerrainUpdated(s, copy));
+		});
+		SurveyorClientEvents.Register.structuresAdded(id("world_data"), (s, k) -> {
+			var copy = com.google.common.collect.ImmutableMultimap.copyOf(k);
+			onClient(() -> WorldAtlasData.getOrCreate(s).onStructuresAdded(s, copy));
+		});
+		SurveyorClientEvents.Register.landmarksAdded(id("world_data"), (s, k) -> {
+			var copy = com.google.common.collect.ImmutableMultimap.copyOf(k);
+			onClient(() -> WorldAtlasData.getOrCreate(s).onLandmarksAdded(s, copy));
+		});
+		SurveyorClientEvents.Register.landmarksRemoved(id("world_data"), (s, k) -> {
+			var copy = com.google.common.collect.ImmutableMultimap.copyOf(k);
+			onClient(() -> WorldAtlasData.getOrCreate(s).onLandmarksRemoved(s, copy));
+		});
+		ClientTickEvents.END_LEVEL_TICK.register((w -> SurveyorClient.getSummaries(Minecraft.getInstance().getConnection()).values().forEach(s -> WorldAtlasData.getOrCreate(s).tick(s))));
 		CommonLifecycleEvents.TAGS_LOADED.register(((manager, client) -> BiomeTileProviders.getInstance().registerFallbacks(manager.lookupOrThrow(Registries.BIOME))));
 		ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> BiomeTileProviders.getInstance().clearFallbacks()));
 		ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> WorldAtlasData.WORLDS.clear()));

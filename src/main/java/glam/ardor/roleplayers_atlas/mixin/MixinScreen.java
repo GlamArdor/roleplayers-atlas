@@ -1,7 +1,7 @@
 package glam.ardor.roleplayers_atlas.mixin;
 
 import glam.ardor.roleplayers_atlas.gui.SettingsLook;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,16 +19,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Screen.class)
 public abstract class MixinScreen {
-	@Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
-	private void roleplayers_atlas$noBlur(GuiGraphics context, CallbackInfo ci) {
+	@Inject(method = "extractBlurredBackground", at = @At("HEAD"), cancellable = true)
+	private void roleplayers_atlas$noBlur(GuiGraphicsExtractor context, CallbackInfo ci) {
 		if (SettingsLook.isOurs()) {
 			ci.cancel();
 		}
 	}
 
-	@Inject(method = "renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;)V",
+	@Inject(method = "extractMenuBackground(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V",
 			at = @At("HEAD"), cancellable = true)
-	private void roleplayers_atlas$noDarkening(GuiGraphics context, CallbackInfo ci) {
+	private void roleplayers_atlas$noDarkening(GuiGraphicsExtractor context, CallbackInfo ci) {
 		if (SettingsLook.isOurs()) {
 			ci.cancel();
 		}

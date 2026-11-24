@@ -6,8 +6,8 @@ import glam.ardor.roleplayers_atlas.WorldAtlasData;
 import glam.ardor.roleplayers_atlas.util.AtlasPainter;
 import glam.ardor.roleplayers_atlas.util.DrawBatcher;
 import glam.ardor.roleplayers_atlas.util.MathUtil;
+import glam.ardor.roleplayers_atlas.util.WorldBuffers;
 import glam.ardor.roleplayers_atlas.MarkerTexture;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import folk.sisby.surveyor.client.SurveyorClient;
@@ -17,7 +17,6 @@ import org.joml.Vector2d;
 
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
@@ -52,31 +51,19 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 	}
 
 	/**
-	 * 1.21.9 stopped handing the first-person renderer a {@link VertexConsumerProvider}
-	 * and defers everything through a command queue instead. The book is still drawn
-	 * exactly as before, into a provider of our own, and that provider is flushed
-	 * inside a custom command so it lands at the point in the frame the hand is drawn.
-	 * The vertices are already in world space by then, so the entry handed to the
-	 * command is not needed.
-	 * <p>
-	 * The allocator is kept between frames rather than rebuilt, since it holds
-	 * native memory.
+	 * 26.x has no MultiBufferSource to draw into, so the book is recorded into
+	 * {@link WorldBuffers} and replayed into the frame's submit queue at the end.
+	 * The vertices are already transformed, which is why the replay ignores the
+	 * pose the queue hands back.
 	 */
-	private static ByteBufferBuilder bookAllocator;
-	private static MultiBufferSource.BufferSource bookBuffers;
-
 	public void renderHandheldAtlas(PoseStack matrices, SubmitNodeCollector queue, int light) {
-		if (bookBuffers == null) {
-			bookAllocator = new ByteBufferBuilder(786432);
-			bookBuffers = MultiBufferSource.immediate(bookAllocator);
-		}
-		MultiBufferSource.BufferSource vertexConsumers = bookBuffers;
+		WorldBuffers vertexConsumers = new WorldBuffers(queue);
 
 		matrices.pushPose();
 		// Mirror the vanilla first-person map transform so the book sits in the
 		// hands exactly like a held map, then fit the book spread to map height.
-		matrices.mulPose(Axis.YP.rotationDegrees(180.0F));
-		matrices.mulPose(Axis.ZP.rotationDegrees(180.0F));
+		matrices.rotate(Axis.YP.rotationDegrees(180.0F));
+		matrices.rotate(Axis.ZP.rotationDegrees(180.0F));
 		// The held book's size scales with the setting (and the live zoom keys).
 		float handScale = 0.38F * (RoleplayersAtlas.CONFIG.handheldScale / 100.0F);
 		matrices.scale(handScale, handScale, handScale);
@@ -93,7 +80,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 
 		AtlasPainter painter = AtlasPainter.world(matrices, vertexConsumers);
 
-		boolean inScreen = Minecraft.getInstance().screen instanceof AtlasScreen;
+		boolean inScreen = Minecraft.getInstance().gui.screen() instanceof AtlasScreen;
 
 		if (open >= 1.0F) {
 			DrawBatcher.drawSingle(painter, AtlasScreen.BOOK, bookWidth, bookHeight, light, bookX, bookY, 0.3F, bookWidth, bookHeight, 0, 0, bookWidth, bookHeight, 0xFFFFFFFF, false);
@@ -129,7 +116,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 			matrices.translate(half, 0.0, 0.0);
 			matrices.scale(1.0F, 1.0F, 0.12F);
 			matrices.translate(0.0, 0.0, -6.0);
-			matrices.mulPose(Axis.YP.rotationDegrees(-angle));
+			matrices.rotate(Axis.YP.rotationDegrees(-angle));
 			// Back into book coordinates so map content lands on the flap and
 			// swings open together with the page.
 			matrices.translate(-half, 0.0, 0.0);
@@ -150,7 +137,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 
 		matrices.popPose();
 
-		queue.submitCustomGeometry(matrices, RenderTypes.entityTranslucent(AtlasScreen.BOOK), (entry, vertices) -> vertexConsumers.endBatch());
+		vertexConsumers.flush();
 	}
 
 	/**

@@ -200,7 +200,7 @@ public interface AtlasRenderer {
 		y1 = Math.max(y1, clipY1);
 		x2 = Math.min(x2, clipX2);
 		y2 = Math.min(y2, clipY2);
-		if (x2 > x1 && y2 > y1) DrawUtil.fill(painter, RenderTypes.textBackgroundSeeThrough(), z, light, x1, y1, x2, y2, alpha, color);
+		if (x2 > x1 && y2 > y1) DrawUtil.fill(painter, DrawUtil.plate(true), z, light, x1, y1, x2, y2, alpha, color);
 	}
 
 	default void renderMarker(AtlasPainter painter, Landmark landmark, MarkerTexture texture, float z, int light, BiFunction<Double, Double, Float> alphaGetter, boolean pinned, boolean hovering, float markerScale) {
@@ -251,10 +251,10 @@ public interface AtlasRenderer {
 						: alphaGetter.apply(markerX, markerY);
 					fillClipped(painter, z, light, 0, 0, size, size, clipX1, clipY1, clipX2, clipY2, 0.25F * alpha, fillColor);
 					if (lineSize > 0) {
-						if (!chunks.contains(new ChunkPos(chunk.x - 1, chunk.z))) fillClipped(painter, z, light, 0, 0, lineSize, size, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
-						if (!chunks.contains(new ChunkPos(chunk.x, chunk.z - 1))) fillClipped(painter, z, light, 0, 0, size, lineSize, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
-						if (!chunks.contains(new ChunkPos(chunk.x + 1, chunk.z))) fillClipped(painter, z, light, size - lineSize, 0, size, size, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
-						if (!chunks.contains(new ChunkPos(chunk.x, chunk.z + 1))) fillClipped(painter, z, light, 0, size - lineSize, size, size, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
+						if (!chunks.contains(new ChunkPos(chunk.x() - 1, chunk.z()))) fillClipped(painter, z, light, 0, 0, lineSize, size, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
+						if (!chunks.contains(new ChunkPos(chunk.x(), chunk.z() - 1))) fillClipped(painter, z, light, 0, 0, size, lineSize, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
+						if (!chunks.contains(new ChunkPos(chunk.x() + 1, chunk.z()))) fillClipped(painter, z, light, size - lineSize, 0, size, size, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
+						if (!chunks.contains(new ChunkPos(chunk.x(), chunk.z() + 1))) fillClipped(painter, z, light, 0, size - lineSize, size, size, clipX1, clipY1, clipX2, clipY2, 0.5F * alpha, fillColor);
 					}
 				}
 				painter.pop();
@@ -596,7 +596,7 @@ public interface AtlasRenderer {
 					painter.push();
 					painter.translate(sx, sy);
 					painter.rotateDegrees(angle);
-					DrawUtil.fill(painter, RenderTypes.textBackgroundSeeThrough(), z, light, 0, y1, (int) Math.max(1, Math.round(advance)), y1 + th, alpha * 0.9F, colorF);
+					DrawUtil.fill(painter, DrawUtil.plate(true), z, light, 0, y1, (int) Math.max(1, Math.round(advance)), y1 + th, alpha * 0.9F, colorF);
 					painter.pop();
 					dashGuard++;
 				} else {
@@ -735,7 +735,7 @@ public interface AtlasRenderer {
 				qy[2] = ribbon.get(k + 1)[1] + normals[k + 1][1] * plateFar;
 				qx[3] = ribbon.get(k + 1)[0] + normals[k + 1][0] * plateNear;
 				qy[3] = ribbon.get(k + 1)[1] + normals[k + 1][1] * plateNear;
-				DrawUtil.quadClipped(painter, RenderTypes.textBackground(), -0.5F, light, qx, qy, MAP_BORDER_WIDTH, MAP_BORDER_HEIGHT, MAP_BORDER_WIDTH + mapWidth(), MAP_BORDER_HEIGHT + mapHeight(), labelAlpha * 0.45F, plateColor);
+				DrawUtil.quadClipped(painter, DrawUtil.plate(false), -0.5F, light, qx, qy, MAP_BORDER_WIDTH, MAP_BORDER_HEIGHT, MAP_BORDER_WIDTH + mapWidth(), MAP_BORDER_HEIGHT + mapHeight(), labelAlpha * 0.45F, plateColor);
 			}
 		}
 

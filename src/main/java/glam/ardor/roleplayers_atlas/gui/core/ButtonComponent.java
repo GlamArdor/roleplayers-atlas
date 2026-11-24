@@ -1,5 +1,6 @@
 package glam.ardor.roleplayers_atlas.gui.core;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -21,7 +22,7 @@ public class ButtonComponent extends Component {
 	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		double x = click.x(), y = click.y();
 		int mouseButton = click.button();
-		if (!isClipped && mouseButton == 0 && isMouseOver(x, y)) {
+		if (!isClipped && mouseButton == InputConstants.MOUSE_BUTTON_LEFT && isMouseOver(x, y)) {
 			onClick();
 			return true;
 		}

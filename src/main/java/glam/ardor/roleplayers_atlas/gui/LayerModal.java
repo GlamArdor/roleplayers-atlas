@@ -1,5 +1,6 @@
 package glam.ardor.roleplayers_atlas.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
 import glam.ardor.roleplayers_atlas.AtlasComponents;
 import glam.ardor.roleplayers_atlas.MarkerLayers;
@@ -15,7 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.CharacterEvent;
@@ -139,22 +140,22 @@ public class LayerModal extends Component {
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, net.minecraft.network.chat.Component.translatable(editing == null ? "gui.roleplayers_atlas.layerModal.titleNew" : "gui.roleplayers_atlas.layerModal.titleEdit"), this.height / 2 - 58, 0xDDDDDD, true);
 		btnDone.active = !nameField.getValue().isBlank();
 		btnDelete.visible = editing != null;
 		btnDeleteAll.visible = editing != null;
-		nameField.render(context, mouseX, mouseY, partialTick);
-		btnDone.render(context, mouseX, mouseY, partialTick);
-		if (btnDelete.visible) btnDelete.render(context, mouseX, mouseY, partialTick);
-		if (btnDeleteAll.visible) btnDeleteAll.render(context, mouseX, mouseY, partialTick);
-		btnCancel.render(context, mouseX, mouseY, partialTick);
+		nameField.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnDone.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnDelete.visible) btnDelete.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnDeleteAll.visible) btnDeleteAll.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnCancel.extractRenderState(context, mouseX, mouseY, partialTick);
 		context.fillGradient(colorScrollBox.getGuiX() + 1, colorScrollBox.getGuiY() + 1,
 			colorScrollBox.getGuiX() + colorScrollBox.getWidth(),
 			colorScrollBox.getGuiY() + colorScrollBox.getHeight(),
 			0x88101010, 0x99101010);
-		super.render(context, mouseX, mouseY, partialTick);
+		super.extractRenderState(context, mouseX, mouseY, partialTick);
 	}
 
 	@Override
@@ -166,12 +167,12 @@ public class LayerModal extends Component {
 
 	@Override
 	public boolean keyPressed(KeyEvent input) {
-		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+		int keyCode = input.key(), scanCode = input.keycode(), modifiers = input.modifiers();
+		if (keyCode == InputConstants.KEY_ESCAPE) {
 			closeChild();
 			return true;
 		}
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+		if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
 			if (btnDone.active) btnDone.onPress(input);
 			return true;
 		}
@@ -181,7 +182,6 @@ public class LayerModal extends Component {
 	@Override
 	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
-		int modifiers = input.modifiers();
 		return super.charTyped(input) || nameField.charTyped(input);
 	}
 

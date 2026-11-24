@@ -16,7 +16,7 @@ public final class TerritoryUtil {
 	public static Map<RegionPos, BitSet> chunksToRegions(Collection<ChunkPos> chunks) {
 		Map<RegionPos, BitSet> regions = new HashMap<>();
 		for (ChunkPos chunk : chunks) {
-			RegionPos region = new RegionPos(RegionPos.chunkToRegion(chunk.x), RegionPos.chunkToRegion(chunk.z));
+			RegionPos region = new RegionPos(RegionPos.chunkToRegion(chunk.x()), RegionPos.chunkToRegion(chunk.z()));
 			regions.computeIfAbsent(region, r -> new BitSet(RegionPos.CHUNK_AREA)).set(RegionPos.chunkToBit(chunk));
 		}
 		return regions;
@@ -25,7 +25,7 @@ public final class TerritoryUtil {
 	/** O(1) membership test straight on the region bitsets. */
 	public static boolean contains(Map<RegionPos, BitSet> regions, ChunkPos chunk) {
 		if (regions == null) return false;
-		BitSet bits = regions.get(new RegionPos(RegionPos.chunkToRegion(chunk.x), RegionPos.chunkToRegion(chunk.z)));
+		BitSet bits = regions.get(new RegionPos(RegionPos.chunkToRegion(chunk.x()), RegionPos.chunkToRegion(chunk.z())));
 		return bits != null && bits.get(RegionPos.chunkToBit(chunk));
 	}
 

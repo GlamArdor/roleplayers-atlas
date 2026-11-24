@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -52,7 +52,7 @@ public final class ZoneTitles {
 
 	public static void init() {
 		ClientTickEvents.END_CLIENT_TICK.register(ZoneTitles::tick);
-		HudElementRegistry.addLast(RoleplayersAtlas.id("zone_title"), ZoneTitles::render);
+		HudElementRegistry.addLast(RoleplayersAtlas.id("zone_title"), ZoneTitles::extractRenderState);
 	}
 
 	private static void tick(Minecraft client) {
@@ -158,10 +158,10 @@ public final class ZoneTitles {
 		return best;
 	}
 
-	private static void render(GuiGraphics context, DeltaTracker tickCounter) {
+	private static void extractRenderState(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
 		if (title == null) return;
 		Minecraft client = Minecraft.getInstance();
-		if (client.options.hideGui || client.player == null) return;
+		if (client.gui.hud.isHidden() || client.player == null) return;
 
 		// How long the title holds fully shown before fading is a setting; the
 		// fade-in and fade-out stay fixed.
@@ -187,7 +187,7 @@ public final class ZoneTitles {
 		context.pose().pushMatrix();
 		context.pose().translate(context.guiWidth() / 2.0F, y);
 		context.pose().scale(scale, scale);
-		context.drawString(textRenderer, styled, -width / 2, 0, (a << 24) | color, true);
+		context.text(textRenderer, styled, -width / 2, 0, (a << 24) | color, true);
 		// Ornament lines: font-stroke thickness with the same 1px drop shadow as
 		// the glyphs. Grand (territory) titles get one above and one below.
 		int lineHalf = Math.max(24, width / 2 + 8);

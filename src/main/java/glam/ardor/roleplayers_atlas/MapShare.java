@@ -136,8 +136,8 @@ public final class MapShare {
 			ListTag chunkList = new ListTag();
 			BiomeOverrides.ownPatches(dim).forEach((pos, look) -> {
 				CompoundTag entry = new CompoundTag();
-				entry.putInt("X", pos.x);
-				entry.putInt("Z", pos.z);
+				entry.putInt("X", pos.x());
+				entry.putInt("Z", pos.z());
 				entry.putString("To", look.toString());
 				chunkList.add(entry);
 			});
@@ -147,8 +147,8 @@ public final class MapShare {
 			ListTag cityList = new ListTag();
 			CityPaint.ownCells(dim).forEach((pos, tile) -> {
 				CompoundTag entry = new CompoundTag();
-				entry.putInt("X", pos.x);
-				entry.putInt("Z", pos.z);
+				entry.putInt("X", pos.x());
+				entry.putInt("Z", pos.z());
 				entry.putString("To", tile.toString());
 				cityList.add(entry);
 			});
@@ -300,7 +300,7 @@ public final class MapShare {
 					CityPaint.restore(townsBefore);
 					WorldAtlasData data = WorldAtlasData.WORLDS.get(dim);
 					if (data != null) data.invalidateTileBatches();
-					if (net.minecraft.client.Minecraft.getInstance().screen instanceof glam.ardor.roleplayers_atlas.gui.AtlasScreen as) as.updateBookmarkerList();
+					if (net.minecraft.client.Minecraft.getInstance().gui.screen() instanceof glam.ardor.roleplayers_atlas.gui.AtlasScreen as) as.updateBookmarkerList();
 				},
 				() -> importFile(file, dim, summary, manager, takeCities));
 		}

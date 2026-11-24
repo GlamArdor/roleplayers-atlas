@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -147,9 +147,9 @@ public class AtlasConfigScreen extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-		super.render(context, mouseX, mouseY, delta);
-		context.drawCenteredString(this.font, this.title, this.width / 2, 18, 0xFFFFFFFF);
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+		super.extractRenderState(context, mouseX, mouseY, delta);
+		context.centeredText(this.font, this.title, this.width / 2, 18, 0xFFFFFFFF);
 	}
 
 	@Override
@@ -161,7 +161,7 @@ public class AtlasConfigScreen extends Screen {
 			|| wasElevations[3] != config.elevationPeak;
 		if (config.fallbackFailHandling != wasFallback || elevationsChanged) WorldAtlasData.retileAll();
 		if (config.reckoning != wasReckoning || config.showMarkDate != wasMarkDate) WorldAtlasData.redateGraves();
-		this.minecraft.setScreen(parent);
+		this.minecraft.gui.setScreen(parent);
 	}
 
 	private Component blocks(int value) {
@@ -273,11 +273,11 @@ public class AtlasConfigScreen extends Screen {
 			}
 
 			@Override
-			public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 				widget.setX(getContentX());
 				widget.setY(getContentY());
 				widget.setWidth(getContentWidth());
-				widget.render(context, mouseX, mouseY, tickDelta);
+				widget.extractRenderState(context, mouseX, mouseY, tickDelta);
 			}
 
 			@Override
@@ -299,9 +299,9 @@ public class AtlasConfigScreen extends Screen {
 			}
 
 			@Override
-			public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			public void extractContent(GuiGraphicsExtractor context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 				Minecraft client = Minecraft.getInstance();
-				context.drawCenteredString(client.font, text,
+				context.centeredText(client.font, text,
 					getContentXMiddle(), getContentY() + 8, 0xFFE0C070);
 			}
 

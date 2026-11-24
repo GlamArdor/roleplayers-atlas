@@ -3,7 +3,7 @@ package glam.ardor.roleplayers_atlas.gui;
 import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
 import glam.ardor.roleplayers_atlas.gui.core.ToggleButtonComponent;
 import glam.ardor.roleplayers_atlas.util.ColorUtil;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -59,13 +59,13 @@ public class BookmarkButton extends ToggleButtonComponent {
 		this.title = title;
 	}
 
-	public void drawIcon(GuiGraphics context, int x, int y) {
+	public void drawIcon(GuiGraphicsExtractor context, int x, int y) {
 		int tint = iconTint != null ? ARGB.color(255, (int) (iconTint[0] * 255), (int) (iconTint[1] * 255), (int) (iconTint[2] * 255)) : 0xFFFFFFFF;
 		context.blit(RenderPipelines.GUI_TEXTURED, iconTexture, x, y, 0, 0, iconWidth, iconHeight, iconWidth, iconHeight, tint);
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		boolean mouseOver = isMouseOver(mouseX, mouseY);
 		boolean isExtended = mouseOver || isSelected();
 
@@ -91,7 +91,7 @@ public class BookmarkButton extends ToggleButtonComponent {
 		this.tooltipLines = null;
 	}
 
-	public void renderTooltip(GuiGraphics context, int mouseX, int mouseY, float partialTick, boolean mouseOver) {
+	public void renderTooltip(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick, boolean mouseOver) {
 		if (!mouseOver || title.getString().isEmpty()) return;
 		if (hint == null) {
 			context.setTooltipForNextFrame(font, title, mouseX, mouseY);

@@ -2,7 +2,7 @@
 	"required": true,
 	"minVersion": "0.8",
 	"package": "glam.ardor.roleplayers_atlas.mixin",
-	"compatibilityLevel": "JAVA_21",
+	"compatibilityLevel": "JAVA_25",
 	"client": [
 		"MixinDrawContext",
 		"MixinGameRenderer",

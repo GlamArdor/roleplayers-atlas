@@ -9,7 +9,7 @@ import folk.sisby.surveyor.util.RegistryPalette;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanArrayMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntArrayMap;
-import net.fabricmc.fabric.api.tag.convention.v1.ConventionalBiomeTags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBiomeTags;
 import net.minecraft.core.Holder;
 import net.minecraft.core.IdMap;
 import net.minecraft.core.Registry;
@@ -77,7 +77,7 @@ public class TerrainTiling {
 	}
 
 	public static boolean isSwamp(Registry<Biome> biomeRegistry, Biome biome) {
-		return swampCache.computeIfAbsent(biome, b -> biomeRegistry.wrapAsHolder(b).is(ConventionalBiomeTags.SWAMP));
+		return swampCache.computeIfAbsent(biome, b -> biomeRegistry.wrapAsHolder(b).is(ConventionalBiomeTags.IS_SWAMP));
 	}
 
 	/**
@@ -108,7 +108,7 @@ public class TerrainTiling {
 
 	/** A number that is the chunk's own and looks like nothing in particular. */
 	private static int scatter(ChunkPos pos) {
-		long h = pos.x * 0x9E3779B97F4A7C15L ^ pos.z * 0xC2B2AE3D27D4EB4FL;
+		long h = pos.x() * 0x9E3779B97F4A7C15L ^ pos.z() * 0xC2B2AE3D27D4EB4FL;
 		h ^= h >>> 29;
 		h *= 0xBF58476D1CE4E5B9L;
 		h ^= h >>> 32;

@@ -20,7 +20,7 @@ public final class SettingsLook {
 	}
 
 	public static boolean isOurs() {
-		Screen current = Minecraft.getInstance().screen;
+		Screen current = Minecraft.getInstance().gui.screen();
 		return current != null && current == armed;
 	}
 }

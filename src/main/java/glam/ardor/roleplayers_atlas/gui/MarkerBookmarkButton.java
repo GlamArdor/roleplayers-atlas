@@ -1,7 +1,7 @@
 package glam.ardor.roleplayers_atlas.gui;
 
 import glam.ardor.roleplayers_atlas.MarkerTexture;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 public class MarkerBookmarkButton extends BookmarkButton {
@@ -13,7 +13,7 @@ public class MarkerBookmarkButton extends BookmarkButton {
 	}
 
 	@Override
-	public void drawIcon(GuiGraphics context, int x, int y) {
+	public void drawIcon(GuiGraphicsExtractor context, int x, int y) {
 		markerTexture.drawIcon(context, x, y, iconTint);
 	}
 }

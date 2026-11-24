@@ -1,5 +1,6 @@
 package glam.ardor.roleplayers_atlas.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import glam.ardor.roleplayers_atlas.BiomeOverrides;
 import glam.ardor.roleplayers_atlas.TileTexture;
 import glam.ardor.roleplayers_atlas.gui.core.ButtonComponent;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -350,11 +351,11 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		void drawContent(GuiGraphics context, int x, int y) {
+		void drawContent(GuiGraphicsExtractor context, int x, int y) {
 			BiomeOverrides.Sheet sheet = BiomeOverrides.importedSheet(author);
-			context.drawString(font, font.plainSubstrByWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
+			context.text(font, font.plainSubstrByWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
 			if (sheet != null) {
-				context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sharedCounts", sheet.biomeCount(), sheet.patchCount()), x + 4, y + 11, 0xFF9A8C70, true);
+				context.text(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sharedCounts", sheet.biomeCount(), sheet.patchCount()), x + 4, y + 11, 0xFF9A8C70, true);
 			}
 		}
 	}
@@ -374,17 +375,17 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		void drawContent(GuiGraphics context, int x, int y) {
+		void drawContent(GuiGraphicsExtractor context, int x, int y) {
 			TileTexture texture = tileOf(look);
 			if (texture != null) drawTile(context, texture, x + 2, y + 2);
 			int textX = x + TILE_SIZE + 6;
 			net.minecraft.network.chat.Component amount = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.ownCount", count);
 			int amountW = font.width(amount);
-			context.drawString(font, font.plainSubstrByWidth(friendlyName(look).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
-			context.drawString(font, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
+			context.text(font, font.plainSubstrByWidth(friendlyName(look).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
+			context.text(font, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
 			// The name it goes by underneath, dim: a translation is what you read,
 			// but the id is what you type into a config or say to an admin.
-			context.drawString(font, font.plainSubstrByWidth(look.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
+			context.text(font, font.plainSubstrByWidth(look.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
 		}
 	}
 
@@ -394,10 +395,10 @@ public class BiomeModal extends Component {
 			setSize(LIST_W, ROW_H);
 		}
 
-		abstract void drawContent(GuiGraphics context, int x, int y);
+		abstract void drawContent(GuiGraphicsExtractor context, int x, int y);
 
 		@Override
-		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+		public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -407,7 +408,7 @@ public class BiomeModal extends Component {
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
 			drawContent(context, x, y);
 			net.minecraft.network.chat.Component drop = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sheetDrop");
-			context.drawString(font, drop, x + getWidth() - font.width(drop) - 3, y + 6, 0xFFC8A05A, true);
+			context.text(font, drop, x + getWidth() - font.width(drop) - 3, y + 6, 0xFFC8A05A, true);
 			context.disableScissor();
 		}
 
@@ -433,18 +434,18 @@ public class BiomeModal extends Component {
 	 * glance. Tile art is brown lines on nothing at all, so it needs the paper
 	 * put behind it or there is nothing to see.
 	 */
-	static void drawTile(GuiGraphics context, TileTexture texture, int x, int y) {
+	static void drawTile(GuiGraphicsExtractor context, TileTexture texture, int x, int y) {
 		drawTile(context, texture, x, y, TILE_SIZE);
 	}
 
 	/** The same at any size – the grid draws them large enough to actually read. */
-	static void drawTile(GuiGraphics context, TileTexture texture, int x, int y, int size) {
+	static void drawTile(GuiGraphicsExtractor context, TileTexture texture, int x, int y, int size) {
 		int half = size / 2;
 		context.fill(x, y, x + size, y + size, PAPER);
 		for (int[] part : FULL_TILE) {
 			context.blit(RenderPipelines.GUI_TEXTURED, texture.id(), x + part[0] * half, y + part[1] * half, part[2] * 8, part[3] * 8, half, half, 8, 8, 32, 48);
 		}
-		context.renderOutline(x, y, size, size, PAPER_EDGE);
+		context.outline(x, y, size, size, PAPER_EDGE);
 	}
 
 	/**
@@ -477,7 +478,7 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+		public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -497,17 +498,17 @@ public class BiomeModal extends Component {
 			net.minecraft.network.chat.Component source = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.source." + entry.source.name().toLowerCase(Locale.ROOT));
 			int sourceW = font.width(source);
 			int nameRoom = x + getWidth() - sourceW - 6 - textX;
-			context.drawString(font, font.plainSubstrByWidth(friendlyName(entry.biome).getString(), nameRoom), textX, y + 2, 0xFFF0E4C8, true);
-			context.drawString(font, source, x + getWidth() - sourceW - 3, y + 2, sourceInk(entry.source), true);
+			context.text(font, font.plainSubstrByWidth(friendlyName(entry.biome).getString(), nameRoom), textX, y + 2, 0xFFF0E4C8, true);
+			context.text(font, source, x + getWidth() - sourceW - 3, y + 2, sourceInk(entry.source), true);
 
 			// Only your own word can be taken back here; someone else's sheet is
 			// torn out whole, from the ledger that lists them.
 			boolean corrected = BiomeOverrides.all().containsKey(entry.biome);
 			net.minecraft.network.chat.Component reset = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.reset");
 			int idRoom = getWidth() - (TILE_SIZE + 6) - (corrected ? font.width(reset) + 8 : 4);
-			context.drawString(font, font.plainSubstrByWidth(entry.biome.toString(), idRoom), textX, y + 11, 0xFF9A8C70, true);
+			context.text(font, font.plainSubstrByWidth(entry.biome.toString(), idRoom), textX, y + 11, 0xFF9A8C70, true);
 			if (corrected) {
-				context.drawString(font, reset, x + getWidth() - font.width(reset) - 3, y + 11, 0xFFC8A05A, true);
+				context.text(font, reset, x + getWidth() - font.width(reset) - 3, y + 11, 0xFFC8A05A, true);
 			}
 			context.disableScissor();
 		}
@@ -554,7 +555,7 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+		public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -564,9 +565,9 @@ public class BiomeModal extends Component {
 			TileTexture texture = tileOf(look);
 			if (texture != null) drawTile(context, texture, x, y, GRID_TILE);
 			boolean chosen = chosenLook != null ? look.equals(chosenLook) : (picking != null && look.equals(BiomeTileProviders.getInstance().drawnAs(picking)));
-			if (chosen) context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
+			if (chosen) context.outline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) {
-				context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
+				context.outline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
 			}
 			context.disableScissor();
 		}
@@ -581,7 +582,7 @@ public class BiomeModal extends Component {
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, switch (view) {
 			case SHARED -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sharedTitle");
@@ -617,24 +618,24 @@ public class BiomeModal extends Component {
 
 		context.fillGradient(listLeft(), listTop(), listLeft() + LIST_W, listTop() + LIST_H, 0x66101010, 0x77101010);
 		if (sheets) {
-			btnSheetBack.render(context, mouseX, mouseY, partialTick);
-			btnSheetDropAll.render(context, mouseX, mouseY, partialTick);
+			btnSheetBack.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnSheetDropAll.extractRenderState(context, mouseX, mouseY, partialTick);
 		} else if (listing) {
-			searchField.render(context, mouseX, mouseY, partialTick);
-			btnGuessedOnly.render(context, mouseX, mouseY, partialTick);
-			btnResetAll.render(context, mouseX, mouseY, partialTick);
-			btnDone.render(context, mouseX, mouseY, partialTick);
-			btnOwn.render(context, mouseX, mouseY, partialTick);
-			btnShared.render(context, mouseX, mouseY, partialTick);
+			searchField.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnGuessedOnly.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnResetAll.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnDone.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnOwn.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnShared.extractRenderState(context, mouseX, mouseY, partialTick);
 			if (entries.isEmpty()) {
 				drawCentered(context, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.none"), listTop() + LIST_H / 2 - 4, 0xAAAAAA, true);
 			}
 		} else {
-			btnPickCancel.render(context, mouseX, mouseY, partialTick);
-			if (patchCells != null) btnPickClear.render(context, mouseX, mouseY, partialTick);
-			btnPickApply.render(context, mouseX, mouseY, partialTick);
+			btnPickCancel.extractRenderState(context, mouseX, mouseY, partialTick);
+			if (patchCells != null) btnPickClear.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnPickApply.extractRenderState(context, mouseX, mouseY, partialTick);
 		}
-		super.render(context, mouseX, mouseY, partialTick);
+		super.extractRenderState(context, mouseX, mouseY, partialTick);
 
 		// The name of the look under the cursor, once everything else is down.
 		if (view == View.PICK) {
@@ -662,10 +663,10 @@ public class BiomeModal extends Component {
 
 	@Override
 	public boolean keyPressed(KeyEvent input) {
-		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
+		int keyCode = input.key(), scanCode = input.keycode(), modifiers = input.modifiers();
 		// Escape steps back one view at a time, and out of the window from the
 		// list. Left to the screen behind it, it would shut the book instead.
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+		if (keyCode == InputConstants.KEY_ESCAPE) {
 			switch (view) {
 				case PICK -> stopPicking();
 				case OWN, SHARED -> closeSheets();
@@ -673,7 +674,7 @@ public class BiomeModal extends Component {
 			}
 			return true;
 		}
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+		if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
 			if (view == View.PICK && btnPickApply.active) btnPickApply.onPress(input);
 			else if (view == View.LIST) closeChild();
 			return true;
@@ -684,7 +685,6 @@ public class BiomeModal extends Component {
 	@Override
 	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
-		int modifiers = input.modifiers();
 		return super.charTyped(input) || searchField.charTyped(input);
 	}
 }

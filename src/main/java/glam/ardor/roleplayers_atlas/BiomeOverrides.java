@@ -445,7 +445,7 @@ public final class BiomeOverrides {
 			fromPatches.forEach((dimension, cells) -> {
 				if (cells.isEmpty()) return;
 				Map<String, String> written = new LinkedHashMap<>();
-				cells.forEach((pos, look) -> written.put(pos.x + "," + pos.z, look.toString()));
+				cells.forEach((pos, look) -> written.put(pos.x() + "," + pos.z(), look.toString()));
 				out.chunks.put(dimension.toString(), written);
 			});
 		}

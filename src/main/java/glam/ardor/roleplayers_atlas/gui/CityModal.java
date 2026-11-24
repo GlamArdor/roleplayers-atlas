@@ -1,5 +1,6 @@
 package glam.ardor.roleplayers_atlas.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import glam.ardor.roleplayers_atlas.CityPaint;
 import glam.ardor.roleplayers_atlas.TileTexture;
 import glam.ardor.roleplayers_atlas.gui.core.ButtonComponent;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -266,7 +267,7 @@ public class CityModal extends Component {
 		}
 
 		@Override
-		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+		public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -275,9 +276,9 @@ public class CityModal extends Component {
 			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
 			TileTexture texture = textureOf(piece);
 			if (texture != null) BiomeModal.drawTile(context, texture, x, y, GRID_TILE);
-			if (piece.equals(held())) context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
+			if (piece.equals(held())) context.outline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) {
-				context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
+				context.outline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
 			}
 			context.disableScissor();
 		}
@@ -297,10 +298,10 @@ public class CityModal extends Component {
 			setSize(LIST_W, ROW_H);
 		}
 
-		abstract void drawContent(GuiGraphics context, int x, int y);
+		abstract void drawContent(GuiGraphicsExtractor context, int x, int y);
 
 		@Override
-		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+		public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -310,7 +311,7 @@ public class CityModal extends Component {
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
 			drawContent(context, x, y);
 			net.minecraft.network.chat.Component drop = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sheetDrop");
-			context.drawString(font, drop, x + getWidth() - font.width(drop) - 3, y + 6, 0xFFC8A05A, true);
+			context.text(font, drop, x + getWidth() - font.width(drop) - 3, y + 6, 0xFFC8A05A, true);
 			context.disableScissor();
 		}
 
@@ -339,16 +340,16 @@ public class CityModal extends Component {
 		}
 
 		@Override
-		void drawContent(GuiGraphics context, int x, int y) {
+		void drawContent(GuiGraphicsExtractor context, int x, int y) {
 			TileTexture texture = textureOf(piece);
 			if (texture != null) BiomeModal.drawTile(context, texture, x + 2, y + 2, TILE_SIZE);
 			int textX = x + TILE_SIZE + 6;
 			net.minecraft.network.chat.Component amount = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.ownCount", familyName(piece), count);
 			int amountW = font.width(amount);
-			context.drawString(font, font.plainSubstrByWidth(pieceName(piece).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
-			context.drawString(font, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
+			context.text(font, font.plainSubstrByWidth(pieceName(piece).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
+			context.text(font, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
 			// The name it goes by underneath, dim, the same as in the biome window.
-			context.drawString(font, font.plainSubstrByWidth(piece.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
+			context.text(font, font.plainSubstrByWidth(piece.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
 		}
 	}
 
@@ -364,14 +365,14 @@ public class CityModal extends Component {
 		}
 
 		@Override
-		void drawContent(GuiGraphics context, int x, int y) {
-			context.drawString(font, font.plainSubstrByWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
-			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.sharedCount", CityPaint.importedCount(author)), x + 4, y + 11, 0xFF9A8C70, true);
+		void drawContent(GuiGraphicsExtractor context, int x, int y) {
+			context.text(font, font.plainSubstrByWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
+			context.text(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.sharedCount", CityPaint.importedCount(author)), x + 4, y + 11, 0xFF9A8C70, true);
 		}
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, switch (view) {
 			case OWN -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.ownTitle");
@@ -393,18 +394,18 @@ public class CityModal extends Component {
 
 		context.fillGradient(listLeft(), listTop(), listLeft() + LIST_W, listTop() + LIST_H, 0x66101010, 0x77101010);
 		if (picking) {
-			searchField.render(context, mouseX, mouseY, partialTick);
-			btnCancel.render(context, mouseX, mouseY, partialTick);
-			btnOwn.render(context, mouseX, mouseY, partialTick);
-			btnShared.render(context, mouseX, mouseY, partialTick);
+			searchField.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnCancel.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnOwn.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnShared.extractRenderState(context, mouseX, mouseY, partialTick);
 			if (pieces.isEmpty()) {
 				drawCentered(context, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.none"), listTop() + LIST_H / 2 - 4, 0xAAAAAA, true);
 			}
 		} else {
-			btnSheetBack.render(context, mouseX, mouseY, partialTick);
-			btnSheetDropAll.render(context, mouseX, mouseY, partialTick);
+			btnSheetBack.extractRenderState(context, mouseX, mouseY, partialTick);
+			btnSheetDropAll.extractRenderState(context, mouseX, mouseY, partialTick);
 		}
-		super.render(context, mouseX, mouseY, partialTick);
+		super.extractRenderState(context, mouseX, mouseY, partialTick);
 
 		if (picking) {
 			for (Component child : pickBox.getViewport().getChildren()) {
@@ -435,8 +436,8 @@ public class CityModal extends Component {
 
 	@Override
 	public boolean keyPressed(KeyEvent input) {
-		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+		int keyCode = input.key(), scanCode = input.keycode(), modifiers = input.modifiers();
+		if (keyCode == InputConstants.KEY_ESCAPE || keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
 			if (view == View.PICK) closeChild();
 			else closeSheets();
 			return true;
@@ -447,7 +448,6 @@ public class CityModal extends Component {
 	@Override
 	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
-		int modifiers = input.modifiers();
 		return super.charTyped(input) || searchField.charTyped(input);
 	}
 

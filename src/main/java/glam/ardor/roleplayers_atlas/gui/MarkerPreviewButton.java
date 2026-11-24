@@ -1,7 +1,7 @@
 package glam.ardor.roleplayers_atlas.gui;
 
 import glam.ardor.roleplayers_atlas.MarkerTexture;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 public class MarkerPreviewButton extends TexturePreviewButton<MarkerTexture> {
 	public MarkerPreviewButton(MarkerTexture markerTexture, float[] tint) {
@@ -9,7 +9,7 @@ public class MarkerPreviewButton extends TexturePreviewButton<MarkerTexture> {
 	}
 
 	@Override
-	protected void drawTexture(GuiGraphics context, int x, int y) {
+	protected void drawTexture(GuiGraphicsExtractor context, int x, int y) {
 		getValue().drawIcon(context, x, y, tint);
 	}
 }

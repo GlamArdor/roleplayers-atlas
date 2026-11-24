@@ -22,29 +22,54 @@ dependencies {
 	implementation libs.kaleidoConfig
 
 	minecraft libs.mc
-	mappings loom.officialMojangMappings()
-	modImplementation libs.fl
+	implementation libs.fl
 
-	modImplementation libs.fapi
+	implementation libs.fapi
 
-	modImplementation libs.surveyor
+	implementation libs.surveyor
 	include libs.surveyor
 
 	// ModMenu: config screen entrypoint; present in the dev client for testing.
-	modCompileOnly "com.terraformersmc:modmenu:17.0.0"
-	modLocalRuntime "com.terraformersmc:modmenu:17.0.0"
+	compileOnly "com.terraformersmc:modmenu:21.0.1"
+	localRuntime "com.terraformersmc:modmenu:21.0.1"
 
 	// Cloth Config: optional at runtime, so it must not be shaded in. It brings
 	// its own copy of Fabric API along, which would fight with ours.
-	modCompileOnly(libs.clothConfig) { exclude group: "net.fabricmc.fabric-api" }
-	modLocalRuntime(libs.clothConfig) { exclude group: "net.fabricmc.fabric-api" }
+	compileOnly(libs.clothConfig) { exclude group: "net.fabricmc.fabric-api" }
+	localRuntime(libs.clothConfig) { exclude group: "net.fabricmc.fabric-api" }
+}
+
+// Dev-only walk-through of the mod (see SelfTest). Its own source set, so it
+// never reaches the released jar.
+sourceSets {
+	selftest {
+		compileClasspath += main.compileClasspath + main.output
+		runtimeClasspath += main.runtimeClasspath + main.output
+	}
 }
 
 loom {
+	mods {
+		roleplayers_atlas {
+			sourceSet sourceSets.main
+		}
+		roleplayers_atlas_selftest {
+			sourceSet sourceSets.selftest
+		}
+	}
 	runs {
+		selftest {
+			inherit client
+			name "Self-test client"
+			source sourceSets.selftest
+			vmArgs "-Droleplayers_atlas.selftest=true"
+			// -PextraMods=<folder> loads a real modpack next to the atlas (26.x needs no remapping).
+			if (project.hasProperty("extraMods")) vmArgs "-Dfabric.addMods=${project.property("extraMods")}"
+			programArgs "--quickPlaySingleplayer", "New World", "--width", "1600", "--height", "900"
+		}
 		client {
-			// Dev convenience: jump straight into the test world.
-			programArgs "--quickPlaySingleplayer", "New World"
+			// Dev convenience: jump straight into the test world, once there is one.
+			if (file("run/saves/New World").exists()) programArgs "--quickPlaySingleplayer", "New World"
 		}
 	}
 }
@@ -74,13 +99,14 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	it.options.release = 21
+	it.options.release = 25
+	it.options.compilerArgs += ["-Xmaxerrs", "5000"]
 }
 
 java {
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {
@@ -111,7 +137,7 @@ githubRelease {
 	repo = slug
 	tagName = "v${baseVersion}+${tagBranch}"
 	targetCommitish = tagBranch
-	releaseAssets = remapJar
+	releaseAssets = jar
 	releaseName = "v${baseVersion}"
 	allowUploadToExisting = true
 	generateReleaseNotes = true
@@ -124,7 +150,7 @@ modrinth {
 	token = System.getenv("MODRINTH_TOKEN") ?: (project.findProperty("modrinthToken") ?: "")
 	projectId = modrinthSlug
 	versionNumber = project.version
-	uploadFile = remapJar
+	uploadFile = jar
 	gameVersions = compatibleVersions.split(", ").toList()
 	loaders = compatibleLoaders.split(", ").toList()
 	changelog = !file("CHANGELOG.md").exists() ? "" : rootProject.file("CHANGELOG.md").text + "\n\nChangelog: ${repoUrl}/releases/tag/v${baseVersion}+${tagBranch}"
@@ -155,7 +181,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
 	// refuses to run until a project of one's own is named in gradle.properties.
 	def projectId = project.findProperty("curseforgeId") ?: ""
 	if (!projectId) throw new GradleException("Set curseforgeId in gradle.properties before publishing to CurseForge.")
-	def mainFile = upload(projectId, remapJar)
+	def mainFile = upload(projectId, jar)
 	compatibleLoaders.split(", ").toList().forEach { mainFile.addModLoader(it) }
 	compatibleVersions.split(", ").toList().forEach { mainFile.addGameVersion(it) }
 	mainFile.addEnvironment("client")

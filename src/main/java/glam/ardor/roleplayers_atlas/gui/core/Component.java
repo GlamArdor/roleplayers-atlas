@@ -5,7 +5,7 @@ import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -321,11 +321,11 @@ public class Component extends Screen {
 	 * Drawable children are not rendered.
 	 */
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		// Do not call super() as it would render the background
 		for (Component child : children) {
 			if (!child.isClipped) {
-				child.render(context, mouseX, mouseY, partialTick);
+				child.extractRenderState(context, mouseX, mouseY, partialTick);
 			}
 		}
 	}
@@ -424,7 +424,7 @@ public class Component extends Screen {
 		if (parent != null) {
 			parent.removeChild(this); // This sets parent to null
 		} else {
-			Minecraft.getInstance().setScreen(null);
+			Minecraft.getInstance().gui.setScreen(null);
 		}
 	}
 
@@ -437,9 +437,9 @@ public class Component extends Screen {
 	/**
 	 * Draw a text string centered horizontally, using this GUI's font.
 	 */
-	public void drawCentered(GuiGraphics context, net.minecraft.network.chat.Component text, int y, int color, boolean dropShadow) {
+	public void drawCentered(GuiGraphicsExtractor context, net.minecraft.network.chat.Component text, int y, int color, boolean dropShadow) {
 		int length = this.font.width(text);
-		context.drawString(font, text, (this.width - length) / 2, y, color, dropShadow);
+		context.text(font, text, (this.width - length) / 2, y, color, dropShadow);
 	}
 
 	public double getMouseX() {

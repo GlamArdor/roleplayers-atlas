@@ -8,10 +8,9 @@ import org.joml.Matrix4f;
 
 import java.lang.reflect.Method;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -57,10 +56,10 @@ public class DrawBatcher implements AutoCloseable {
 			this.matrix4f = null;
 			this.vertexConsumer = null;
 		} else {
-			MultiBufferSource vertexConsumers = painter.vertexConsumers();
+			WorldBuffers vertexConsumers = painter.vertexConsumers();
 			if (areWeShadersRightNow()) {
 				if (drawingTransparent) {
-					this.vertexConsumer = vertexConsumers.getBuffer(RenderTypes.entityNoOutline(texture));
+					this.vertexConsumer = vertexConsumers.getBuffer(RenderTypes.entityTranslucent(texture));
 				} else {
 					this.vertexConsumer = vertexConsumers.getBuffer(RenderTypes.entitySolid(texture));
 				}
@@ -119,7 +118,7 @@ public class DrawBatcher implements AutoCloseable {
 	@Override
 	public void close() {
 		if (painter.isGui() && guiQuads != null && !guiQuads.isEmpty()) {
-			GuiGraphics context = painter.context();
+			GuiGraphicsExtractor context = painter.context();
 			Matrix3x2f pose = new Matrix3x2f(context.pose());
 			ScreenRectangle scissor = context.scissorStack.peek();
 			// Textures carry their own sampler since 1.21.9, and TextureSetup now wants both.
@@ -128,7 +127,7 @@ public class DrawBatcher implements AutoCloseable {
 			ScreenRectangle bounds = new ScreenRectangle((int) Math.floor(guiMinX), (int) Math.floor(guiMinY), (int) Math.ceil(guiMaxX - guiMinX), (int) Math.ceil(guiMaxY - guiMinY)).transformMaxBounds(pose);
 			if (scissor != null) bounds = bounds.intersection(scissor);
 			if (bounds != null) {
-				context.guiRenderState.submitGuiElement(new BatchedGuiQuads(RenderPipelines.GUI_TEXTURED, textureSetup, pose, scissor, guiQuads.toFloatArray(), guiColors.toIntArray(), guiColors.size(), bounds));
+				context.guiRenderState.addGuiElement(new BatchedGuiQuads(RenderPipelines.GUI_TEXTURED, textureSetup, pose, scissor, guiQuads.toFloatArray(), guiColors.toIntArray(), guiColors.size(), bounds));
 			}
 			guiQuads = null;
 			guiColors = null;

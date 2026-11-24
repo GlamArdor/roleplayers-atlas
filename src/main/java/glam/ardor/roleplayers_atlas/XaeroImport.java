@@ -276,9 +276,11 @@ public final class XaeroImport {
 	 * chosen keeps a red waypoint red.
 	 */
 	public static DyeColor dyeOf(int index) {
-		ChatFormatting formatting = ChatFormatting.getById(Math.max(0, Math.min(15, index)));
-		Integer rgb = formatting == null ? null : formatting.getColor();
-		if (rgb == null) return DyeColor.WHITE;
+		// The first sixteen formattings are the colours, in Xaero's index order.
+		ChatFormatting formatting = ChatFormatting.values()[Math.max(0, Math.min(15, index))];
+		net.minecraft.network.chat.TextColor color = net.minecraft.network.chat.TextColor.fromLegacyFormat(formatting);
+		if (color == null) return DyeColor.WHITE;
+		int rgb = color.getValue();
 		DyeColor nearest = DyeColor.WHITE;
 		int best = Integer.MAX_VALUE;
 		for (DyeColor dye : DyeColor.values()) {

@@ -124,6 +124,6 @@ public final class MapTeleport {
 			command = "execute in " + dim.identifier() + " run " + command;
 		}
 		client.getConnection().sendCommand(command);
-		player.displayClientMessage(Component.translatable("gui.roleplayers_atlas.teleport.sent", x, height, z), true);
+		player.sendOverlayMessage(Component.translatable("gui.roleplayers_atlas.teleport.sent", x, height, z));
 	}
 }

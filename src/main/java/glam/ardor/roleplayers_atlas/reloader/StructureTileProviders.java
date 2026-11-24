@@ -122,19 +122,19 @@ public class StructureTileProviders extends LegacyJsonDataLoader implements Iden
 	public void resolve(Map<ChunkPos, TileTexture> outTiles, Map<ChunkPos, StructureTileProvider> structureProviders, Map<ChunkPos, String> debugPredicates, Map<Landmark, MarkerTexture> outMarkers, WorldSummary summary, ResourceKey<Structure> key, ChunkPos pos, StructureStartSummary start, ResourceKey<StructureType<?>> type, Collection<TagKey<Structure>> tags) {
 		if (startMarkers.containsKey(key.identifier())) {
 			MarkerTexture texture = startMarkers.get(key.identifier());
-			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
+			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x() + "/" + pos.z()), b -> b
 				.add(LandmarkComponentTypes.POS, pos.getMiddleBlockPosition(0))
 				.add(LandmarkComponentTypes.NAME, Component.translatable(ProviderType.START.translation(key.identifier())))
 			), texture);
 		} else if (type != null && typeMarkers.containsKey(type.identifier())) {
 			MarkerTexture texture = typeMarkers.get(type.identifier());
-			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
+			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x() + "/" + pos.z()), b -> b
 				.add(LandmarkComponentTypes.POS, pos.getMiddleBlockPosition(0))
 				.add(LandmarkComponentTypes.NAME, Component.translatable(ProviderType.TYPE.translation(type.identifier())))
 			), texture);
 		} else {
 			tagMarkers.entrySet().stream().filter(entry -> tags.contains(TagKey.create(Registries.STRUCTURE, entry.getKey()))).findFirst().ifPresent(entry ->
-				outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
+				outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x() + "/" + pos.z()), b -> b
 					.add(LandmarkComponentTypes.POS, pos.getMiddleBlockPosition(0))
 					.add(LandmarkComponentTypes.NAME, Component.translatable(ProviderType.TAG.translation(entry.getKey())))
 				), entry.getValue()));

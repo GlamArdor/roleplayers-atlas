@@ -1,5 +1,6 @@
 package glam.ardor.roleplayers_atlas.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import glam.ardor.roleplayers_atlas.MarkerTexture;
 import glam.ardor.roleplayers_atlas.WorldAtlasData;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
@@ -18,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.CharacterEvent;
@@ -333,13 +334,13 @@ public class MarkerModal extends Component {
 	}
 
 	/** Multiline note box: vanilla-textfield look, word-wrapped content, blinking cursor. */
-	private void renderNoteBox(GuiGraphics context) {
+	private void renderNoteBox(GuiGraphicsExtractor context) {
 		int x = noteBoxX();
 		int y = noteBoxY();
 		context.fill(x - 1, y - 1, x + NOTE_W + 1, y + noteH + 1, noteFocused ? 0xFFFFFFFF : 0xFFA0A0A0);
 		context.fill(x, y, x + NOTE_W, y + noteH, 0xFF000000);
 		if (noteText.isEmpty() && !noteFocused) {
-			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.note"), x + 4, y + 4, 0xFF707070, false);
+			context.text(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.note"), x + 4, y + 4, 0xFF707070, false);
 			return;
 		}
 		java.util.List<String> lines = wrapNote(noteText, NOTE_W - 10);
@@ -350,7 +351,7 @@ public class MarkerModal extends Component {
 		for (int i = start; i < lines.size(); i++) {
 			String line = lines.get(i);
 			boolean last = i == lines.size() - 1;
-			context.drawString(font, net.minecraft.network.chat.Component.literal(last && cursorBlink ? line + "_" : line), x + 4, y + 4 + (i - start) * 9, 0xFFE0E0E0, false);
+			context.text(font, net.minecraft.network.chat.Component.literal(last && cursorBlink ? line + "_" : line), x + 4, y + 4 + (i - start) * 9, 0xFFE0E0E0, false);
 		}
 	}
 
@@ -548,11 +549,11 @@ public class MarkerModal extends Component {
 		}
 
 		@Override
-		protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
+		protected void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
 			int x = getX(), y = getY(), w = getWidth(), h = getHeight();
 			context.fill(x - 1, y - 1, x + w + 1, y + h + 1, isHovered() || dragging >= 0 ? 0xFFFFFFFF : 0xFFA0A0A0);
 			context.fill(x, y, x + w, y + h, 0xFF000000);
-			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve"), x + 4, y + 3, 0xFF707070, false);
+			context.text(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve"), x + 4, y + 3, 0xFF707070, false);
 			double half = half(), cx = centerX(), cy = centerY();
 			// Tilted letters at the ends of a steep bend can still poke out; the box clips them.
 			context.enableScissor(x, y, x + w, y + h);
@@ -583,7 +584,7 @@ public class MarkerModal extends Component {
 				context.fill(hx - 3, hy - 3, hx + 4, hy + 4, 0xFF2E1A0C);
 				context.fill(hx - 2, hy - 2, hx + 3, hy + 3, i == lit ? 0xFFFFE080 : 0xFFE8D9B0);
 			}
-			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve.hint"), x + 4, y + h - 11, 0xFF505050, false);
+			context.text(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve.hint"), x + 4, y + h - 11, 0xFF505050, false);
 		}
 
 		private int nearestHandle(double mouseX) {
@@ -603,7 +604,7 @@ public class MarkerModal extends Component {
 		@Override
 		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			if (!this.active || !this.visible || !isMouseOver(click.x(), click.y())) return false;
-			if (click.button() == 1) {
+			if (click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
 				labelCurve = isTerritory() ? new int[]{0, 20, 0} : Lettering.DEFAULT_CURVE.clone();
 				curveSet = false;
 				playDownSound(Minecraft.getInstance().getSoundManager());
@@ -1001,17 +1002,17 @@ public class MarkerModal extends Component {
 
 	@Override
 	public boolean keyPressed(KeyEvent input) {
-		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
+		int keyCode = input.key(), scanCode = input.keycode(), modifiers = input.modifiers();
 		if (noteFocused) {
-			if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE && !noteText.isEmpty()) {
+			if (keyCode == InputConstants.KEY_BACKSPACE && !noteText.isEmpty()) {
 				noteText = noteText.substring(0, noteText.length() - 1);
 				return true;
 			}
-			if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+			if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER || keyCode == InputConstants.KEY_ESCAPE) {
 				noteFocused = false;
 				return true;
 			}
-			if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
+			if (keyCode == InputConstants.KEY_V && (modifiers & InputConstants.MOD_CONTROL) != 0) {
 				String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
 				if (clip != null) noteText = (noteText + clip).substring(0, Math.min(512, noteText.length() + clip.length()));
 				return true;
@@ -1020,13 +1021,13 @@ public class MarkerModal extends Component {
 		}
 		// Enter is the same as pressing Done. Typing a name and reaching for the
 		// mouse to confirm it is a step nobody expects to have to take.
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+		if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
 			if (btnDone != null && btnDone.active) btnDone.onPress(input);
 			return true;
 		}
 		// Escape backs out of the dialog. Handled here rather than left to the
 		// screen behind, which would take the whole book down with it.
-		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+		if (keyCode == InputConstants.KEY_ESCAPE) {
 			closeChild();
 			return true;
 		}
@@ -1040,7 +1041,6 @@ public class MarkerModal extends Component {
 	@Override
 	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
-		int modifiers = input.modifiers();
 		if (noteFocused) {
 			if (chr >= ' ' && noteText.length() < 512) noteText += chr;
 			return true;
@@ -1050,7 +1050,7 @@ public class MarkerModal extends Component {
 	}
 
 	@Override
-	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
+	public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
 		// Switching plate/lettering adds or drops the curve row, so the dialog is
 		// laid out again – here, outside the click that asked for it.
 		if (relayout) {
@@ -1064,36 +1064,36 @@ public class MarkerModal extends Component {
 		drawCentered(context, isSpawn() ? net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.spawn.name") : net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.label"), titleY, 0xDDDDDD, true);
 		// Inscriptions must not be empty – they are nothing but their text.
 		btnDone.active = !isPenLabel() || !textField.getValue().isBlank();
-		btnCancel.render(context, mouseX, mouseY, partialTick);
-		btnDone.render(context, mouseX, mouseY, partialTick);
+		btnCancel.extractRenderState(context, mouseX, mouseY, partialTick);
+		btnDone.extractRenderState(context, mouseX, mouseY, partialTick);
 		// Nothing to lengthen on a road that is still being drawn for the first time.
 		btnExtend.visible = isRoute() && !isSpawn() && baseLandmark != null && !baseLandmark.id().getPath().equals("newroute");
-		if (btnExtend.visible) btnExtend.render(context, mouseX, mouseY, partialTick);
+		if (btnExtend.visible) btnExtend.extractRenderState(context, mouseX, mouseY, partialTick);
 		// Nothing to reshape on a zone that is still being painted for the first time.
 		btnEditArea.visible = isTerritory() && baseLandmark != null && !baseLandmark.id().getPath().equals("newterritory");
-		if (btnEditArea.visible) btnEditArea.render(context, mouseX, mouseY, partialTick);
+		if (btnEditArea.visible) btnEditArea.extractRenderState(context, mouseX, mouseY, partialTick);
 		// Everything between the title and the confirm row scrolls when the screen
 		// is too short to hold it; it is clipped so it never covers either of them.
 		if (maxScroll > 0) context.enableScissor(0, scrollTop, this.width, scrollBottom);
 		if (!isSpawn()) {
-			textField.render(context, mouseX, mouseY, partialTick);
+			textField.extractRenderState(context, mouseX, mouseY, partialTick);
 			renderNoteBox(context);
 		}
-		if (btnZoneTitle != null) btnZoneTitle.render(context, mouseX, mouseY, partialTick);
-		if (btnHideLabel != null) btnHideLabel.render(context, mouseX, mouseY, partialTick);
-		if (radiusSlider != null) radiusSlider.render(context, mouseX, mouseY, partialTick);
-		if (btnDistance != null) btnDistance.render(context, mouseX, mouseY, partialTick);
-		if (btnDate != null) btnDate.render(context, mouseX, mouseY, partialTick);
-		if (btnLayer != null) btnLayer.render(context, mouseX, mouseY, partialTick);
-		if (rotationSlider != null) rotationSlider.render(context, mouseX, mouseY, partialTick);
-		if (btnShadow != null) btnShadow.render(context, mouseX, mouseY, partialTick);
-		if (btnLettering != null) btnLettering.render(context, mouseX, mouseY, partialTick);
-		if (btnFixedSize != null) btnFixedSize.render(context, mouseX, mouseY, partialTick);
-		if (sizeSlider != null) sizeSlider.render(context, mouseX, mouseY, partialTick);
-		if (zoomMinSlider != null) zoomMinSlider.render(context, mouseX, mouseY, partialTick);
-		if (zoomMaxSlider != null) zoomMaxSlider.render(context, mouseX, mouseY, partialTick);
-		if (curveEditor != null) curveEditor.render(context, mouseX, mouseY, partialTick);
-		opacitySlider.render(context, mouseX, mouseY, partialTick);
+		if (btnZoneTitle != null) btnZoneTitle.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnHideLabel != null) btnHideLabel.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (radiusSlider != null) radiusSlider.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnDistance != null) btnDistance.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnDate != null) btnDate.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnLayer != null) btnLayer.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (rotationSlider != null) rotationSlider.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnShadow != null) btnShadow.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnLettering != null) btnLettering.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (btnFixedSize != null) btnFixedSize.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (sizeSlider != null) sizeSlider.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (zoomMinSlider != null) zoomMinSlider.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (zoomMaxSlider != null) zoomMaxSlider.extractRenderState(context, mouseX, mouseY, partialTick);
+		if (curveEditor != null) curveEditor.extractRenderState(context, mouseX, mouseY, partialTick);
+		opacitySlider.extractRenderState(context, mouseX, mouseY, partialTick);
 		// Darker background for marker type selector
 		if (textureScrollBox != null) {
 			context.fillGradient(textureScrollBox.getGuiX() + 1, textureScrollBox.getGuiY() + 1,
@@ -1105,7 +1105,7 @@ public class MarkerModal extends Component {
 			colorScrollBox.getGuiX() + colorScrollBox.getWidth(),
 			colorScrollBox.getGuiY() + colorScrollBox.getHeight(),
 			0x88101010, 0x99101010);
-		super.render(context, mouseX, mouseY, partialTick);
+		super.extractRenderState(context, mouseX, mouseY, partialTick);
 		if (maxScroll > 0) {
 			context.disableScissor();
 			// A plain bar on the right edge of the scrolling middle, so it is
