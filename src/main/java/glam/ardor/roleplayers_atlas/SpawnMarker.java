@@ -7,16 +7,15 @@ import folk.sisby.surveyor.landmark.Landmark;
 import folk.sisby.surveyor.landmark.WorldLandmarks;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Level;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -59,7 +58,7 @@ public final class SpawnMarker {
 	}.getType();
 
 	private static BlockPos pos = null;
-	private static RegistryKey<World> dimension = null;
+	private static ResourceKey<Level> dimension = null;
 	/** Anything learned from the player themselves outranks the world spawn. */
 	private static boolean known = false;
 	private static String worldId = null;
@@ -72,7 +71,7 @@ public final class SpawnMarker {
 	private SpawnMarker() {
 	}
 
-	public static void load(MinecraftClient client) {
+	public static void load(Minecraft client) {
 		load(glam.ardor.roleplayers_atlas.util.WorldKey.current(client));
 	}
 
@@ -90,7 +89,7 @@ public final class SpawnMarker {
 			if (parts.length != 4) return;
 			Identifier dim = Identifier.tryParse(parts[0]);
 			if (dim == null) return;
-			dimension = RegistryKey.of(RegistryKeys.WORLD, dim);
+			dimension = ResourceKey.create(Registries.DIMENSION, dim);
 			pos = new BlockPos(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
 			known = true;
 		} catch (Exception e) {
@@ -110,7 +109,7 @@ public final class SpawnMarker {
 				} catch (Exception ignored) {
 				}
 			}
-			all.put(worldId, "%s %d %d %d".formatted(dimension.getValue(), pos.getX(), pos.getY(), pos.getZ()));
+			all.put(worldId, "%s %d %d %d".formatted(dimension.identifier(), pos.getX(), pos.getY(), pos.getZ()));
 			try (Writer writer = Files.newBufferedWriter(FILE)) {
 				GSON.toJson(all, TYPE, writer);
 			}
@@ -141,8 +140,8 @@ public final class SpawnMarker {
 	 *   <li>The world spawn – stands in until either of the above happens.</li>
 	 * </ol>
 	 */
-	public static void tick(MinecraftClient client) {
-		ClientWorld world = client.world;
+	public static void tick(Minecraft client) {
+		ClientLevel world = client.level;
 		if (world == null || client.player == null) return;
 
 		// Checked here rather than on joining, because a proxy can hand you a
@@ -150,7 +149,7 @@ public final class SpawnMarker {
 		String id = glam.ardor.roleplayers_atlas.util.WorldKey.current(client);
 		if (id != null && !id.equals(worldId)) load(id);
 
-		if (client.player.isDead()) {
+		if (client.player.isDeadOrDying()) {
 			wasDead = true;
 		} else if (wasDead) {
 			wasDead = false;
@@ -158,24 +157,24 @@ public final class SpawnMarker {
 			captureDelay = 3;
 		}
 		if (captureDelay >= 0 && --captureDelay < 0) {
-			record(client.player.getBlockPos(), world.getRegistryKey());
+			record(client.player.blockPosition(), world.dimension());
 			return;
 		}
 
 		if (RoleplayersAtlas.CONFIG.hearthFollowsBeds && client.player.isSleeping()) {
-			BlockPos bed = client.player.getSleepingPosition().orElse(null);
-			if (bed != null) record(bed, world.getRegistryKey());
+			BlockPos bed = client.player.getSleepingPos().orElse(null);
+			if (bed != null) record(bed, world.dimension());
 			return;
 		}
 
 		if (known) return;
-		BlockPos worldSpawn = world.getSpawnPoint().getPos();
+		BlockPos worldSpawn = world.getRespawnData().pos();
 		if (worldSpawn == null || worldSpawn.equals(pos)) return;
 		pos = worldSpawn;
-		dimension = world.getRegistryKey();
+		dimension = world.dimension();
 	}
 
-	private static void record(BlockPos at, RegistryKey<World> dim) {
+	private static void record(BlockPos at, ResourceKey<Level> dim) {
 		if (known && at.equals(pos) && dim.equals(dimension)) return;
 		pos = at;
 		dimension = dim;
@@ -183,7 +182,7 @@ public final class SpawnMarker {
 		save();
 	}
 
-	public static BlockPos pos(RegistryKey<World> dim) {
+	public static BlockPos pos(ResourceKey<Level> dim) {
 		if (!RoleplayersAtlas.CONFIG.spawnMarker || pos == null || dimension == null || !dimension.equals(dim)) return null;
 		return pos;
 	}
@@ -193,15 +192,15 @@ public final class SpawnMarker {
 	}
 
 	/** The mark itself, rebuilt on demand – it is never stored as a landmark. */
-	public static Landmark get(RegistryKey<World> dim) {
+	public static Landmark get(ResourceKey<Level> dim) {
 		BlockPos at = pos(dim);
 		if (at == null) return null;
-		int color = colorOf().getEntityColor();
+		int color = colorOf().getTextureDiffuseColor();
 		return Landmark.create(WorldLandmarks.GLOBAL, ID, b -> b
 			.add(LandmarkComponentTypes.POS, at)
 			.add(LandmarkComponentTypes.COLOR, color)
-			.add(LandmarkComponentTypes.NAME, Text.translatable("gui.roleplayers_atlas.spawn.name"))
-			.add(LandmarkComponentTypes.LORE, List.of(Text.translatable("gui.roleplayers_atlas.spawn.lore")))
+			.add(LandmarkComponentTypes.NAME, Component.translatable("gui.roleplayers_atlas.spawn.name"))
+			.add(LandmarkComponentTypes.LORE, List.of(Component.translatable("gui.roleplayers_atlas.spawn.lore")))
 			// No zone title: the hearth announcing itself every time you come
 			// home would wear thin fast.
 			.add(AtlasComponents.ZONE_TITLE, false)
@@ -210,7 +209,7 @@ public final class SpawnMarker {
 
 	public static DyeColor colorOf() {
 		for (DyeColor color : DyeColor.values()) {
-			if (color.getId().equals(RoleplayersAtlas.CONFIG.spawnMarkerColor)) return color;
+			if (color.getName().equals(RoleplayersAtlas.CONFIG.spawnMarkerColor)) return color;
 		}
 		return DyeColor.RED;
 	}

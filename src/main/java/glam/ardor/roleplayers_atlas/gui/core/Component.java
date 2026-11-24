@@ -1,17 +1,15 @@
 package glam.ardor.roleplayers_atlas.gui.core;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 
 /**
  * Core visual component class, which facilitates hierarchy. You can add child
@@ -44,7 +42,7 @@ public class Component extends Screen {
 	public int guiX = 0, guiY = 0;
 
 	public Component() {
-		super(Text.literal("component"));
+		super(net.minecraft.network.chat.Component.literal("component"));
 	}
 
 	/**
@@ -187,7 +185,7 @@ public class Component extends Screen {
 		}
 		child.parent = this;
 		child.setGuiCoords(guiX, guiY);
-		if (MinecraftClient.getInstance() != null) {
+		if (Minecraft.getInstance() != null) {
 			child.init(width, height);
 		}
 		updateSize();
@@ -240,7 +238,7 @@ public class Component extends Screen {
 	 * Handle mouse input for this GUI and its children.
 	 */
 	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
+	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		if (!iterateInput((c) -> c.mouseClicked(click, doubled))) {
 			return super.mouseClicked(click, doubled);
 		} else {
@@ -249,7 +247,7 @@ public class Component extends Screen {
 	}
 
 	@Override
-	public boolean mouseReleased(Click click) {
+	public boolean mouseReleased(MouseButtonEvent click) {
 		if (!iterateInput((c) -> c.mouseReleased(click))) {
 			return super.mouseReleased(click);
 		} else {
@@ -258,7 +256,7 @@ public class Component extends Screen {
 	}
 
 	@Override
-	public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+	public boolean mouseDragged(MouseButtonEvent click, double offsetX, double offsetY) {
 		if (!iterateInput((c) -> c.mouseDragged(click, offsetX, offsetY))) {
 			// A drag must stay a drag: falling back to mouseClicked re-fired a
 			// full click (and its down-sound) on every drag tick, so holding the
@@ -292,7 +290,7 @@ public class Component extends Screen {
 	 * Handle keyboard input for this GUI and its children.
 	 */
 	@Override
-	public boolean keyPressed(KeyInput input) {
+	public boolean keyPressed(KeyEvent input) {
 		if (!iterateInput((cpt) -> cpt.keyPressed(input))) {
 			return super.keyPressed(input);
 		} else {
@@ -301,7 +299,7 @@ public class Component extends Screen {
 	}
 
 	@Override
-	public boolean charTyped(CharInput input) {
+	public boolean charTyped(CharacterEvent input) {
 		if (!iterateInput((cpt) -> cpt.charTyped(input))) {
 			return super.charTyped(input);
 		} else {
@@ -310,7 +308,7 @@ public class Component extends Screen {
 	}
 
 	@Override
-	public boolean keyReleased(KeyInput input) {
+	public boolean keyReleased(KeyEvent input) {
 		if (!iterateInput((cpt) -> cpt.keyReleased(input))) {
 			return super.keyReleased(input);
 		} else {
@@ -323,7 +321,7 @@ public class Component extends Screen {
 	 * Drawable children are not rendered.
 	 */
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		// Do not call super() as it would render the background
 		for (Component child : children) {
 			if (!child.isClipped) {
@@ -336,11 +334,11 @@ public class Component extends Screen {
 	 * Called when the GUI is unloaded, called for each child as well.
 	 */
 	@Override
-	public void close() {
+	public void onClose() {
 		for (Component child : children) {
-			child.close();
+			child.onClose();
 		}
-		super.close();
+		super.onClose();
 	}
 
 	/**
@@ -426,7 +424,7 @@ public class Component extends Screen {
 		if (parent != null) {
 			parent.removeChild(this); // This sets parent to null
 		} else {
-			MinecraftClient.getInstance().setScreen(null);
+			Minecraft.getInstance().setScreen(null);
 		}
 	}
 
@@ -439,16 +437,16 @@ public class Component extends Screen {
 	/**
 	 * Draw a text string centered horizontally, using this GUI's font.
 	 */
-	public void drawCentered(DrawContext context, Text text, int y, int color, boolean dropShadow) {
-		int length = this.textRenderer.getWidth(text);
-		context.drawText(textRenderer, text, (this.width - length) / 2, y, color, dropShadow);
+	public void drawCentered(GuiGraphics context, net.minecraft.network.chat.Component text, int y, int color, boolean dropShadow) {
+		int length = this.font.width(text);
+		context.drawString(font, text, (this.width - length) / 2, y, color, dropShadow);
 	}
 
 	public double getMouseX() {
-		return MinecraftClient.getInstance().mouse.getX() * width / MinecraftClient.getInstance().getWindow().getWidth();
+		return Minecraft.getInstance().mouseHandler.xpos() * width / Minecraft.getInstance().getWindow().getScreenWidth();
 	}
 
 	public double getMouseY() {
-		return MinecraftClient.getInstance().mouse.getY() * height / MinecraftClient.getInstance().getWindow().getHeight();
+		return Minecraft.getInstance().mouseHandler.ypos() * height / Minecraft.getInstance().getWindow().getScreenHeight();
 	}
 }

@@ -1,14 +1,14 @@
 package glam.ardor.roleplayers_atlas;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 
 public record TerrainTileProvider(Identifier id, Map<TileElevation, List<TileTexture>> textures) {
 	private static final Map<TileTexture, TerrainTileProvider> FALLBACKS = new java.util.concurrent.ConcurrentHashMap<>();
@@ -27,7 +27,7 @@ public record TerrainTileProvider(Identifier id, Map<TileElevation, List<TileTex
 	}
 
 	public TileTexture getTexture(ChunkPos pos, @Nullable TileElevation elevation) {
-		int variation = (int) (MathHelper.hashCode(pos.x, pos.z, pos.x * pos.z) & 0x7FFFFFFF);
+		int variation = (int) (Mth.getSeed(pos.x, pos.z, pos.x * pos.z) & 0x7FFFFFFF);
 		TileElevation usedElevation = elevation == null ? TileElevation.VALLEY : elevation;
 		return textures.get(usedElevation).get(variation % textures.get(usedElevation).size());
 	}

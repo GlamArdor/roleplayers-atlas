@@ -6,17 +6,16 @@ import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import folk.sisby.surveyor.terrain.ChunkSummary;
 import folk.sisby.surveyor.terrain.LayerSummary;
 import folk.sisby.surveyor.terrain.WorldTerrain;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ColumnPos;
-import net.minecraft.world.World;
-
 import java.util.OptionalInt;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 
 /**
  * Travelling by map, where the game allows it.
@@ -47,8 +46,8 @@ public final class MapTeleport {
 			case ON -> true;
 			case OFF -> false;
 			case AUTO -> {
-				ClientPlayNetworkHandler handler = MinecraftClient.getInstance().getNetworkHandler();
-				yield handler != null && handler.getCommandDispatcher().getRoot().getChild(commandName()) != null;
+				ClientPacketListener handler = Minecraft.getInstance().getConnection();
+				yield handler != null && handler.getCommands().getRoot().getChild(commandName()) != null;
 			}
 		};
 	}
@@ -100,10 +99,10 @@ public final class MapTeleport {
 	 * answers, and failing that the command is sent with the player's own
 	 * height, which vanilla resolves against the ground on arrival.
 	 */
-	public static void to(WorldSummary summary, RegistryKey<World> dim, int x, Integer y, int z) {
-		MinecraftClient client = MinecraftClient.getInstance();
-		ClientPlayerEntity player = client.player;
-		if (player == null || client.getNetworkHandler() == null) return;
+	public static void to(WorldSummary summary, ResourceKey<Level> dim, int x, Integer y, int z) {
+		Minecraft client = Minecraft.getInstance();
+		LocalPlayer player = client.player;
+		if (player == null || client.getConnection() == null) return;
 		int height;
 		if (y != null && y != 0) {
 			height = y;
@@ -115,16 +114,16 @@ public final class MapTeleport {
 			.replace("{x}", String.valueOf(x))
 			.replace("{y}", String.valueOf(height))
 			.replace("{z}", String.valueOf(z))
-			.replace("{dim}", dim.getValue().toString())
+			.replace("{dim}", dim.identifier().toString())
 			.trim();
 		if (command.startsWith("/")) command = command.substring(1);
 		if (command.isEmpty()) return;
 		// A map open on another world sends you there as well, unless the
 		// command already says which world it means.
-		if (dim != null && !dim.equals(player.getEntityWorld().getRegistryKey()) && !RoleplayersAtlas.CONFIG.teleportCommand.contains("{dim}")) {
-			command = "execute in " + dim.getValue() + " run " + command;
+		if (dim != null && !dim.equals(player.level().dimension()) && !RoleplayersAtlas.CONFIG.teleportCommand.contains("{dim}")) {
+			command = "execute in " + dim.identifier() + " run " + command;
 		}
-		client.getNetworkHandler().sendChatCommand(command);
-		player.sendMessage(Text.translatable("gui.roleplayers_atlas.teleport.sent", x, height, z), true);
+		client.getConnection().sendCommand(command);
+		player.displayClientMessage(Component.translatable("gui.roleplayers_atlas.teleport.sent", x, height, z), true);
 	}
 }

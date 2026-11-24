@@ -1,14 +1,14 @@
 package glam.ardor.roleplayers_atlas.gui.core;
 
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ColorHelper;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 
 /**
  * Displays a texture that changes alpha at regular intervals.
  * By default the texture file is assumed to be full image, but that behavior
- * can be altered by overriding the method {@link #drawImage(DrawContext, int)}.
+ * can be altered by overriding the method {@link #drawImage(GuiGraphics, int)}.
  *
  * @author Hunternif
  */
@@ -46,16 +46,16 @@ public class BlinkingTextureComponent extends Component {
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		long currentTime = System.currentTimeMillis();
 		if (lastTickTime + blinkTime < currentTime) {
 			lastTickTime = currentTime;
 			isVisible = !isVisible;
 		}
-		drawImage(context, ColorHelper.getArgb((int) ((isVisible ? visibleAlpha : invisibleAlpha) * 255), 255, 255, 255));
+		drawImage(context, ARGB.color((int) ((isVisible ? visibleAlpha : invisibleAlpha) * 255), 255, 255, 255));
 	}
 
-	protected void drawImage(DrawContext context, int argb) {
-		context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, getGuiX(), getGuiY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight(), argb);
+	protected void drawImage(GuiGraphics context, int argb) {
+		context.blit(RenderPipelines.GUI_TEXTURED, texture, getGuiX(), getGuiY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight(), argb);
 	}
 }

@@ -7,20 +7,19 @@ import glam.ardor.roleplayers_atlas.MarkerTexture;
 import glam.ardor.roleplayers_atlas.util.CodecUtil;
 import folk.sisby.surveyor.landmark.Landmark;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.SinglePreparationResourceReloader;
-import net.minecraft.resource.metadata.ResourceMetadata;
-import net.minecraft.resource.metadata.ResourceMetadataSerializer;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
-
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceMetadata;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class MarkerTextures extends SinglePreparationResourceReloader<Map<Identifier, MarkerTextures.MarkerTextureMeta>> implements IdentifiableResourceReloadListener {
+public class MarkerTextures extends SimplePreparableReloadListener<Map<Identifier, MarkerTextures.MarkerTextureMeta>> implements IdentifiableResourceReloadListener {
 	public static final MarkerTextures INSTANCE = new MarkerTextures();
 	public static final Identifier ID = RoleplayersAtlas.id("marker_textures");
 
@@ -63,13 +62,13 @@ public class MarkerTextures extends SinglePreparationResourceReloader<Map<Identi
 	}
 
 	@Override
-	protected Map<Identifier, MarkerTextureMeta> prepare(ResourceManager manager, Profiler profiler) {
+	protected Map<Identifier, MarkerTextureMeta> prepare(ResourceManager manager, ProfilerFiller profiler) {
 		Map<Identifier, MarkerTextures.MarkerTextureMeta> textureMeta = new HashMap<>();
-		for (Map.Entry<Identifier, Resource> e : manager.findResources("textures/atlas/marker", id -> id.getPath().endsWith(".png")).entrySet()) {
-			Identifier id = Identifier.of(e.getKey().getNamespace(), e.getKey().getPath().substring("textures/atlas/marker/".length(), e.getKey().getPath().length() - ".png".length()));
+		for (Map.Entry<Identifier, Resource> e : manager.listResources("textures/atlas/marker", id -> id.getPath().endsWith(".png")).entrySet()) {
+			Identifier id = Identifier.fromNamespaceAndPath(e.getKey().getNamespace(), e.getKey().getPath().substring("textures/atlas/marker/".length(), e.getKey().getPath().length() - ".png".length()));
 			try {
-				ResourceMetadata metadata = e.getValue().getMetadata();
-				textureMeta.put(id, metadata.decode(MarkerTextures.MarkerTextureMeta.METADATA).orElse(MarkerTextureMeta.DEFAULT));
+				ResourceMetadata metadata = e.getValue().metadata();
+				textureMeta.put(id, metadata.getSection(MarkerTextures.MarkerTextureMeta.METADATA).orElse(MarkerTextureMeta.DEFAULT));
 			} catch (IOException ex) {
 				RoleplayersAtlas.LOGGER.error("[Roleplayer's Atlas] Failed to access marker texture metadata for {}", e.getKey(), ex);
 				textureMeta.put(id, MarkerTextures.MarkerTextureMeta.DEFAULT);
@@ -79,7 +78,7 @@ public class MarkerTextures extends SinglePreparationResourceReloader<Map<Identi
 	}
 
 	@Override
-	protected void apply(Map<Identifier, MarkerTextureMeta> prepared, ResourceManager manager, Profiler profiler) {
+	protected void apply(Map<Identifier, MarkerTextureMeta> prepared, ResourceManager manager, ProfilerFiller profiler) {
 		RoleplayersAtlas.LOGGER.info("[Roleplayer's Atlas] Reloading Marker Textures...");
 		textures.clear();
 		prepared.forEach((id, meta) -> {
@@ -119,7 +118,7 @@ public class MarkerTextures extends SinglePreparationResourceReloader<Map<Identi
 			Codec.INT.optionalFieldOf("farClip").forGetter(MarkerTextureMeta::farClip)
 		).apply(instance, MarkerTextureMeta::new));
 
-		public static final ResourceMetadataSerializer<MarkerTextureMeta> METADATA = CodecUtil.metadataSerializer(CODEC, RoleplayersAtlas.id("marker"));
+		public static final MetadataSectionType<MarkerTextureMeta> METADATA = CodecUtil.metadataSerializer(CODEC, RoleplayersAtlas.id("marker"));
 
 		public MarkerTexture build(Identifier id, boolean accent) {
 			int textureWidth = this.textureWidth.orElse(32);

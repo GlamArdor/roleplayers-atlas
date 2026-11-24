@@ -1,10 +1,10 @@
 package glam.ardor.roleplayers_atlas;
 
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import net.minecraft.network.chat.Component;
 
 /**
  * Taking back the last thing drawn.
@@ -28,7 +28,7 @@ public final class AtlasUndo {
 	/** How far back the atlas remembers. Twenty is a long drag's worth of strokes. */
 	private static final int LIMIT = 20;
 
-	public record Step(Text description, Runnable undo) {
+	public record Step(Component description, Runnable undo) {
 	}
 
 	private static final Deque<Step> undoSteps = new ArrayDeque<>();
@@ -57,7 +57,7 @@ public final class AtlasUndo {
 	 * @param undo        what to do to reverse it – itself a change, which files
 	 *                    its own inverse in turn
 	 */
-	public static void push(Text description, Runnable undo) {
+	public static void push(Component description, Runnable undo) {
 		Step step = new Step(description, undo);
 		switch (mode) {
 			case OFF -> {
@@ -89,16 +89,16 @@ public final class AtlasUndo {
 	}
 
 	/** Takes back the last thing done and says what it was, or null if there was nothing. */
-	public static @Nullable Text undo() {
+	public static @Nullable Component undo() {
 		return run(undoSteps, Recording.UNDOING);
 	}
 
 	/** Does again the last thing taken back, or null if there was nothing. */
-	public static @Nullable Text redo() {
+	public static @Nullable Component redo() {
 		return run(redoSteps, Recording.REDOING);
 	}
 
-	private static @Nullable Text run(Deque<Step> from, Recording as) {
+	private static @Nullable Component run(Deque<Step> from, Recording as) {
 		Step step = from.pollLast();
 		if (step == null) return null;
 		Recording was = mode;
@@ -124,7 +124,7 @@ public final class AtlasUndo {
 	 * rather than to reverse a reversal. For those, both directions are handed
 	 * over and the two are made to swap places each time one is used.
 	 */
-	public static void pushReversible(Text description, Runnable back, Runnable forth) {
+	public static void pushReversible(Component description, Runnable back, Runnable forth) {
 		push(description, () -> {
 			withoutRecording(back);
 			pushReversible(description, forth, back);

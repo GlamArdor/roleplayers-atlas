@@ -1,9 +1,8 @@
 package glam.ardor.roleplayers_atlas.util;
 
-import net.minecraft.util.math.BlockPos;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 
 /**
  * The shape of a drawn route. Both the map and the length readout run through

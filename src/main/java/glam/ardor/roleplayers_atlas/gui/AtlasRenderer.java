@@ -19,27 +19,23 @@ import folk.sisby.surveyor.landmark.Landmark;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import folk.sisby.surveyor.util.RegionPos;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 
 public interface AtlasRenderer {
 	Map<Identifier, AtlasOverlay> overlays = new HashMap<>();
@@ -78,11 +74,11 @@ public interface AtlasRenderer {
 	Identifier ICON_EDIT_BIOMES = RoleplayersAtlas.id("textures/gui/icons/edit_biomes.png");
 	Identifier ICON_PAINT_CITY = RoleplayersAtlas.id("textures/gui/icons/paint_city.png");
 	Identifier ICON_UNKNOWN = RoleplayersAtlas.id("textures/gui/icons/unknown.png");
-	Text TEXT_ADD_MARKER = Text.translatable("gui.roleplayers_atlas.addMarker");
-	Text TEXT_ADD_MARKER_HERE = Text.translatable("gui.roleplayers_atlas.addMarkerHere");
-	Text TEXT_ADD_TERRITORY = Text.translatable("gui.roleplayers_atlas.addTerritory");
-	Text TEXT_ADD_LABEL = Text.translatable("gui.roleplayers_atlas.addLabel");
-	Text TEXT_ADD_ROUTE = Text.translatable("gui.roleplayers_atlas.addRoute");
+	Component TEXT_ADD_MARKER = Component.translatable("gui.roleplayers_atlas.addMarker");
+	Component TEXT_ADD_MARKER_HERE = Component.translatable("gui.roleplayers_atlas.addMarkerHere");
+	Component TEXT_ADD_TERRITORY = Component.translatable("gui.roleplayers_atlas.addTerritory");
+	Component TEXT_ADD_LABEL = Component.translatable("gui.roleplayers_atlas.addLabel");
+	Component TEXT_ADD_ROUTE = Component.translatable("gui.roleplayers_atlas.addRoute");
 
 	int DEFAULT_BOOK_WIDTH = 310;
 	int DEFAULT_BOOK_HEIGHT = 218;
@@ -109,11 +105,11 @@ public interface AtlasRenderer {
 	/** Drawing a town by hand, cell by cell. */
 	ScreenState.State<AtlasScreen> PAINTING_CITY = new ScreenState.ToggleState<>(s -> s.paintCityBookmark);
 	ScreenState.State<AtlasScreen> HIDING_MARKERS = new ScreenState.ToggleState<>(s -> s.markerVisibilityBookmark, s -> {
-		s.markerVisibilityBookmark.setTitle(Text.translatable("gui.roleplayers_atlas.showMarkers"));
+		s.markerVisibilityBookmark.setTitle(Component.translatable("gui.roleplayers_atlas.showMarkers"));
 		s.markerVisibilityBookmark.setIconTexture(ICON_SHOW_MARKERS);
 	}, s -> {
 		s.clearTargetBookmarks(s.playerBookmark);
-		s.markerVisibilityBookmark.setTitle(Text.translatable("gui.roleplayers_atlas.hideMarkers"));
+		s.markerVisibilityBookmark.setTitle(Component.translatable("gui.roleplayers_atlas.hideMarkers"));
 		s.markerVisibilityBookmark.setIconTexture(ICON_HIDE_MARKERS);
 	});
 
@@ -139,7 +135,7 @@ public interface AtlasRenderer {
 
 	int mapScale();
 
-	PlayerEntity player();
+	Player player();
 
 	WorldAtlasData worldAtlasData();
 
@@ -147,7 +143,7 @@ public interface AtlasRenderer {
 
 	double guiScale();
 
-	RegistryKey<World> dim();
+	ResourceKey<Level> dim();
 
 	default int screenXToWorldX(double screenX) {
 		return screenXToWorldX(screenX, bookX(), mapOffsetX(), mapWidth(), getPixelsPerBlock());
@@ -187,7 +183,7 @@ public interface AtlasRenderer {
 
 	default float markerOpacity(Landmark landmark) {
 		Integer opacity = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.OPACITY);
-		float alpha = opacity == null ? 1.0F : MathHelper.clamp(opacity, 0, 100) / 100.0F;
+		float alpha = opacity == null ? 1.0F : Mth.clamp(opacity, 0, 100) / 100.0F;
 		// Marks copied from someone else's scroll are drawn faint until their
 		// owner has actually stood there: known by hearsay, not by having gone.
 		if (glam.ardor.roleplayers_atlas.AtlasTime.isUnverified(landmark)) alpha *= 0.5F;
@@ -204,7 +200,7 @@ public interface AtlasRenderer {
 		y1 = Math.max(y1, clipY1);
 		x2 = Math.min(x2, clipX2);
 		y2 = Math.min(y2, clipY2);
-		if (x2 > x1 && y2 > y1) DrawUtil.fill(painter, RenderLayers.textBackgroundSeeThrough(), z, light, x1, y1, x2, y2, alpha, color);
+		if (x2 > x1 && y2 > y1) DrawUtil.fill(painter, RenderTypes.textBackgroundSeeThrough(), z, light, x1, y1, x2, y2, alpha, color);
 	}
 
 	default void renderMarker(AtlasPainter painter, Landmark landmark, MarkerTexture texture, float z, int light, BiFunction<Double, Double, Float> alphaGetter, boolean pinned, boolean hovering, float markerScale) {
@@ -228,8 +224,8 @@ public interface AtlasRenderer {
 			Set<ChunkPos> chunks = RegionPos.regionsToChunks(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>()));
 			boolean clipToPage = clipsMarkersToPage();
 			for (ChunkPos chunk : chunks) {
-				double markerX = worldXToScreenX(chunk.getStartX()) - bookX();
-				double markerY = worldZToScreenY(chunk.getStartZ()) - bookY();
+				double markerX = worldXToScreenX(chunk.getMinBlockX()) - bookX();
+				double markerY = worldZToScreenY(chunk.getMinBlockZ()) - bookY();
 				float effectiveScale = (float) (mapScale() / guiScale());
 				painter.push();
 				painter.translate(markerX, markerY);
@@ -273,8 +269,8 @@ public interface AtlasRenderer {
 		double markerY = worldZToScreenY(pos.getZ()) - bookY();
 
 		if (pinned) {
-			markerX = MathHelper.clamp(markerX, MAP_BORDER_WIDTH, mapWidth() + MAP_BORDER_WIDTH);
-			markerY = MathHelper.clamp(markerY, MAP_BORDER_HEIGHT, mapHeight() + MAP_BORDER_HEIGHT);
+			markerX = Mth.clamp(markerX, MAP_BORDER_WIDTH, mapWidth() + MAP_BORDER_WIDTH);
+			markerY = Mth.clamp(markerY, MAP_BORDER_HEIGHT, mapHeight() + MAP_BORDER_HEIGHT);
 		}
 
 		// Tracked markers glow along their outline: four flat-color silhouette
@@ -317,13 +313,13 @@ public interface AtlasRenderer {
 		if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.HIDE_LABEL))) return;
 		labelAlpha *= markerOpacity(landmark);
 		if (labelAlpha <= 0.05F) return;
-		Text name = landmark.get(LandmarkComponentTypes.NAME);
+		Component name = landmark.get(LandmarkComponentTypes.NAME);
 		if (name == null || name.getString().isEmpty()) return;
 		BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 		if (pos == null) return;
 		double markerX = worldXToScreenX(pos.getX()) - bookX();
 		double markerY = worldZToScreenY(pos.getZ()) - bookY();
-		net.minecraft.client.font.TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+		net.minecraft.client.gui.Font textRenderer = Minecraft.getInstance().font;
 		if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.PEN_LABEL))) {
 			// A pen inscription: no icon, just its text centred on its position,
 			// in the marker's color. Either italic on the usual name-tag plate or,
@@ -348,8 +344,8 @@ public interface AtlasRenderer {
 				}
 				return;
 			}
-			Text styled = name.copy().formatted(net.minecraft.util.Formatting.ITALIC);
-			double half = textRenderer.getWidth(styled) / 2.0;
+			Component styled = name.copy().withStyle(net.minecraft.ChatFormatting.ITALIC);
+			double half = textRenderer.width(styled) / 2.0;
 			if (markerX - half * penScale < MAP_BORDER_WIDTH || markerX + half * penScale > MAP_BORDER_WIDTH + mapWidth()
 				|| markerY - 4 * penScale < MAP_BORDER_HEIGHT || markerY + 5 * penScale > MAP_BORDER_HEIGHT + mapHeight()) return;
 			painter.push();
@@ -363,7 +359,7 @@ public interface AtlasRenderer {
 			painter.pop();
 			return;
 		}
-		double labelHalf = textRenderer.getWidth(name) / 2.0;
+		double labelHalf = textRenderer.width(name) / 2.0;
 		double labelY = markerY + 14 * markerScale;
 		// Only draw the label while it fits entirely on the page.
 		if (markerX - labelHalf < MAP_BORDER_WIDTH || markerX + labelHalf > MAP_BORDER_WIDTH + mapWidth()
@@ -384,7 +380,7 @@ public interface AtlasRenderer {
 		if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.HIDE_LABEL))) return;
 		labelAlpha *= markerOpacity(landmark);
 		if (labelAlpha <= 0.05F) return;
-		Text name = landmark.get(LandmarkComponentTypes.NAME);
+		Component name = landmark.get(LandmarkComponentTypes.NAME);
 		if (name == null || name.getString().isEmpty()) return;
 		// Only the name keeps to its zoom range; the zone itself is always drawn.
 		if (!glam.ardor.roleplayers_atlas.LabelZoom.visible(landmark, getPixelsPerBlock())) return;
@@ -394,15 +390,15 @@ public interface AtlasRenderer {
 		// Mean and covariance of chunk centers in book space.
 		double meanX = 0, meanY = 0;
 		for (ChunkPos chunk : chunks) {
-			meanX += worldXToScreenX(chunk.getStartX() + 8) - bookX();
-			meanY += worldZToScreenY(chunk.getStartZ() + 8) - bookY();
+			meanX += worldXToScreenX(chunk.getMinBlockX() + 8) - bookX();
+			meanY += worldZToScreenY(chunk.getMinBlockZ() + 8) - bookY();
 		}
 		meanX /= chunks.size();
 		meanY /= chunks.size();
 		double sxx = 0, sxy = 0, syy = 0;
 		for (ChunkPos chunk : chunks) {
-			double dx = worldXToScreenX(chunk.getStartX() + 8) - bookX() - meanX;
-			double dy = worldZToScreenY(chunk.getStartZ() + 8) - bookY() - meanY;
+			double dx = worldXToScreenX(chunk.getMinBlockX() + 8) - bookX() - meanX;
+			double dy = worldZToScreenY(chunk.getMinBlockZ() + 8) - bookY() - meanY;
 			sxx += dx * dx;
 			sxy += dx * dy;
 			syy += dy * dy;
@@ -417,8 +413,8 @@ public interface AtlasRenderer {
 		// Extent along the axis (plus one chunk of slack for single-row shapes).
 		double tMin = Double.MAX_VALUE, tMax = -Double.MAX_VALUE;
 		for (ChunkPos chunk : chunks) {
-			double dx = worldXToScreenX(chunk.getStartX() + 8) - bookX() - meanX;
-			double dy = worldZToScreenY(chunk.getStartZ() + 8) - bookY() - meanY;
+			double dx = worldXToScreenX(chunk.getMinBlockX() + 8) - bookX() - meanX;
+			double dy = worldZToScreenY(chunk.getMinBlockZ() + 8) - bookY() - meanY;
 			double t = dx * cos + dy * sin;
 			tMin = Math.min(tMin, t);
 			tMax = Math.max(tMax, t);
@@ -427,7 +423,7 @@ public interface AtlasRenderer {
 		double span = tMax - tMin + chunkPixels;
 		if (span < 44) return;
 
-		Text[] glyphs = Lettering.glyphs(name.getString());
+		Component[] glyphs = Lettering.glyphs(name.getString());
 		int count = glyphs.length;
 		if (count == 0) return;
 		// Ink picked against the territory fill for contrast, with an
@@ -447,10 +443,10 @@ public interface AtlasRenderer {
 		double rawWidth = Lettering.rawLength(glyphs, 0);
 		if (rawWidth == 0) return;
 		double target = span * 0.72;
-		double scale = MathHelper.clamp(target / (rawWidth + 2.0 * (count - 1)), 0.85, 2.6);
-		double spacing = count > 1 ? MathHelper.clamp((target - rawWidth * scale) / (count - 1), 0, 8 * scale) : 0;
+		double scale = Mth.clamp(target / (rawWidth + 2.0 * (count - 1)), 0.85, 2.6);
+		double spacing = count > 1 ? Mth.clamp((target - rawWidth * scale) / (count - 1), 0, 8 * scale) : 0;
 		double total = rawWidth * scale + spacing * (count - 1);
-		double sagitta = MathHelper.clamp(span * 0.07, 2, 14);
+		double sagitta = Mth.clamp(span * 0.07, 2, 14);
 		// The size setting scales the fitted name; the curve, when the player has
 		// bent it by hand, replaces the automatic arch.
 		double sizeMul = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_SIZE, 100) / 100.0;
@@ -490,7 +486,7 @@ public interface AtlasRenderer {
 		return scale * getPixelsPerBlock();
 	}
 
-	private static Lettering.Glyph[] layoutPenLettering(Landmark landmark, Text name, double scale) {
+	private static Lettering.Glyph[] layoutPenLettering(Landmark landmark, Component name, double scale) {
 		int[] curve = Lettering.curveOf(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_CURVE));
 		if (curve == null) curve = Lettering.DEFAULT_CURVE;
 		int rotation = landmark.getOrDefault(glam.ardor.roleplayers_atlas.AtlasComponents.LABEL_ROTATION, 0);
@@ -503,7 +499,7 @@ public interface AtlasRenderer {
 	 * there to be pointed at.
 	 */
 	default boolean penLabelHit(Landmark landmark, double x, double y) {
-		Text name = landmark.get(LandmarkComponentTypes.NAME);
+		Component name = landmark.get(LandmarkComponentTypes.NAME);
 		BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 		if (name == null || name.getString().isEmpty() || pos == null) return false;
 		if (!glam.ardor.roleplayers_atlas.LabelZoom.visible(landmark, getPixelsPerBlock())) return false;
@@ -524,7 +520,7 @@ public interface AtlasRenderer {
 		double dx = x - cx, dy = y - cy;
 		double lx = (dx * Math.cos(rad) - dy * Math.sin(rad)) / scale;
 		double ly = (dx * Math.sin(rad) + dy * Math.cos(rad)) / scale;
-		double half = MinecraftClient.getInstance().textRenderer.getWidth(name.copy().formatted(net.minecraft.util.Formatting.ITALIC)) / 2.0 + 2;
+		double half = Minecraft.getInstance().font.width(name.copy().withStyle(net.minecraft.ChatFormatting.ITALIC)) / 2.0 + 2;
 		return Math.abs(lx) <= half && ly >= -6 && ly <= 6;
 	}
 
@@ -547,9 +543,9 @@ public interface AtlasRenderer {
 	default void renderRoutePath(AtlasPainter painter, java.util.List<BlockPos> points, float z, int light, float alpha, int rgb, boolean straight) {
 		if (points == null || points.size() < 2 || alpha <= 0.03F) return;
 		java.util.List<double[]> samples = sampleRoute(points, straight);
-		double dash = MathHelper.clamp(6 * getPixelsPerBlock(), 3, 18);
+		double dash = Mth.clamp(6 * getPixelsPerBlock(), 3, 18);
 		double gap = dash * 0.7;
-		int th = (int) MathHelper.clamp(Math.round(2 * getPixelsPerBlock()), 1, 4);
+		int th = (int) Mth.clamp(Math.round(2 * getPixelsPerBlock()), 1, 4);
 		int y1 = -(th + 1) / 2;
 		float[] colorF = ColorUtil.componentsFromRgb(rgb);
 		double phase = 0;
@@ -600,7 +596,7 @@ public interface AtlasRenderer {
 					painter.push();
 					painter.translate(sx, sy);
 					painter.rotateDegrees(angle);
-					DrawUtil.fill(painter, RenderLayers.textBackgroundSeeThrough(), z, light, 0, y1, (int) Math.max(1, Math.round(advance)), y1 + th, alpha * 0.9F, colorF);
+					DrawUtil.fill(painter, RenderTypes.textBackgroundSeeThrough(), z, light, 0, y1, (int) Math.max(1, Math.round(advance)), y1 + th, alpha * 0.9F, colorF);
 					painter.pop();
 					dashGuard++;
 				} else {
@@ -618,7 +614,7 @@ public interface AtlasRenderer {
 		if (Boolean.TRUE.equals(landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.HIDE_LABEL))) return;
 		labelAlpha *= markerOpacity(landmark);
 		if (labelAlpha <= 0.05F) return;
-		Text name = landmark.get(LandmarkComponentTypes.NAME);
+		Component name = landmark.get(LandmarkComponentTypes.NAME);
 		if (name == null || name.getString().isEmpty()) return;
 		java.util.List<BlockPos> points = landmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.ROUTE);
 		if (points == null || points.size() < 2) return;
@@ -632,15 +628,15 @@ public interface AtlasRenderer {
 			lens[i] = total;
 		}
 
-		net.minecraft.client.font.TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+		net.minecraft.client.gui.Font textRenderer = Minecraft.getInstance().font;
 		String text = name.getString();
 		int count = text.length();
-		Text[] glyphs = new Text[count];
+		Component[] glyphs = new Component[count];
 		int[] widths = new int[count];
 		int textWidth = 0;
 		for (int i = 0; i < count; i++) {
-			glyphs[i] = Text.literal(String.valueOf(text.charAt(i))).formatted(net.minecraft.util.Formatting.ITALIC);
-			widths[i] = textRenderer.getWidth(glyphs[i]);
+			glyphs[i] = Component.literal(String.valueOf(text.charAt(i))).withStyle(net.minecraft.ChatFormatting.ITALIC);
+			widths[i] = textRenderer.width(glyphs[i]);
 			textWidth += widths[i];
 		}
 		if (textWidth == 0 || total < textWidth + 24) return;
@@ -674,8 +670,8 @@ public interface AtlasRenderer {
 		// has no seams at all no matter how sharply the route turns.
 		double plateNear = reversed ? 1 : -12;
 		double plateFar = reversed ? 12 : -1;
-		double start = MathHelper.clamp((total - textWidth) / 2 - 2, 0, total);
-		double end = MathHelper.clamp(start + textWidth + 4, 0, total);
+		double start = Mth.clamp((total - textWidth) / 2 - 2, 0, total);
+		double end = Mth.clamp(start + textWidth + 4, 0, total);
 		java.util.List<double[]> ribbon = new java.util.ArrayList<>();
 		int rseg = 1;
 		for (int i = 0; i < samples.size() + 1; i++) {
@@ -739,7 +735,7 @@ public interface AtlasRenderer {
 				qy[2] = ribbon.get(k + 1)[1] + normals[k + 1][1] * plateFar;
 				qx[3] = ribbon.get(k + 1)[0] + normals[k + 1][0] * plateNear;
 				qy[3] = ribbon.get(k + 1)[1] + normals[k + 1][1] * plateNear;
-				DrawUtil.quadClipped(painter, RenderLayers.textBackground(), -0.5F, light, qx, qy, MAP_BORDER_WIDTH, MAP_BORDER_HEIGHT, MAP_BORDER_WIDTH + mapWidth(), MAP_BORDER_HEIGHT + mapHeight(), labelAlpha * 0.45F, plateColor);
+				DrawUtil.quadClipped(painter, RenderTypes.textBackground(), -0.5F, light, qx, qy, MAP_BORDER_WIDTH, MAP_BORDER_HEIGHT, MAP_BORDER_WIDTH + mapWidth(), MAP_BORDER_HEIGHT + mapHeight(), labelAlpha * 0.45F, plateColor);
 			}
 		}
 
@@ -779,13 +775,13 @@ public interface AtlasRenderer {
 	default void renderGuideArrows(AtlasPainter painter, float z, int light, float alpha, float scale) {
 		alpha *= RoleplayersAtlas.CONFIG.guideArrowOpacity / 100.0F;
 		if (RoleplayersAtlas.trackedMarkers.isEmpty() || alpha <= 0.05F) return;
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null || !dim().equals(client.player.getEntityWorld().getRegistryKey())) return;
+		Minecraft client = Minecraft.getInstance();
+		if (client.player == null || !dim().equals(client.player.level().dimension())) return;
 		double px = client.player.getX();
 		double pz = client.player.getZ();
-		double originX = MathHelper.clamp(worldXToScreenX(px) - bookX(), MAP_BORDER_WIDTH + 10, mapWidth() + MAP_BORDER_WIDTH - 10);
-		double originY = MathHelper.clamp(worldZToScreenY(pz) - bookY(), MAP_BORDER_HEIGHT + 10, mapHeight() + MAP_BORDER_HEIGHT - 10);
-		net.minecraft.client.font.TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+		double originX = Mth.clamp(worldXToScreenX(px) - bookX(), MAP_BORDER_WIDTH + 10, mapWidth() + MAP_BORDER_WIDTH - 10);
+		double originY = Mth.clamp(worldZToScreenY(pz) - bookY(), MAP_BORDER_HEIGHT + 10, mapHeight() + MAP_BORDER_HEIGHT - 10);
+		net.minecraft.client.gui.Font textRenderer = Minecraft.getInstance().font;
 		// Placed arrow positions, so arrows sharing a bearing stack along the
 		// line towards the player instead of overlapping.
 		java.util.List<double[]> placed = new java.util.ArrayList<>();
@@ -819,7 +815,7 @@ public interface AtlasRenderer {
 			} else {
 				var regions = landmark.get(LandmarkComponentTypes.CHUNKS);
 				if (regions == null) continue;
-				net.minecraft.util.math.ColumnPos center = glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(regions);
+				net.minecraft.server.level.ColumnPos center = glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(regions);
 				tx = center.x();
 				tz = center.z();
 			}
@@ -866,8 +862,8 @@ public interface AtlasRenderer {
 					{baseX - perpX * ring * separation, baseY - perpY * ring * separation},
 				};
 				for (double[] candidate : candidates) {
-					double cx = MathHelper.clamp(candidate[0], MAP_BORDER_WIDTH + margin, mapWidth() + MAP_BORDER_WIDTH - margin);
-					double cy = MathHelper.clamp(candidate[1], MAP_BORDER_HEIGHT + margin, mapHeight() + MAP_BORDER_HEIGHT - margin);
+					double cx = Mth.clamp(candidate[0], MAP_BORDER_WIDTH + margin, mapWidth() + MAP_BORDER_WIDTH - margin);
+					double cy = Mth.clamp(candidate[1], MAP_BORDER_HEIGHT + margin, mapHeight() + MAP_BORDER_HEIGHT - margin);
 					boolean conflict = false;
 					for (double[] other : placed) {
 						if (Math.hypot(cx - other[0], cy - other[1]) < separation) {
@@ -889,9 +885,9 @@ public interface AtlasRenderer {
 			int tintColor = color == null ? 0xE8C878 : color & 0xFFFFFF;
 			DrawUtil.drawCenteredWithRotation(painter, GUIDE_ARROW, ax, ay, z, scale, 16, 16, rot, light, ((int) (alpha * 255) << 24) | tintColor);
 
-			Text distText = Text.translatable("gui.roleplayers_atlas.distance", (int) dist);
-			double half = textRenderer.getWidth(distText) / 2.0;
-			double textX = MathHelper.clamp(ax, MAP_BORDER_WIDTH + half + 2, mapWidth() + MAP_BORDER_WIDTH - half - 2);
+			Component distText = Component.translatable("gui.roleplayers_atlas.distance", (int) dist);
+			double half = textRenderer.width(distText) / 2.0;
+			double textX = Mth.clamp(ax, MAP_BORDER_WIDTH + half + 2, mapWidth() + MAP_BORDER_WIDTH - half - 2);
 			double textY = ay + 8 * scale + 2;
 			if (textY + 9 > MAP_BORDER_HEIGHT + mapHeight()) textY = ay - 8 * scale - 10;
 			painter.drawText(distText, (float) (textX - half), (float) textY, ((int) (alpha * 255) << 24) | 0xF8ECD0, light);
@@ -899,12 +895,12 @@ public interface AtlasRenderer {
 	}
 
 	default void renderPlayer(AtlasPainter painter, float z, int light, PlayerSummary player, float iconScale, float alpha, boolean hovering, boolean self) {
-		double dimX = player.pos().getX();
-		double dimZ = player.pos().getZ();
+		double dimX = player.pos().x();
+		double dimZ = player.pos().z();
 
 		boolean inDim = dim().equals(player.dimension());
 		if (!inDim) {
-			Map<RegistryKey<World>, Integer> scales = RoleplayersAtlas.CONFIG.dimensions.getScales(MinecraftClient.getInstance().getNetworkHandler());
+			Map<ResourceKey<Level>, Integer> scales = RoleplayersAtlas.CONFIG.dimensions.getScales(Minecraft.getInstance().getConnection());
 			int newScale = scales.getOrDefault(dim(), 0);
 			int oldScale = scales.getOrDefault(player.dimension(), 0);
 			if (newScale * oldScale == 0) return; // no ratio!
@@ -916,14 +912,14 @@ public interface AtlasRenderer {
 		double playerOffsetX = worldXToScreenX(dimX) - bookX();
 		double playerOffsetY = worldZToScreenY(dimZ) - bookY();
 
-		playerOffsetX = MathHelper.clamp(playerOffsetX, MAP_BORDER_WIDTH, mapWidth() + MAP_BORDER_WIDTH);
-		playerOffsetY = MathHelper.clamp(playerOffsetY, MAP_BORDER_HEIGHT, mapHeight() + MAP_BORDER_HEIGHT);
+		playerOffsetX = Mth.clamp(playerOffsetX, MAP_BORDER_WIDTH, mapWidth() + MAP_BORDER_WIDTH);
+		playerOffsetY = Mth.clamp(playerOffsetY, MAP_BORDER_HEIGHT, mapHeight() + MAP_BORDER_HEIGHT);
 
 		// Draw the icon:
 		float tint = (player.online() ? 1 : 0.5f) * (hovering ? 0.9f : 1);
 		float greenTint = self ? 1 : 0.7f;
 		float redTint = inDim ? 1 : 0.7f;
-		int argb = ColorHelper.getArgb((int) (alpha * 255.0), (int) (tint * redTint * 255), (int) (tint * greenTint * 255), (int) (tint * 255));
+		int argb = ARGB.color((int) (alpha * 255.0), (int) (tint * redTint * 255), (int) (tint * greenTint * 255), (int) (tint * 255));
 		float playerRotation = ((float) Math.round(player.yaw() / 360f * PLAYER_ROTATION_STEPS) / PLAYER_ROTATION_STEPS) * 360f;
 
 		DrawUtil.drawCenteredWithRotation(painter, PLAYER, playerOffsetX, playerOffsetY, z, iconScale, PLAYER_ICON_WIDTH, PLAYER_ICON_HEIGHT, playerRotation, light, argb);

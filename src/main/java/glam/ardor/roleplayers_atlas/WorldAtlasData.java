@@ -15,19 +15,7 @@ import folk.sisby.surveyor.landmark.component.LandmarkComponentMap;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import folk.sisby.surveyor.util.RegionPos;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.Structure;
-
 import java.util.BitSet;
 import java.util.Deque;
 import java.util.HashMap;
@@ -39,11 +27,21 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 public class WorldAtlasData {
-	public static final Map<RegistryKey<World>, WorldAtlasData> WORLDS = new HashMap<>();
+	public static final Map<ResourceKey<Level>, WorldAtlasData> WORLDS = new HashMap<>();
 
-	public static WorldAtlasData getOrCreate(RegistryKey<World> dimension) {
+	public static WorldAtlasData getOrCreate(ResourceKey<Level> dimension) {
 		return WORLDS.computeIfAbsent(dimension, k -> {
 			WorldAtlasData data = new WorldAtlasData();
 			data.dimension = k;
@@ -77,7 +75,7 @@ public class WorldAtlasData {
 	private WorldSummary boundSummary = null;
 
 	/** Which dimension this data is for – needed to look up what was drawn on it. */
-	private RegistryKey<World> dimension = null;
+	private ResourceKey<Level> dimension = null;
 
 	/**
 	 * Towns drawn by hand, resolved to textures once rather than looked up per
@@ -134,10 +132,10 @@ public class WorldAtlasData {
 		// The world changed under us – every remembered step refers to the old one.
 		AtlasUndo.clear();
 		invalidateTileBatches();
-		if (MinecraftClient.getInstance().currentScreen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
-	public static boolean isEmpty(RegistryKey<World> dimension) {
+	public static boolean isEmpty(ResourceKey<Level> dimension) {
 		return !WORLDS.containsKey(dimension) || WORLDS.get(dimension).isEmpty();
 	}
 
@@ -218,9 +216,9 @@ public class WorldAtlasData {
 	 * and re-reading it would write the old date inside the new one.
 	 */
 	public static void redateGraves() {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.world == null) return;
-		RegistryKey<World> dimension = client.world.getRegistryKey();
+		Minecraft client = Minecraft.getInstance();
+		if (client.level == null) return;
+		ResourceKey<Level> dimension = client.level.dimension();
 		WorldSummary summary = SurveyorClient.tryGetSummary(dimension);
 		WorldAtlasData data = WORLDS.get(dimension);
 		if (summary == null || summary.landmarks() == null || data == null) return;
@@ -247,7 +245,7 @@ public class WorldAtlasData {
 		}
 	}
 
-	public void onStructuresAdded(WorldSummary summary, Multimap<RegistryKey<Structure>, ChunkPos> starts) {
+	public void onStructuresAdded(WorldSummary summary, Multimap<ResourceKey<Structure>, ChunkPos> starts) {
 		starts.forEach((key, pos) -> StructureTileProviders.getInstance().resolve(structureTiles, debugStructures, debugStructurePredicates, structureMarkers, summary, key, pos, summary.structures().get(key, pos), summary.structures().getType(key), summary.structures().getTags(key)));
 		invalidateTileBatches();
 	}
@@ -267,7 +265,7 @@ public class WorldAtlasData {
 			ChunkPos pos = terrainDeque.pollFirst();
 			terrainDequeHash.remove(pos);
 			if (pos == null) break;
-			TileChoice tile = summary.dimension() == World.NETHER ? TerrainTiling.terrainToTileNether(summary, pos) : TerrainTiling.terrainToTile(summary, pos);
+			TileChoice tile = summary.dimension() == Level.NETHER ? TerrainTiling.terrainToTileNether(summary, pos) : TerrainTiling.terrainToTile(summary, pos);
 			if (tile != null) {
 				tileScope.extendTo(pos.x, pos.z);
 				// A patch names this one chunk and outranks anything worked out
@@ -321,11 +319,11 @@ public class WorldAtlasData {
 	 */
 	private void checkArrivals(WorldSummary summary) {
 		if (!RoleplayersAtlas.CONFIG.clearTrackingOnArrival || RoleplayersAtlas.trackedMarkers.isEmpty()) return;
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null || !client.player.getEntityWorld().getRegistryKey().equals(summary.dimension())) return;
+		Minecraft client = Minecraft.getInstance();
+		if (client.player == null || !client.player.level().dimension().equals(summary.dimension())) return;
 		double px = client.player.getX();
 		double pz = client.player.getZ();
-		ChunkPos playerChunk = new ChunkPos(client.player.getBlockPos());
+		ChunkPos playerChunk = new ChunkPos(client.player.blockPosition());
 		boolean any = false;
 		for (Landmark landmark : getAllMarkers(1).keySet()) {
 			String key = RoleplayersAtlas.trackKey(landmark);
@@ -337,16 +335,16 @@ public class WorldAtlasData {
 		if (any) {
 			TrackedMarkersStore.save();
 			AtlasSounds.arrived();
-			if (MinecraftClient.getInstance().currentScreen instanceof AtlasScreen as) as.updateBookmarkerList();
+			if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
 		}
 	}
 
 	private static boolean arrived(Landmark landmark, double px, double pz, ChunkPos playerChunk) {
-		java.util.List<net.minecraft.util.math.BlockPos> route = landmark.get(AtlasComponents.ROUTE);
+		java.util.List<net.minecraft.core.BlockPos> route = landmark.get(AtlasComponents.ROUTE);
 		if (route != null && !route.isEmpty()) {
 			return within(route.getFirst(), px, pz) || within(route.getLast(), px, pz);
 		}
-		net.minecraft.util.math.BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
+		net.minecraft.core.BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 		if (pos != null) return within(pos, px, pz);
 		if (landmark.contains(LandmarkComponentTypes.CHUNKS)) {
 			return RegionPos.regionsToChunks(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>())).contains(playerChunk);
@@ -354,7 +352,7 @@ public class WorldAtlasData {
 		return false;
 	}
 
-	private static boolean within(net.minecraft.util.math.BlockPos pos, double px, double pz) {
+	private static boolean within(net.minecraft.core.BlockPos pos, double px, double pz) {
 		return Math.hypot(pos.getX() + 0.5 - px, pos.getZ() + 0.5 - pz) <= ARRIVE_RANGE;
 	}
 
@@ -366,11 +364,11 @@ public class WorldAtlasData {
 	 */
 	private void verifyNearbyHearsay(WorldSummary summary) {
 		if (summary.landmarks() == null) return;
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.player == null || !client.player.getEntityWorld().getRegistryKey().equals(summary.dimension())) return;
+		Minecraft client = Minecraft.getInstance();
+		if (client.player == null || !client.player.level().dimension().equals(summary.dimension())) return;
 		double px = client.player.getX();
 		double pz = client.player.getZ();
-		ChunkPos playerChunk = new ChunkPos(client.player.getBlockPos());
+		ChunkPos playerChunk = new ChunkPos(client.player.blockPosition());
 		for (Map.Entry<Landmark, MarkerTexture> entry : getEditableLandmarks().entrySet()) {
 			Landmark landmark = entry.getKey();
 			if (!AtlasTime.isUnverified(landmark)) continue;
@@ -386,11 +384,11 @@ public class WorldAtlasData {
 	}
 
 	private static boolean reached(Landmark landmark, double px, double pz, ChunkPos playerChunk) {
-		net.minecraft.util.math.BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
+		net.minecraft.core.BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 		if (pos != null && Math.hypot(pos.getX() + 0.5 - px, pos.getZ() + 0.5 - pz) <= VERIFY_RANGE) return true;
-		java.util.List<net.minecraft.util.math.BlockPos> route = landmark.get(AtlasComponents.ROUTE);
+		java.util.List<net.minecraft.core.BlockPos> route = landmark.get(AtlasComponents.ROUTE);
 		if (route != null) {
-			for (net.minecraft.util.math.BlockPos point : route) {
+			for (net.minecraft.core.BlockPos point : route) {
 				if (Math.hypot(point.getX() + 0.5 - px, point.getZ() + 0.5 - pz) <= VERIFY_RANGE) return true;
 			}
 		}
@@ -456,33 +454,33 @@ public class WorldAtlasData {
 			if (!RoleplayersAtlas.CONFIG.deathMarkers) return;
 			// Death markers get their own auto-created layer on first death.
 			if (MarkerLayers.get(MarkerLayers.DEATHS_ID) == null) {
-				MarkerLayers.put(new MarkerLayers.MapLayer(MarkerLayers.DEATHS_ID, Text.translatable("gui.roleplayers_atlas.layer.deaths").getString(), 0xB03A3A));
+				MarkerLayers.put(new MarkerLayers.MapLayer(MarkerLayers.DEATHS_ID, Component.translatable("gui.roleplayers_atlas.layer.deaths").getString(), 0xB03A3A));
 			}
 			Landmark grave = dateGrave(summary, landmark);
 			AtlasConfig.GraveStyle style = RoleplayersAtlas.CONFIG.graveStyle;
-			Text name = grave.get(LandmarkComponentTypes.NAME);
+			Component name = grave.get(LandmarkComponentTypes.NAME);
 			if (name == null && style == AtlasConfig.GraveStyle.CAUSE) style = AtlasConfig.GraveStyle.DIED;
 			String styleName = style.toString().toLowerCase();
-			MutableText verb = switch (style) {
-				case CAUSE -> name.copy().formatted(Formatting.GRAY).formatted(Formatting.RED);
-				case GRAVE, ITEMS, DIED -> Text.translatable("gui.roleplayers_atlas.marker.death.%s.verb".formatted(styleName)).formatted(Formatting.RED);
-				case EUPHEMISMS -> Text.translatable("gui.roleplayers_atlas.marker.death.%s.verb.%s".formatted(styleName, new Random(grave.getOrDefault(LandmarkComponentTypes.SEED, 0)).nextInt(11))).formatted(Formatting.RED);
+			MutableComponent verb = switch (style) {
+				case CAUSE -> name.copy().withStyle(ChatFormatting.GRAY).withStyle(ChatFormatting.RED);
+				case GRAVE, ITEMS, DIED -> Component.translatable("gui.roleplayers_atlas.marker.death.%s.verb".formatted(styleName)).withStyle(ChatFormatting.RED);
+				case EUPHEMISMS -> Component.translatable("gui.roleplayers_atlas.marker.death.%s.verb.%s".formatted(styleName, new Random(grave.getOrDefault(LandmarkComponentTypes.SEED, 0)).nextInt(11))).withStyle(ChatFormatting.RED);
 			};
 			// A grave dug before this update has no real moment recorded, so the
 			// server's reckoning can't date it; it keeps the day number it has
 			// always shown rather than being given an invented cycle.
 			Long graveReal = grave.get(AtlasComponents.REAL_TIME);
 			boolean reign = RoleplayersAtlas.CONFIG.reckoning == AtlasConfig.Reckoning.REIGN && graveReal != null && graveReal > 0;
-			MutableText timeText = (reign
+			MutableComponent timeText = (reign
 				? AtlasTime.inWorldDate(grave.get(AtlasComponents.DAY), graveReal).copy()
-				: Text.literal(String.valueOf(grave.getOrDefault(AtlasComponents.DAY, 0L)))).formatted(Formatting.WHITE);
+				: Component.literal(String.valueOf(grave.getOrDefault(AtlasComponents.DAY, 0L)))).withStyle(ChatFormatting.WHITE);
 			String key = "gui.roleplayers_atlas.marker.death.%s%s".formatted(styleName, reign ? ".reign" : "");
 			// With in-world dates turned off the epitaph is the verb on its own.
-			MutableText text = RoleplayersAtlas.CONFIG.showMarkDate
-				? Text.translatable(key, verb, timeText).formatted(Formatting.GRAY)
-				: verb.copy().formatted(Formatting.GRAY);
+			MutableComponent text = RoleplayersAtlas.CONFIG.showMarkDate
+				? Component.translatable(key, verb, timeText).withStyle(ChatFormatting.GRAY)
+				: verb.copy().withStyle(ChatFormatting.GRAY);
 			addLandmarkMarker(copyLandmarkWith(grave, grave.id(), m -> {
-				m.set(LandmarkComponentTypes.COLOR, DyeColor.GRAY.getEntityColor());
+				m.set(LandmarkComponentTypes.COLOR, DyeColor.GRAY.getTextureDiffuseColor());
 				m.set(LandmarkComponentTypes.NAME, text);
 			}), MarkerTextures.getInstance().fromLandmark(grave, style == AtlasConfig.GraveStyle.ITEMS ? "items" : null));
 		} else {
@@ -503,7 +501,7 @@ public class WorldAtlasData {
 	 */
 	private Landmark dateGrave(WorldSummary summary, Landmark landmark) {
 		if (landmark.get(AtlasComponents.DAY) != null) return landmark;
-		boolean fresh = net.minecraft.util.Util.getMeasuringTimeMs() - RoleplayersAtlas.worldJoinedMs > 5000L;
+		boolean fresh = net.minecraft.util.Util.getMillis() - RoleplayersAtlas.worldJoinedMs > 5000L;
 		long day = fresh ? AtlasTime.gameDay() : 1 + landmark.getOrDefault(LandmarkComponentTypes.TIME, 0L) / 24000L;
 		Landmark dated = copyLandmarkWith(landmark, landmark.id(), m -> {
 			m.set(AtlasComponents.DAY, day);
@@ -515,7 +513,7 @@ public class WorldAtlasData {
 
 	public void onLandmarksAdded(WorldSummary summary, Multimap<UUID, Identifier> landmarks) {
 		landmarks.forEach((type, pos) -> this.addLandmark(summary, summary.landmarks().get(type, pos)));
-		if (MinecraftClient.getInstance().currentScreen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
 	public void onLandmarksRemoved(WorldSummary summary, Multimap<UUID, Identifier> landmarks) {
@@ -525,10 +523,10 @@ public class WorldAtlasData {
 				if (landmarkMarkers.get(type).isEmpty()) landmarkMarkers.remove(type);
 			}
 		});
-		if (MinecraftClient.getInstance().currentScreen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
-	public boolean deleteLandmark(RegistryKey<World> dimension, Landmark landmark) {
+	public boolean deleteLandmark(ResourceKey<Level> dimension, Landmark landmark) {
 		WorldSummary summary = SurveyorClient.tryGetSummary(dimension);
 		if (summary == null || summary.landmarks() == null || landmark.owner().equals(WorldLandmarks.GLOBAL) || !SurveyorClient.canModify(landmark.owner())) return false;
 		// Surveyor drops a removal for a mark it doesn't have without a word, so
@@ -540,8 +538,8 @@ public class WorldAtlasData {
 		}
 		// An erased mark is the loss people feel worst, so it is the one most
 		// worth being able to take back.
-		swapLandmark(dimension, landmark, null, Text.translatable("gui.roleplayers_atlas.undo.marker",
-			landmark.getOrDefault(LandmarkComponentTypes.NAME, Text.translatable("gui.roleplayers_atlas.unnamedMarker"))));
+		swapLandmark(dimension, landmark, null, Component.translatable("gui.roleplayers_atlas.undo.marker",
+			landmark.getOrDefault(LandmarkComponentTypes.NAME, Component.translatable("gui.roleplayers_atlas.unnamedMarker"))));
 		return true;
 	}
 
@@ -551,13 +549,13 @@ public class WorldAtlasData {
 	 * an edit. Its own inverse is filed as it goes, so taking it back and doing
 	 * it again are the same machinery.
 	 */
-	public static void swapLandmark(RegistryKey<World> dimension, @Nullable Landmark remove, @Nullable Landmark put, Text description) {
+	public static void swapLandmark(ResourceKey<Level> dimension, @Nullable Landmark remove, @Nullable Landmark put, Component description) {
 		WorldSummary summary = SurveyorClient.tryGetSummary(dimension);
 		if (summary == null || summary.landmarks() == null) return;
 		if (remove != null) summary.landmarks().remove(remove.owner(), remove.id());
 		if (put != null) summary.landmarks().put(put);
 		AtlasUndo.push(description, () -> swapLandmark(dimension, put, remove, description));
-		if (MinecraftClient.getInstance().currentScreen instanceof AtlasScreen as) as.updateBookmarkerList();
+		if (Minecraft.getInstance().screen instanceof AtlasScreen as) as.updateBookmarkerList();
 	}
 
 	public Map<Landmark, MarkerTexture> getEditableLandmarks() {
@@ -582,8 +580,8 @@ public class WorldAtlasData {
 	}
 
 	/** Which dimension this data belongs to, resolved from the registry it was filed under. */
-	private RegistryKey<World> dimensionOf() {
-		for (Map.Entry<RegistryKey<World>, WorldAtlasData> entry : WORLDS.entrySet()) {
+	private ResourceKey<Level> dimensionOf() {
+		for (Map.Entry<ResourceKey<Level>, WorldAtlasData> entry : WORLDS.entrySet()) {
 			if (entry.getValue() == this) return entry.getKey();
 		}
 		return null;

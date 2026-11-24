@@ -1,35 +1,35 @@
 package glam.ardor.roleplayers_atlas.util;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.RotationAxis;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.network.chat.Component;
 
 /**
  * Bridges the two rendering paths that survive in 1.21.6+:
- * GUI drawing must go through {@link DrawContext} (2D matrices, deferred render
+ * GUI drawing must go through {@link GuiGraphics} (2D matrices, deferred render
  * state), while in-world drawing (the handheld atlas) still uses a
- * {@link MatrixStack} with a {@link VertexConsumerProvider}.
+ * {@link PoseStack} with a {@link MultiBufferSource}.
  */
 public final class AtlasPainter {
-	private final DrawContext context;
-	private final MatrixStack matrices;
-	private final VertexConsumerProvider vertexConsumers;
+	private final GuiGraphics context;
+	private final PoseStack matrices;
+	private final MultiBufferSource vertexConsumers;
 
-	private AtlasPainter(DrawContext context, MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
+	private AtlasPainter(GuiGraphics context, PoseStack matrices, MultiBufferSource vertexConsumers) {
 		this.context = context;
 		this.matrices = matrices;
 		this.vertexConsumers = vertexConsumers;
 	}
 
-	public static AtlasPainter gui(DrawContext context) {
+	public static AtlasPainter gui(GuiGraphics context) {
 		return new AtlasPainter(context, null, null);
 	}
 
-	public static AtlasPainter world(MatrixStack matrices, VertexConsumerProvider vertexConsumers) {
+	public static AtlasPainter world(PoseStack matrices, MultiBufferSource vertexConsumers) {
 		return new AtlasPainter(null, matrices, vertexConsumers);
 	}
 
@@ -37,45 +37,45 @@ public final class AtlasPainter {
 		return context != null;
 	}
 
-	public DrawContext context() {
+	public GuiGraphics context() {
 		return context;
 	}
 
-	public MatrixStack matrices() {
+	public PoseStack matrices() {
 		return matrices;
 	}
 
-	public VertexConsumerProvider vertexConsumers() {
+	public MultiBufferSource vertexConsumers() {
 		return vertexConsumers;
 	}
 
 	public void push() {
-		if (isGui()) context.getMatrices().pushMatrix();
-		else matrices.push();
+		if (isGui()) context.pose().pushMatrix();
+		else matrices.pushPose();
 	}
 
 	public void pop() {
-		if (isGui()) context.getMatrices().popMatrix();
-		else matrices.pop();
+		if (isGui()) context.pose().popMatrix();
+		else matrices.popPose();
 	}
 
 	public void translate(double x, double y) {
-		if (isGui()) context.getMatrices().translate((float) x, (float) y);
+		if (isGui()) context.pose().translate((float) x, (float) y);
 		else matrices.translate(x, y, 0.0);
 	}
 
 	public void scale(float scale) {
-		if (isGui()) context.getMatrices().scale(scale, scale);
+		if (isGui()) context.pose().scale(scale, scale);
 		else matrices.scale(scale, scale, 1.0F);
 	}
 
 	public void rotateDegrees(float degrees) {
-		if (isGui()) context.getMatrices().rotate((float) Math.toRadians(degrees));
-		else matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(degrees));
+		if (isGui()) context.pose().rotate((float) Math.toRadians(degrees));
+		else matrices.mulPose(Axis.ZP.rotationDegrees(degrees));
 	}
 
 	/** Plain shadowed text without the plate, used for territory lettering. */
-	public void drawGlyph(Text text, float x, float y, int argb, int light) {
+	public void drawGlyph(Component text, float x, float y, int argb, int light) {
 		drawGlyph(text, x, y, argb, null, light);
 	}
 
@@ -86,24 +86,24 @@ public final class AtlasPainter {
 	 * in the baked text pipeline, so the shadow is drawn as its own shadowless
 	 * pass at a deeper z with the glyph shadowless above it.
 	 */
-	public void drawGlyph(Text text, float x, float y, int argb, Integer shadowArgb, int light) {
-		TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+	public void drawGlyph(Component text, float x, float y, int argb, Integer shadowArgb, int light) {
+		Font textRenderer = Minecraft.getInstance().font;
 		boolean noShadow = shadowArgb != null && shadowArgb == 0;
 		if (isGui()) {
-			Text styled = shadowArgb == null || noShadow ? text : text.copy().styled(s -> s.withShadowColor(shadowArgb));
-			context.drawText(textRenderer, styled, (int) x, (int) y, argb, !noShadow);
+			Component styled = shadowArgb == null || noShadow ? text : text.copy().withStyle(s -> s.withShadowColor(shadowArgb));
+			context.drawString(textRenderer, styled, (int) x, (int) y, argb, !noShadow);
 		} else if (shadowArgb == null || noShadow) {
-			matrices.push();
+			matrices.pushPose();
 			matrices.translate(0.0, 0.0, -0.7);
-			textRenderer.draw(text, x, y, argb, !noShadow, matrices.peek().getPositionMatrix(), vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
-			matrices.pop();
+			textRenderer.drawInBatch(text, x, y, argb, !noShadow, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			matrices.popPose();
 		} else {
-			matrices.push();
+			matrices.pushPose();
 			matrices.translate(0.0, 0.0, -0.65);
-			textRenderer.draw(text, x + 1, y + 1, shadowArgb, false, matrices.peek().getPositionMatrix(), vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
+			textRenderer.drawInBatch(text, x + 1, y + 1, shadowArgb, false, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
 			matrices.translate(0.0, 0.0, -0.05);
-			textRenderer.draw(text, x, y, argb, false, matrices.peek().getPositionMatrix(), vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
-			matrices.pop();
+			textRenderer.drawInBatch(text, x, y, argb, false, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			matrices.popPose();
 		}
 	}
 
@@ -113,24 +113,24 @@ public final class AtlasPainter {
 	 * the plate sits at a deeper z than the glyphs so depth testing keeps their
 	 * order stable regardless of buffer flush order.
 	 */
-	public void drawText(Text text, float x, float y, int argb, int light) {
-		TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+	public void drawText(Component text, float x, float y, int argb, int light) {
+		Font textRenderer = Minecraft.getInstance().font;
 		int alpha = argb >>> 24;
 		int background = ((int) (alpha * 0.45F) << 24) | 0x201409;
 		if (isGui()) {
-			int width = textRenderer.getWidth(text);
-			context.getMatrices().pushMatrix();
-			context.getMatrices().translate(x, y);
+			int width = textRenderer.width(text);
+			context.pose().pushMatrix();
+			context.pose().translate(x, y);
 			context.fill(-2, -1, width + 1, 9, background);
-			context.drawText(textRenderer, text, 0, 0, argb, false);
-			context.getMatrices().popMatrix();
+			context.drawString(textRenderer, text, 0, 0, argb, false);
+			context.pose().popMatrix();
 		} else {
-			int width = textRenderer.getWidth(text);
-			DrawUtil.fill(this, net.minecraft.client.render.RenderLayers.textBackground(), -0.5F, light, (int) x - 2, (int) y - 1, (int) x + width + 1, (int) y + 9, alpha / 255.0F * 0.45F, new float[]{0.125F, 0.078F, 0.035F});
-			matrices.push();
+			int width = textRenderer.width(text);
+			DrawUtil.fill(this, net.minecraft.client.renderer.rendertype.RenderTypes.textBackground(), -0.5F, light, (int) x - 2, (int) y - 1, (int) x + width + 1, (int) y + 9, alpha / 255.0F * 0.45F, new float[]{0.125F, 0.078F, 0.035F});
+			matrices.pushPose();
 			matrices.translate(0.0, 0.0, -0.6);
-			textRenderer.draw(text, x, y, argb, false, matrices.peek().getPositionMatrix(), vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
-			matrices.pop();
+			textRenderer.drawInBatch(text, x, y, argb, false, matrices.last().pose(), vertexConsumers, Font.DisplayMode.NORMAL, 0, light);
+			matrices.popPose();
 		}
 	}
 }

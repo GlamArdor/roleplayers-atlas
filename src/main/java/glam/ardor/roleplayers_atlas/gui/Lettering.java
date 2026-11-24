@@ -1,10 +1,10 @@
 package glam.ardor.roleplayers_atlas.gui;
 
 import glam.ardor.roleplayers_atlas.util.AtlasPainter;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
 
 /**
  * Lays out a name in large spaced capitals along a gentle curve, the way old
@@ -26,27 +26,27 @@ public final class Lettering {
 	private static final int SAMPLES = 48;
 
 	/** One letter: where its centre sits relative to the label's centre, and how it is turned. */
-	public record Glyph(Text text, int width, double x, double y, double angle) {
+	public record Glyph(Component text, int width, double x, double y, double angle) {
 	}
 
 	private Lettering() {
 	}
 
-	public static Text[] glyphs(String name) {
+	public static Component[] glyphs(String name) {
 		String upper = name.toUpperCase(java.util.Locale.ROOT);
 		int[] codepoints = upper.codePoints().toArray();
-		Text[] glyphs = new Text[codepoints.length];
+		Component[] glyphs = new Component[codepoints.length];
 		for (int i = 0; i < codepoints.length; i++) {
-			glyphs[i] = Text.literal(new String(Character.toChars(codepoints[i]))).formatted(Formatting.BOLD);
+			glyphs[i] = Component.literal(new String(Character.toChars(codepoints[i]))).withStyle(ChatFormatting.BOLD);
 		}
 		return glyphs;
 	}
 
 	/** Width of the glyphs laid end to end with a gap between each, unscaled. */
-	public static double rawLength(Text[] glyphs, double gap) {
-		TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+	public static double rawLength(Component[] glyphs, double gap) {
+		Font textRenderer = Minecraft.getInstance().font;
 		double length = 0;
-		for (Text glyph : glyphs) length += textRenderer.getWidth(glyph);
+		for (Component glyph : glyphs) length += textRenderer.width(glyph);
 		return length + gap * Math.max(0, glyphs.length - 1);
 	}
 
@@ -85,14 +85,14 @@ public final class Lettering {
 	 * @param rotation turn of the whole label, degrees
 	 * @param center   whether to centre the label's height on its point rather than its chord
 	 */
-	public static Glyph[] layout(Text[] glyphs, double scale, double gap, int[] curve, double rotation, boolean center) {
+	public static Glyph[] layout(Component[] glyphs, double scale, double gap, int[] curve, double rotation, boolean center) {
 		int count = glyphs.length;
 		if (count == 0) return new Glyph[0];
-		TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+		Font textRenderer = Minecraft.getInstance().font;
 		int[] widths = new int[count];
 		double total = 0;
 		for (int i = 0; i < count; i++) {
-			widths[i] = textRenderer.getWidth(glyphs[i]);
+			widths[i] = textRenderer.width(glyphs[i]);
 			total += widths[i] * scale;
 		}
 		total += gap * (count - 1);

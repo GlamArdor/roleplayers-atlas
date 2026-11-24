@@ -4,16 +4,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
-
+import com.mojang.blaze3d.platform.NativeImage;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
 
 /**
  * CPU renderer for the vanilla bitmap font, used to write names onto exported
@@ -35,17 +34,17 @@ public final class MapFont {
 		glyphs = new HashMap<>();
 		spaces = new HashMap<>();
 		try {
-			loadFontJson(Identifier.of("minecraft", "font/default.json"));
+			loadFontJson(Identifier.fromNamespaceAndPath("minecraft", "font/default.json"));
 		} catch (Exception e) {
 			RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] Failed to load font for map export", e);
 		}
 	}
 
 	private static void loadFontJson(Identifier fontId) {
-		Resource resource = MinecraftClient.getInstance().getResourceManager().getResource(fontId).orElse(null);
+		Resource resource = Minecraft.getInstance().getResourceManager().getResource(fontId).orElse(null);
 		if (resource == null) return;
 		JsonObject root;
-		try (InputStream in = resource.getInputStream()) {
+		try (InputStream in = resource.open()) {
 			root = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
 		} catch (Exception e) {
 			return;
@@ -58,7 +57,7 @@ public final class MapFont {
 			switch (type) {
 				case "reference" -> {
 					Identifier ref = Identifier.tryParse(provider.get("id").getAsString());
-					if (ref != null) loadFontJson(Identifier.of(ref.getNamespace(), "font/" + ref.getPath() + ".json"));
+					if (ref != null) loadFontJson(Identifier.fromNamespaceAndPath(ref.getNamespace(), "font/" + ref.getPath() + ".json"));
 				}
 				case "space" -> {
 					JsonObject advances = provider.getAsJsonObject("advances");
@@ -76,11 +75,11 @@ public final class MapFont {
 	private static void loadBitmapProvider(JsonObject provider) {
 		Identifier fileId = Identifier.tryParse(provider.get("file").getAsString());
 		if (fileId == null) return;
-		Identifier textureId = Identifier.of(fileId.getNamespace(), "textures/" + fileId.getPath());
-		Resource resource = MinecraftClient.getInstance().getResourceManager().getResource(textureId).orElse(null);
+		Identifier textureId = Identifier.fromNamespaceAndPath(fileId.getNamespace(), "textures/" + fileId.getPath());
+		Resource resource = Minecraft.getInstance().getResourceManager().getResource(textureId).orElse(null);
 		if (resource == null) return;
 		NativeImage tex;
-		try (InputStream in = resource.getInputStream()) {
+		try (InputStream in = resource.open()) {
 			tex = NativeImage.read(in);
 		} catch (Exception e) {
 			return;
@@ -107,7 +106,7 @@ public final class MapFont {
 				int maxCol = -1;
 				for (int y = 0; y < cellH; y++) {
 					for (int x = 0; x < cellW; x++) {
-						if ((tex.getColorArgb(u + x, v + y) >>> 24) > 8 && x > maxCol) maxCol = x;
+						if ((tex.getPixel(u + x, v + y) >>> 24) > 8 && x > maxCol) maxCol = x;
 					}
 				}
 				if (maxCol < 0) continue;
@@ -152,7 +151,7 @@ public final class MapFont {
 				int srcY = glyph.v() + (int) (dy / (glyphScale * scale));
 				for (int dx = 0; dx < destW; dx++) {
 					int srcX = glyph.u() + (int) (dx / (glyphScale * scale));
-					int src = glyph.tex().getColorArgb(srcX, srcY);
+					int src = glyph.tex().getPixel(srcX, srcY);
 					int alpha = (src >>> 24) * tintA / 255;
 					if (alpha == 0) continue;
 					blend(dst, cursor + dx, y + offsetY + dy, (alpha << 24) | tintRgb);
@@ -167,13 +166,13 @@ public final class MapFont {
 		int srcA = src >>> 24;
 		if (srcA == 0) return;
 		if (srcA == 255) {
-			dst.setColorArgb(x, y, src);
+			dst.setPixel(x, y, src);
 			return;
 		}
-		int d = dst.getColorArgb(x, y);
+		int d = dst.getPixel(x, y);
 		int outR = ((src >> 16 & 0xFF) * srcA + (d >> 16 & 0xFF) * (255 - srcA)) / 255;
 		int outG = ((src >> 8 & 0xFF) * srcA + (d >> 8 & 0xFF) * (255 - srcA)) / 255;
 		int outB = ((src & 0xFF) * srcA + (d & 0xFF) * (255 - srcA)) / 255;
-		dst.setColorArgb(x, y, 0xFF000000 | (outR << 16) | (outG << 8) | outB);
+		dst.setPixel(x, y, 0xFF000000 | (outR << 16) | (outG << 8) | outB);
 	}
 }

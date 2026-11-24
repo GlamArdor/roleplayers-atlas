@@ -3,26 +3,25 @@ package glam.ardor.roleplayers_atlas.gui;
 import glam.ardor.roleplayers_atlas.AtlasConfig;
 import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
 import glam.ardor.roleplayers_atlas.WorldAtlasData;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 /**
  * The settings screen (opened from Mod Menu): every option in one scrolling
@@ -49,7 +48,7 @@ public class AtlasConfigScreen extends Screen {
 	private boolean resetArmed = false;
 
 	public AtlasConfigScreen(Screen parent) {
-		super(Text.translatable("gui.roleplayers_atlas.config"));
+		super(Component.translatable("gui.roleplayers_atlas.config"));
 		this.parent = parent;
 		this.wasFallback = config.fallbackFailHandling;
 		this.wasElevations = new int[]{config.elevationLow, config.elevationMid, config.elevationHigh, config.elevationPeak};
@@ -59,9 +58,9 @@ public class AtlasConfigScreen extends Screen {
 
 	@Override
 	protected void init() {
-		OptionList list = new OptionList(this.client, this.width, this.height - 96, 40, 25);
+		OptionList list = new OptionList(this.minecraft, this.width, this.height - 96, 40, 25);
 
-		list.addHeader(Text.translatable("roleplayers_atlas.category.map"));
+		list.addHeader(Component.translatable("roleplayers_atlas.category.map"));
 		list.addWidget(toggle("fullscreen", () -> config.fullscreen, v -> config.fullscreen = v));
 		list.addWidget(toggle("keepZoom", () -> config.keepZoom, v -> config.keepZoom = v));
 		list.addWidget(toggle("keepOffset", () -> config.keepOffset, v -> config.keepOffset = v));
@@ -70,12 +69,12 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(toggle("stabilizeHeldMap", () -> config.stabilizeHeldMap, v -> config.stabilizeHeldMap = v));
 		list.addWidget(intSlider("handheldScale", config.handheldScale, 50, 200, v -> config.handheldScale = v, this::percent));
 		list.addWidget(toggle("showHints", () -> config.showHints, v -> config.showHints = v));
-		list.addWidget(intSlider("mapScale", config.mapScale, -2, 10, v -> config.mapScale = v, v -> Text.literal(Integer.toString(v))));
-		list.addWidget(intSlider("maxTileChunks", config.maxTileChunks, 0, 6, v -> config.maxTileChunks = v, v -> Text.literal(Integer.toString(v))));
-		list.addWidget(intSlider("maxTilePixels", config.maxTilePixels, 0, 3, v -> config.maxTilePixels = v, v -> Text.literal(Integer.toString(v))));
-		list.addWidget(intSlider("chunkTickLimit", config.chunkTickLimit, 1, 1000, v -> config.chunkTickLimit = v, v -> Text.literal(Integer.toString(v))));
+		list.addWidget(intSlider("mapScale", config.mapScale, -2, 10, v -> config.mapScale = v, v -> Component.literal(Integer.toString(v))));
+		list.addWidget(intSlider("maxTileChunks", config.maxTileChunks, 0, 6, v -> config.maxTileChunks = v, v -> Component.literal(Integer.toString(v))));
+		list.addWidget(intSlider("maxTilePixels", config.maxTilePixels, 0, 3, v -> config.maxTilePixels = v, v -> Component.literal(Integer.toString(v))));
+		list.addWidget(intSlider("chunkTickLimit", config.chunkTickLimit, 1, 1000, v -> config.chunkTickLimit = v, v -> Component.literal(Integer.toString(v))));
 
-		list.addHeader(Text.translatable("roleplayers_atlas.category.marks"));
+		list.addHeader(Component.translatable("roleplayers_atlas.category.marks"));
 		list.addWidget(enumButton("quickMark", AtlasConfig.QuickMark.values(), () -> config.quickMark,
 			v -> config.quickMark = v, v -> "gui.roleplayers_atlas.config.quickMark." + v.name().toLowerCase()));
 		// Whatever icons the resource pack actually ships, read at the moment the
@@ -83,7 +82,7 @@ public class AtlasConfigScreen extends Screen {
 		List<String> icons = glam.ardor.roleplayers_atlas.QuickMark.icons();
 		if (!icons.isEmpty()) {
 			list.addWidget(cycleButton("quickMarkIcon",
-				() -> Text.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(config.quickMarkIcon.replace('_', ' '))),
+				() -> Component.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(config.quickMarkIcon.replace('_', ' '))),
 				() -> {
 					int at = icons.indexOf(config.quickMarkIcon);
 					config.quickMarkIcon = icons.get((at + 1) % icons.size());
@@ -109,13 +108,13 @@ public class AtlasConfigScreen extends Screen {
 		list.addWidget(intSlider("guideArrowOpacity", config.guideArrowOpacity, 10, 100, v -> config.guideArrowOpacity = v, this::percent));
 		list.addWidget(toggle("clearTrackingOnArrival", () -> config.clearTrackingOnArrival, v -> config.clearTrackingOnArrival = v));
 
-		list.addHeader(Text.translatable("roleplayers_atlas.category.titles"));
+		list.addHeader(Component.translatable("roleplayers_atlas.category.titles"));
 		list.addWidget(toggle("zoneTitles", () -> config.zoneTitles, v -> config.zoneTitles = v));
 		list.addWidget(toggle("zoneTitleSound", () -> config.zoneTitleSound, v -> config.zoneTitleSound = v));
 		list.addWidget(intSlider("zoneTitleSeconds", config.zoneTitleSeconds, 1, 30, v -> config.zoneTitleSeconds = v, this::seconds));
 		list.addWidget(intSlider("zoneTitleCooldown", config.zoneTitleCooldown, 0, 600, v -> config.zoneTitleCooldown = v, this::seconds));
 
-		list.addHeader(Text.translatable("roleplayers_atlas.category.terrain"));
+		list.addHeader(Component.translatable("roleplayers_atlas.category.terrain"));
 		list.addWidget(intSlider("elevationLow", config.elevationLow, -64, 320, v -> config.elevationLow = v, this::blocks));
 		list.addWidget(intSlider("elevationMid", config.elevationMid, -64, 320, v -> config.elevationMid = v, this::blocks));
 		list.addWidget(intSlider("elevationHigh", config.elevationHigh, -64, 320, v -> config.elevationHigh = v, this::blocks));
@@ -130,31 +129,31 @@ public class AtlasConfigScreen extends Screen {
 			() -> config.fallbackFailHandling == AtlasConfig.FallbackHandling.CRASH ? AtlasConfig.FallbackHandling.MISSING : config.fallbackFailHandling,
 			v -> config.fallbackFailHandling = v, v -> "gui.roleplayers_atlas.config.fallbackFailHandling." + v.name().toLowerCase()));
 
-		addDrawableChild(list);
+		addRenderableWidget(list);
 
 		// Two clicks: undoing every setting at once is easy to hit by accident.
-		addDrawableChild(ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.config.reset"), button -> {
+		addRenderableWidget(Button.builder(Component.translatable("gui.roleplayers_atlas.config.reset"), button -> {
 			if (!resetArmed) {
 				resetArmed = true;
-				button.setMessage(Text.translatable("gui.roleplayers_atlas.config.resetConfirm"));
+				button.setMessage(Component.translatable("gui.roleplayers_atlas.config.resetConfirm"));
 				return;
 			}
 			config.resetToDefaults();
 			resetArmed = false;
-			clearAndInit();
-		}).dimensions(this.width / 2 - 154, this.height - 30, 150, 20).build());
-		addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> close())
-			.dimensions(this.width / 2 + 4, this.height - 30, 150, 20).build());
+			rebuildWidgets();
+		}).bounds(this.width / 2 - 154, this.height - 30, 150, 20).build());
+		addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
+			.bounds(this.width / 2 + 4, this.height - 30, 150, 20).build());
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
 		super.render(context, mouseX, mouseY, delta);
-		context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 18, 0xFFFFFFFF);
+		context.drawCenteredString(this.font, this.title, this.width / 2, 18, 0xFFFFFFFF);
 	}
 
 	@Override
-	public void close() {
+	public void onClose() {
 		config.saveFields();
 		boolean elevationsChanged = wasElevations[0] != config.elevationLow
 			|| wasElevations[1] != config.elevationMid
@@ -162,34 +161,34 @@ public class AtlasConfigScreen extends Screen {
 			|| wasElevations[3] != config.elevationPeak;
 		if (config.fallbackFailHandling != wasFallback || elevationsChanged) WorldAtlasData.retileAll();
 		if (config.reckoning != wasReckoning || config.showMarkDate != wasMarkDate) WorldAtlasData.redateGraves();
-		this.client.setScreen(parent);
+		this.minecraft.setScreen(parent);
 	}
 
-	private Text blocks(int value) {
-		return Text.translatable("config.roleplayers_atlas.blocks", value);
+	private Component blocks(int value) {
+		return Component.translatable("config.roleplayers_atlas.blocks", value);
 	}
 
-	private Text percent(int value) {
-		return Text.translatable("config.roleplayers_atlas.percent", value);
+	private Component percent(int value) {
+		return Component.translatable("config.roleplayers_atlas.percent", value);
 	}
 
-	private Text seconds(int value) {
-		return Text.translatable("config.roleplayers_atlas.seconds", value);
+	private Component seconds(int value) {
+		return Component.translatable("config.roleplayers_atlas.seconds", value);
 	}
 
-	private static Text label(String key, Text value) {
-		return Text.translatable("config.roleplayers_atlas." + key).copy().append(": ").append(value);
+	private static Component label(String key, Component value) {
+		return Component.translatable("config.roleplayers_atlas." + key).copy().append(": ").append(value);
 	}
 
-	private ClickableWidget toggle(String key, Supplier<Boolean> getter, Consumer<Boolean> setter) {
+	private AbstractWidget toggle(String key, Supplier<Boolean> getter, Consumer<Boolean> setter) {
 		return cycleButton(key,
-			() -> getter.get() ? ScreenTexts.ON : ScreenTexts.OFF,
+			() -> getter.get() ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF,
 			() -> setter.accept(!getter.get()));
 	}
 
-	private <E extends Enum<E>> ClickableWidget enumButton(String key, E[] values, Supplier<E> getter, Consumer<E> setter, Function<E, String> nameKey) {
+	private <E extends Enum<E>> AbstractWidget enumButton(String key, E[] values, Supplier<E> getter, Consumer<E> setter, Function<E, String> nameKey) {
 		return cycleButton(key,
-			() -> Text.translatable(nameKey.apply(getter.get())),
+			() -> Component.translatable(nameKey.apply(getter.get())),
 			() -> setter.accept(values[(indexOf(values, getter.get()) + 1) % values.length]));
 	}
 
@@ -198,40 +197,40 @@ public class AtlasConfigScreen extends Screen {
 		return -1;
 	}
 
-	private ClickableWidget cycleButton(String key, Supplier<Text> value, Runnable onClick) {
-		ButtonWidget button = ButtonWidget.builder(label(key, value.get()), b -> {
+	private AbstractWidget cycleButton(String key, Supplier<Component> value, Runnable onClick) {
+		Button button = Button.builder(label(key, value.get()), b -> {
 			onClick.run();
 			b.setMessage(label(key, value.get()));
-		}).dimensions(0, 0, ROW_WIDTH, 20).build();
-		button.setTooltip(Tooltip.of(Text.translatable("config.roleplayers_atlas." + key + ".tooltip")));
+		}).bounds(0, 0, ROW_WIDTH, 20).build();
+		button.setTooltip(Tooltip.create(Component.translatable("config.roleplayers_atlas." + key + ".tooltip")));
 		return button;
 	}
 
-	private ClickableWidget intSlider(String key, int current, int min, int max, Consumer<Integer> setter, IntFunction<Text> display) {
+	private AbstractWidget intSlider(String key, int current, int min, int max, Consumer<Integer> setter, IntFunction<Component> display) {
 		return new OptionSlider(key, current, min, max, setter, display);
 	}
 
 	/** Slider over an integer range that writes straight back into the config field. */
-	private static class OptionSlider extends SliderWidget {
+	private static class OptionSlider extends AbstractSliderButton {
 		private final String key;
 		private final int min;
 		private final int max;
 		private final Consumer<Integer> setter;
-		private final IntFunction<Text> display;
+		private final IntFunction<Component> display;
 
-		OptionSlider(String key, int current, int min, int max, Consumer<Integer> setter, IntFunction<Text> display) {
-			super(0, 0, ROW_WIDTH, 20, Text.empty(), MathHelper.clamp((current - min) / (double) (max - min), 0.0, 1.0));
+		OptionSlider(String key, int current, int min, int max, Consumer<Integer> setter, IntFunction<Component> display) {
+			super(0, 0, ROW_WIDTH, 20, Component.empty(), Mth.clamp((current - min) / (double) (max - min), 0.0, 1.0));
 			this.key = key;
 			this.min = min;
 			this.max = max;
 			this.setter = setter;
 			this.display = display;
-			setTooltip(Tooltip.of(Text.translatable("config.roleplayers_atlas." + key + ".tooltip")));
+			setTooltip(Tooltip.create(Component.translatable("config.roleplayers_atlas." + key + ".tooltip")));
 			updateMessage();
 		}
 
 		private int currentValue() {
-			return MathHelper.clamp((int) Math.round(min + (max - min) * this.value), min, max);
+			return Mth.clamp((int) Math.round(min + (max - min) * this.value), min, max);
 		}
 
 		@Override
@@ -245,16 +244,16 @@ public class AtlasConfigScreen extends Screen {
 		}
 	}
 
-	private static class OptionList extends ElementListWidget<OptionList.Entry> {
-		OptionList(MinecraftClient client, int width, int height, int y, int itemHeight) {
+	private static class OptionList extends ContainerObjectSelectionList<OptionList.Entry> {
+		OptionList(Minecraft client, int width, int height, int y, int itemHeight) {
 			super(client, width, height, y, itemHeight);
 		}
 
-		void addWidget(ClickableWidget widget) {
+		void addWidget(AbstractWidget widget) {
 			addEntry(new WidgetEntry(widget));
 		}
 
-		void addHeader(Text text) {
+		void addHeader(Component text) {
 			addEntry(new HeaderEntry(text));
 		}
 
@@ -263,18 +262,18 @@ public class AtlasConfigScreen extends Screen {
 			return ROW_WIDTH;
 		}
 
-		abstract static class Entry extends ElementListWidget.Entry<Entry> {
+		abstract static class Entry extends ContainerObjectSelectionList.Entry<glam.ardor.roleplayers_atlas.gui.AtlasConfigScreen.OptionList.Entry> {
 		}
 
-		static class WidgetEntry extends Entry {
-			private final ClickableWidget widget;
+		static class WidgetEntry extends glam.ardor.roleplayers_atlas.gui.AtlasConfigScreen.OptionList.Entry {
+			private final AbstractWidget widget;
 
-			WidgetEntry(ClickableWidget widget) {
+			WidgetEntry(AbstractWidget widget) {
 				this.widget = widget;
 			}
 
 			@Override
-			public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+			public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 				widget.setX(getContentX());
 				widget.setY(getContentY());
 				widget.setWidth(getContentWidth());
@@ -282,37 +281,37 @@ public class AtlasConfigScreen extends Screen {
 			}
 
 			@Override
-			public List<? extends Element> children() {
+			public List<? extends GuiEventListener> children() {
 				return List.of(widget);
 			}
 
 			@Override
-			public List<? extends Selectable> selectableChildren() {
+			public List<? extends NarratableEntry> narratables() {
 				return List.of(widget);
 			}
 		}
 
-		static class HeaderEntry extends Entry {
-			private final Text text;
+		static class HeaderEntry extends glam.ardor.roleplayers_atlas.gui.AtlasConfigScreen.OptionList.Entry {
+			private final Component text;
 
-			HeaderEntry(Text text) {
+			HeaderEntry(Component text) {
 				this.text = text;
 			}
 
 			@Override
-			public void render(DrawContext context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-				MinecraftClient client = MinecraftClient.getInstance();
-				context.drawCenteredTextWithShadow(client.textRenderer, text,
-					getContentMiddleX(), getContentY() + 8, 0xFFE0C070);
+			public void renderContent(GuiGraphics context, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+				Minecraft client = Minecraft.getInstance();
+				context.drawCenteredString(client.font, text,
+					getContentXMiddle(), getContentY() + 8, 0xFFE0C070);
 			}
 
 			@Override
-			public List<? extends Element> children() {
+			public List<? extends GuiEventListener> children() {
 				return List.of();
 			}
 
 			@Override
-			public List<? extends Selectable> selectableChildren() {
+			public List<? extends NarratableEntry> narratables() {
 				return List.of();
 			}
 		}

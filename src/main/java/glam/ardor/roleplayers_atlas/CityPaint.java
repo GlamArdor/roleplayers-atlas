@@ -5,11 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import glam.ardor.roleplayers_atlas.util.WorldKey;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Reader;
@@ -125,12 +125,12 @@ public final class CityPaint {
 	// --- reading ---
 
 	/** What is drawn on this cell, yours first and someone else's after. */
-	public static @Nullable Identifier at(RegistryKey<World> dimension, ChunkPos pos) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static @Nullable Identifier at(ResourceKey<Level> dimension, ChunkPos pos) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		Identifier own = mine == null ? null : mine.get(pos);
 		if (own != null) return own;
 		for (Map<Identifier, Map<ChunkPos, Identifier>> sheet : shared.values()) {
-			Map<ChunkPos, Identifier> theirs = sheet.get(dimension.getValue());
+			Map<ChunkPos, Identifier> theirs = sheet.get(dimension.identifier());
 			Identifier look = theirs == null ? null : theirs.get(pos);
 			if (look != null) return look;
 		}
@@ -138,38 +138,38 @@ public final class CityPaint {
 	}
 
 	/** Everything drawn here by anyone, for the map to put down in one pass. */
-	public static Map<ChunkPos, Identifier> allAt(RegistryKey<World> dimension) {
+	public static Map<ChunkPos, Identifier> allAt(ResourceKey<Level> dimension) {
 		Map<ChunkPos, Identifier> out = new HashMap<>();
 		// Someone else's hand goes down first so your own draws over it.
 		for (Map<Identifier, Map<ChunkPos, Identifier>> sheet : shared.values()) {
-			Map<ChunkPos, Identifier> theirs = sheet.get(dimension.getValue());
+			Map<ChunkPos, Identifier> theirs = sheet.get(dimension.identifier());
 			if (theirs != null) out.putAll(theirs);
 		}
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		if (mine != null) out.putAll(mine);
 		return out;
 	}
 
-	public static Map<ChunkPos, Identifier> ownCells(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static Map<ChunkPos, Identifier> ownCells(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		return mine == null ? Map.of() : java.util.Collections.unmodifiableMap(mine);
 	}
 
 	/** Everywhere you drew here, so the map can outline it back at you. */
-	public static Set<ChunkPos> ownChunks(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static Set<ChunkPos> ownChunks(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		return mine == null ? Set.of() : java.util.Collections.unmodifiableSet(mine.keySet());
 	}
 
 	/** Everywhere a scroll drew here that you didn't draw yourself. */
-	public static Set<ChunkPos> importedChunks(RegistryKey<World> dimension) {
+	public static Set<ChunkPos> importedChunks(ResourceKey<Level> dimension) {
 		if (shared.isEmpty()) return Set.of();
 		Set<ChunkPos> out = new LinkedHashSet<>();
 		for (Map<Identifier, Map<ChunkPos, Identifier>> sheet : shared.values()) {
-			Map<ChunkPos, Identifier> theirs = sheet.get(dimension.getValue());
+			Map<ChunkPos, Identifier> theirs = sheet.get(dimension.identifier());
 			if (theirs != null) out.addAll(theirs.keySet());
 		}
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		if (mine != null) out.removeAll(mine.keySet());
 		return out;
 	}
@@ -179,16 +179,16 @@ public final class CityPaint {
 	 * cells each covers. A pile of loose coordinates can't be read; "twelve
 	 * cells of plains road" can.
 	 */
-	public static Map<Identifier, Integer> ownLooks(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static Map<Identifier, Integer> ownLooks(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		if (mine == null || mine.isEmpty()) return Map.of();
 		Map<Identifier, Integer> out = new LinkedHashMap<>();
 		mine.values().forEach(look -> out.merge(look, 1, Integer::sum));
 		return out;
 	}
 
-	public static int ownCount(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static int ownCount(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		return mine == null ? 0 : mine.size();
 	}
 
@@ -198,7 +198,7 @@ public final class CityPaint {
 	private static boolean dirty = false;
 	/** What the cells of the stroke in progress said before it touched them. */
 	private static final Map<ChunkPos, Identifier> strokeBefore = new LinkedHashMap<>();
-	private static @Nullable RegistryKey<World> strokeDim = null;
+	private static @Nullable ResourceKey<Level> strokeDim = null;
 
 	/**
 	 * One stroke of the brush, shown at once and written down later.
@@ -211,14 +211,14 @@ public final class CityPaint {
 	 * @return whether anything actually changed, so a brush passing back over
 	 * ground it has already covered is not heard doing it.
 	 */
-	public static boolean paint(RegistryKey<World> dimension, ChunkPos pos, @Nullable Identifier tile) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static boolean paint(ResourceKey<Level> dimension, ChunkPos pos, @Nullable Identifier tile) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		Identifier was = mine == null ? null : mine.get(pos);
 		if (tile == null) {
 			if (mine == null || mine.remove(pos) == null) return false;
-			if (mine.isEmpty()) cells.remove(dimension.getValue());
+			if (mine.isEmpty()) cells.remove(dimension.identifier());
 		} else {
-			if (mine == null) mine = cells.computeIfAbsent(dimension.getValue(), k -> new HashMap<>());
+			if (mine == null) mine = cells.computeIfAbsent(dimension.identifier(), k -> new HashMap<>());
 			if (tile.equals(mine.put(pos, tile))) return false;
 		}
 		// The first state a cell had in this stroke is the one to go back to: a
@@ -239,9 +239,9 @@ public final class CityPaint {
 		if (!dirty) return;
 		dirty = false;
 		if (!strokeBefore.isEmpty() && strokeDim != null) {
-			RegistryKey<World> dimension = strokeDim;
+			ResourceKey<Level> dimension = strokeDim;
 			Map<ChunkPos, Identifier> before = new LinkedHashMap<>(strokeBefore);
-			Text description = Text.translatable("gui.roleplayers_atlas.undo.city", before.size());
+			Component description = Component.translatable("gui.roleplayers_atlas.undo.city", before.size());
 			AtlasUndo.push(description, () -> applyCells(dimension, before, description));
 		}
 		strokeBefore.clear();
@@ -255,48 +255,48 @@ public final class CityPaint {
 	 * it files the exact opposite before doing it, so taking a step back and
 	 * going forward again are the same machinery rather than two.
 	 */
-	private static void applyCells(RegistryKey<World> dimension, Map<ChunkPos, Identifier> target, Text description) {
+	private static void applyCells(ResourceKey<Level> dimension, Map<ChunkPos, Identifier> target, Component description) {
 		if (target.isEmpty()) return;
-		Map<ChunkPos, Identifier> existing = cells.get(dimension.getValue());
+		Map<ChunkPos, Identifier> existing = cells.get(dimension.identifier());
 		Map<ChunkPos, Identifier> before = new LinkedHashMap<>();
 		target.keySet().forEach(pos -> before.put(pos, existing == null ? null : existing.get(pos)));
-		Map<ChunkPos, Identifier> into = cells.computeIfAbsent(dimension.getValue(), k -> new HashMap<>());
+		Map<ChunkPos, Identifier> into = cells.computeIfAbsent(dimension.identifier(), k -> new HashMap<>());
 		target.forEach((pos, tile) -> {
 			if (tile == null) into.remove(pos);
 			else into.put(pos, tile);
 		});
-		if (into.isEmpty()) cells.remove(dimension.getValue());
+		if (into.isEmpty()) cells.remove(dimension.identifier());
 		AtlasUndo.push(description, () -> applyCells(dimension, before, description));
 		dirty = false;
 		saveAndRefresh();
 	}
 
 	/** Draws the given cells, or rubs them out if the tile is null. */
-	public static void set(RegistryKey<World> dimension, Collection<ChunkPos> drawn, @Nullable Identifier tile) {
+	public static void set(ResourceKey<Level> dimension, Collection<ChunkPos> drawn, @Nullable Identifier tile) {
 		if (drawn.isEmpty()) return;
 		Map<ChunkPos, Identifier> target = new LinkedHashMap<>();
 		drawn.forEach(pos -> target.put(pos, tile));
-		applyCells(dimension, target, Text.translatable("gui.roleplayers_atlas.undo.city", drawn.size()));
+		applyCells(dimension, target, Component.translatable("gui.roleplayers_atlas.undo.city", drawn.size()));
 	}
 
 	/** Rubs out every cell you drew with one particular piece. */
-	public static void clearOf(RegistryKey<World> dimension, Identifier tile) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static void clearOf(ResourceKey<Level> dimension, Identifier tile) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		if (mine == null) return;
 		Map<ChunkPos, Identifier> target = new LinkedHashMap<>();
 		mine.forEach((pos, was) -> {
 			if (tile.equals(was)) target.put(pos, null);
 		});
-		applyCells(dimension, target, Text.translatable("gui.roleplayers_atlas.undo.city", target.size()));
+		applyCells(dimension, target, Component.translatable("gui.roleplayers_atlas.undo.city", target.size()));
 	}
 
 	/** Rubs out everything you drew in one dimension, leaving other people's alone. */
-	public static void clearAll(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> mine = cells.get(dimension.getValue());
+	public static void clearAll(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> mine = cells.get(dimension.identifier());
 		if (mine == null) return;
 		Map<ChunkPos, Identifier> target = new LinkedHashMap<>();
 		mine.keySet().forEach(pos -> target.put(pos, null));
-		applyCells(dimension, target, Text.translatable("gui.roleplayers_atlas.undo.city", target.size()));
+		applyCells(dimension, target, Component.translatable("gui.roleplayers_atlas.undo.city", target.size()));
 	}
 
 	// --- what came in on other people's scrolls ---
@@ -319,27 +319,27 @@ public final class CityPaint {
 	 * before: a scroll says how their map looks now, it isn't an addition to an
 	 * older one.
 	 */
-	public static void putImported(String author, RegistryKey<World> dimension, Map<ChunkPos, Identifier> theirs) {
+	public static void putImported(String author, ResourceKey<Level> dimension, Map<ChunkPos, Identifier> theirs) {
 		if (author == null || author.isBlank() || theirs == null || theirs.isEmpty()) return;
 		Map<String, Map<Identifier, Map<ChunkPos, Identifier>>> target = copyOf(shared);
-		target.computeIfAbsent(author, k -> new HashMap<>()).computeIfAbsent(dimension.getValue(), k -> new HashMap<>()).putAll(theirs);
-		applySheets(target, Text.translatable("gui.roleplayers_atlas.undo.sheet", author));
+		target.computeIfAbsent(author, k -> new HashMap<>()).computeIfAbsent(dimension.identifier(), k -> new HashMap<>()).putAll(theirs);
+		applySheets(target, Component.translatable("gui.roleplayers_atlas.undo.sheet", author));
 	}
 
 	public static void dropImported(String author) {
 		if (!shared.containsKey(author)) return;
 		Map<String, Map<Identifier, Map<ChunkPos, Identifier>>> target = copyOf(shared);
 		target.remove(author);
-		applySheets(target, Text.translatable("gui.roleplayers_atlas.undo.sheet", author));
+		applySheets(target, Component.translatable("gui.roleplayers_atlas.undo.sheet", author));
 	}
 
 	public static void dropAllImported() {
 		if (shared.isEmpty()) return;
-		applySheets(Map.of(), Text.translatable("gui.roleplayers_atlas.undo.sheetsAll", shared.size()));
+		applySheets(Map.of(), Component.translatable("gui.roleplayers_atlas.undo.sheetsAll", shared.size()));
 	}
 
 	/** The one way the guest sheets ever change, filing the state they replace. */
-	private static void applySheets(Map<String, Map<Identifier, Map<ChunkPos, Identifier>>> target, Text description) {
+	private static void applySheets(Map<String, Map<Identifier, Map<ChunkPos, Identifier>>> target, Component description) {
 		Map<String, Map<Identifier, Map<ChunkPos, Identifier>>> copied = copyOf(target);
 		Map<String, Map<Identifier, Map<ChunkPos, Identifier>>> before = copyOf(shared);
 		shared.clear();

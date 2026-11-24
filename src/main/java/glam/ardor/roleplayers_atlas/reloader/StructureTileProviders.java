@@ -16,20 +16,19 @@ import folk.sisby.surveyor.structure.StructurePieceSummary;
 import folk.sisby.surveyor.structure.StructureStartSummary;
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureType;
+import net.minecraft.world.level.levelgen.structure.pools.StructurePoolElementType;
 import glam.ardor.roleplayers_atlas.util.LegacyJsonDataLoader;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.structure.pool.StructurePoolElementType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.profiler.Profiler;
-import net.minecraft.world.gen.structure.Structure;
-import net.minecraft.world.gen.structure.StructureType;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -100,7 +99,7 @@ public class StructureTileProviders extends LegacyJsonDataLoader implements Iden
 	public void resolve(Map<ChunkPos, TileTexture> outTiles, Map<ChunkPos, StructureTileProvider> structureProviders, Map<ChunkPos, String> tilePredicates, StructurePieceSummary piece, WorldSummary summary) {
 		if (piece instanceof JigsawPieceSummary jigsawPiece) {
 			if (pieceJigsawSingleTiles.containsKey(jigsawPiece.getId())) {
-				StructureTileProvider provider = (jigsawPiece.getElementType() == StructurePoolElementType.FEATURE_POOL_ELEMENT ? pieceJigsawFeatureTiles : pieceJigsawSingleTiles).get(jigsawPiece.getId());
+				StructureTileProvider provider = (jigsawPiece.getElementType() == StructurePoolElementType.FEATURE ? pieceJigsawFeatureTiles : pieceJigsawSingleTiles).get(jigsawPiece.getId());
 				provider.getTextures(summary, jigsawPiece.getBoundingBox(), jigsawPiece.getJunctions(), tilePredicates).forEach((pos, texture) -> {
 					if (structureProviders.containsKey(pos) && structureProviders.get(pos).priority() < provider.priority()) return;
 					outTiles.put(pos, texture);
@@ -108,7 +107,7 @@ public class StructureTileProviders extends LegacyJsonDataLoader implements Iden
 				});
 			}
 		} else {
-			Identifier pieceTypeId = Registries.STRUCTURE_PIECE.getId(piece.getType());
+			Identifier pieceTypeId = BuiltInRegistries.STRUCTURE_PIECE.getKey(piece.getType());
 			if (pieceTypeTiles.containsKey(pieceTypeId)) {
 				StructureTileProvider provider = pieceTypeTiles.get(pieceTypeId);
 				provider.getTextures(summary, piece.getBoundingBox(), tilePredicates).forEach((pos, texture) -> {
@@ -120,44 +119,44 @@ public class StructureTileProviders extends LegacyJsonDataLoader implements Iden
 		}
 	}
 
-	public void resolve(Map<ChunkPos, TileTexture> outTiles, Map<ChunkPos, StructureTileProvider> structureProviders, Map<ChunkPos, String> debugPredicates, Map<Landmark, MarkerTexture> outMarkers, WorldSummary summary, RegistryKey<Structure> key, ChunkPos pos, StructureStartSummary start, RegistryKey<StructureType<?>> type, Collection<TagKey<Structure>> tags) {
-		if (startMarkers.containsKey(key.getValue())) {
-			MarkerTexture texture = startMarkers.get(key.getValue());
-			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.getValue().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
-				.add(LandmarkComponentTypes.POS, pos.getCenterAtY(0))
-				.add(LandmarkComponentTypes.NAME, Text.translatable(ProviderType.START.translation(key.getValue())))
+	public void resolve(Map<ChunkPos, TileTexture> outTiles, Map<ChunkPos, StructureTileProvider> structureProviders, Map<ChunkPos, String> debugPredicates, Map<Landmark, MarkerTexture> outMarkers, WorldSummary summary, ResourceKey<Structure> key, ChunkPos pos, StructureStartSummary start, ResourceKey<StructureType<?>> type, Collection<TagKey<Structure>> tags) {
+		if (startMarkers.containsKey(key.identifier())) {
+			MarkerTexture texture = startMarkers.get(key.identifier());
+			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
+				.add(LandmarkComponentTypes.POS, pos.getMiddleBlockPosition(0))
+				.add(LandmarkComponentTypes.NAME, Component.translatable(ProviderType.START.translation(key.identifier())))
 			), texture);
-		} else if (type != null && typeMarkers.containsKey(type.getValue())) {
-			MarkerTexture texture = typeMarkers.get(type.getValue());
-			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.getValue().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
-				.add(LandmarkComponentTypes.POS, pos.getCenterAtY(0))
-				.add(LandmarkComponentTypes.NAME, Text.translatable(ProviderType.TYPE.translation(type.getValue())))
+		} else if (type != null && typeMarkers.containsKey(type.identifier())) {
+			MarkerTexture texture = typeMarkers.get(type.identifier());
+			outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
+				.add(LandmarkComponentTypes.POS, pos.getMiddleBlockPosition(0))
+				.add(LandmarkComponentTypes.NAME, Component.translatable(ProviderType.TYPE.translation(type.identifier())))
 			), texture);
 		} else {
-			tagMarkers.entrySet().stream().filter(entry -> tags.contains(TagKey.of(RegistryKeys.STRUCTURE, entry.getKey()))).findFirst().ifPresent(entry ->
-				outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.getValue().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
-					.add(LandmarkComponentTypes.POS, pos.getCenterAtY(0))
-					.add(LandmarkComponentTypes.NAME, Text.translatable(ProviderType.TAG.translation(entry.getKey())))
+			tagMarkers.entrySet().stream().filter(entry -> tags.contains(TagKey.create(Registries.STRUCTURE, entry.getKey()))).findFirst().ifPresent(entry ->
+				outMarkers.put(Landmark.create(WorldLandmarks.GLOBAL, key.identifier().withPath(p -> "start/" + p + "/" + pos.x + "/" + pos.z), b -> b
+					.add(LandmarkComponentTypes.POS, pos.getMiddleBlockPosition(0))
+					.add(LandmarkComponentTypes.NAME, Component.translatable(ProviderType.TAG.translation(entry.getKey())))
 				), entry.getValue()));
 		}
 
-		if (startTiles.containsKey(key.getValue())) {
-			StructureTileProvider provider = startTiles.get(key.getValue());
+		if (startTiles.containsKey(key.identifier())) {
+			StructureTileProvider provider = startTiles.get(key.identifier());
 			provider.getTextures(summary, start.getBoundingBox(), debugPredicates).forEach((pos2, texture) -> {
 				if (structureProviders.containsKey(pos) && structureProviders.get(pos).priority() < provider.priority()) return;
 				outTiles.put(pos2, texture);
 				structureProviders.put(pos2, provider);
 			});
-		} else if (type != null && typeTiles.containsKey(type.getValue())) {
-			StructureTileProvider provider = typeTiles.get(key.getValue());
+		} else if (type != null && typeTiles.containsKey(type.identifier())) {
+			StructureTileProvider provider = typeTiles.get(key.identifier());
 			provider.getTextures(summary, start.getBoundingBox(), debugPredicates).forEach((pos2, texture) -> {
 				if (structureProviders.containsKey(pos) && structureProviders.get(pos).priority() < provider.priority()) return;
 				outTiles.put(pos2, texture);
 				structureProviders.put(pos2, provider);
 			});
 		} else {
-			tags.stream().filter(t -> tagTiles.containsKey(t.id())).findFirst().ifPresent(tag -> {
-				StructureTileProvider provider = tagTiles.get(tag.id());
+			tags.stream().filter(t -> tagTiles.containsKey(t.location())).findFirst().ifPresent(tag -> {
+				StructureTileProvider provider = tagTiles.get(tag.location());
 				provider.getTextures(summary, start.getBoundingBox(), debugPredicates).forEach((pos2, texture) -> {
 					if (structureProviders.containsKey(pos) && structureProviders.get(pos).priority() < provider.priority()) return;
 					outTiles.put(pos2, texture);
@@ -170,7 +169,7 @@ public class StructureTileProviders extends LegacyJsonDataLoader implements Iden
 	}
 
 	@Override
-	protected void apply(Map<Identifier, JsonElement> prepared, ResourceManager manager, Profiler profiler) {
+	protected void apply(Map<Identifier, JsonElement> prepared, ResourceManager manager, ProfilerFiller profiler) {
 		RoleplayersAtlas.LOGGER.info("[Roleplayer's Atlas] Reloading Structure Tile / Marker Providers...");
 		Map<Identifier, TileTexture> textures = TileTextures.getInstance().getTextures();
 		Set<TileTexture> unusedTextures = new HashSet<>(textures.values().stream().filter(t -> t.id().getPath().startsWith("structure")).toList());
@@ -183,7 +182,7 @@ public class StructureTileProviders extends LegacyJsonDataLoader implements Iden
 				Map<Identifier, StructureTileProvider> providerMap = pair.left();
 				Map<Identifier, MarkerTexture> markerMap = pair.right();
 				if (fileId.getPath().startsWith(providerType.prefix())) {
-					Identifier id = Identifier.of(fileId.getNamespace(), fileId.getPath().substring(providerType.prefix().length()));
+					Identifier id = Identifier.fromNamespaceAndPath(fileId.getNamespace(), fileId.getPath().substring(providerType.prefix().length()));
 					try {
 						JsonObject fileJson = fileEntry.getValue().getAsJsonObject();
 						if (fileJson.has("textures")) {

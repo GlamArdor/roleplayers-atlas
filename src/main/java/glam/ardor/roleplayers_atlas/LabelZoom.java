@@ -1,7 +1,7 @@
 package glam.ardor.roleplayers_atlas;
 
 import folk.sisby.surveyor.landmark.Landmark;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 /**
  * Which map zooms a label shows at. A level is the power of two of the scale
@@ -49,8 +49,8 @@ public final class LabelZoom {
 	}
 
 	/** "4c", or "any" past either end of the range. */
-	public static Text describe(int level) {
-		if (level < MIN_LEVEL || level > MAX_LEVEL) return Text.translatable("gui.roleplayers_atlas.marker.zoom.any");
-		return Text.literal(name(level));
+	public static Component describe(int level) {
+		if (level < MIN_LEVEL || level > MAX_LEVEL) return Component.translatable("gui.roleplayers_atlas.marker.zoom.any");
+		return Component.literal(name(level));
 	}
 }

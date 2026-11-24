@@ -1,15 +1,14 @@
 package glam.ardor.roleplayers_atlas;
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.util.Identifier;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.minecraft.resources.Identifier;
 
 public record TileTexture(Identifier id, boolean innerBorder, Set<TileTexture> tilesTo, Set<TileTexture> tilesToHorizontal, Set<TileTexture> tilesToVertical) {
 	public static TileTexture empty(Identifier id, boolean innerBorder) {
-		return new TileTexture(Identifier.of(id.getNamespace(), "textures/atlas/tile/%s.png".formatted(id.getPath())), innerBorder, new ReferenceOpenHashSet<>(), new ReferenceOpenHashSet<>(), new ReferenceOpenHashSet<>());
+		return new TileTexture(Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/atlas/tile/%s.png".formatted(id.getPath())), innerBorder, new ReferenceOpenHashSet<>(), new ReferenceOpenHashSet<>(), new ReferenceOpenHashSet<>());
 	}
 
 	private static final TileTexture MISSING = empty(RoleplayersAtlas.id("missing"), false);

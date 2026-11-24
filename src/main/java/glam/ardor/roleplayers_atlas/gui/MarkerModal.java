@@ -1,123 +1,37 @@
 package glam.ardor.roleplayers_atlas.gui;
 
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.MarkerTexture;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.WorldAtlasData;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ScrollBoxComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ToggleButtonRadioGroup;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.reloader.MarkerTextures;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.util.ColorUtil;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.WorldSummary;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.landmark.Landmark;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.landmark.WorldLandmarks;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.util.AtlasPainter;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.item.Item;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.text.MutableText;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.text.Text;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.util.DyeColor;
-
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.ArrayList;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Arrays;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.LinkedHashMap;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.List;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.Item;
 
 /**
  * This GUI is used select marker icon and enter a label.
@@ -127,7 +41,7 @@ import java.util.Map;
  */
 public class MarkerModal extends Component {
 	protected WorldSummary summary;
-	protected DynamicRegistryManager manager;
+	protected RegistryAccess manager;
 	protected Landmark baseLandmark = null;
 
 	protected MarkerTexture selectedTexture = MarkerTexture.DEFAULT;
@@ -137,20 +51,20 @@ public class MarkerModal extends Component {
 	protected int markerOpacity = 100;
 	protected boolean hideLabel = false;
 
-	protected ButtonWidget btnZoneTitle;
-	protected ButtonWidget btnHideLabel;
-	protected ButtonWidget btnLayer;
-	protected ButtonWidget btnDate;
-	protected ButtonWidget btnDistance;
+	protected Button btnZoneTitle;
+	protected Button btnHideLabel;
+	protected Button btnLayer;
+	protected Button btnDate;
+	protected Button btnDistance;
 	protected boolean dateEnabled = true;
 	protected boolean showDistance = true;
 	protected String markerLayer = "personal";
-	protected net.minecraft.client.gui.widget.SliderWidget radiusSlider;
-	protected net.minecraft.client.gui.widget.SliderWidget opacitySlider;
+	protected net.minecraft.client.gui.components.AbstractSliderButton radiusSlider;
+	protected net.minecraft.client.gui.components.AbstractSliderButton opacitySlider;
 	protected int labelRotation = 0;
 	protected boolean labelNoShadow = false;
-	protected net.minecraft.client.gui.widget.SliderWidget rotationSlider;
-	protected ButtonWidget btnShadow;
+	protected net.minecraft.client.gui.components.AbstractSliderButton rotationSlider;
+	protected Button btnShadow;
 	// Lettering: big spaced capitals along a curve, for inscriptions (and the
 	// curve, size and zoom range for territory names too).
 	protected boolean labelLettering = false;
@@ -161,9 +75,9 @@ public class MarkerModal extends Component {
 	protected boolean labelFixedSize = true;
 	protected int zoomMin = glam.ardor.roleplayers_atlas.LabelZoom.MIN_LEVEL - 1;
 	protected int zoomMax = glam.ardor.roleplayers_atlas.LabelZoom.MAX_LEVEL + 1;
-	protected ButtonWidget btnLettering;
-	protected ButtonWidget btnFixedSize;
-	protected net.minecraft.client.gui.widget.SliderWidget sizeSlider;
+	protected Button btnLettering;
+	protected Button btnFixedSize;
+	protected net.minecraft.client.gui.components.AbstractSliderButton sizeSlider;
 	protected ZoomSlider zoomMinSlider;
 	protected ZoomSlider zoomMaxSlider;
 	protected CurveEditor curveEditor;
@@ -179,11 +93,11 @@ public class MarkerModal extends Component {
 
 	public static final int TYPE_SPACING = 1;
 
-	protected ButtonWidget btnDone;
-	protected ButtonWidget btnCancel;
-	protected ButtonWidget btnExtend;
-	protected ButtonWidget btnEditArea;
-	protected TextFieldWidget textField;
+	protected Button btnDone;
+	protected Button btnCancel;
+	protected Button btnExtend;
+	protected Button btnEditArea;
+	protected EditBox textField;
 	protected String noteText = "";
 	protected boolean noteFocused = false;
 	protected static final int NOTE_W = BUTTON_WIDTH * 2 + BUTTON_SPACING;
@@ -207,7 +121,7 @@ public class MarkerModal extends Component {
 	private int scrollBottom;
 	private int scrollY;
 	private int maxScroll;
-	private final Map<net.minecraft.client.gui.widget.ClickableWidget, Integer> widgetBaseY = new LinkedHashMap<>();
+	private final Map<net.minecraft.client.gui.components.AbstractWidget, Integer> widgetBaseY = new LinkedHashMap<>();
 	protected ScrollBoxComponent textureScrollBox;
 	protected ToggleButtonRadioGroup<TexturePreviewButton<MarkerTexture>> textureRadioGroup;
 	protected ScrollBoxComponent colorScrollBox;
@@ -220,11 +134,11 @@ public class MarkerModal extends Component {
 	public MarkerModal() {
 	}
 
-	void setMarkerData(WorldSummary summary, DynamicRegistryManager manager, Landmark baseLandmark) {
+	void setMarkerData(WorldSummary summary, RegistryAccess manager, Landmark baseLandmark) {
 		this.summary = summary;
 		this.manager = manager;
 		this.baseLandmark = baseLandmark;
-		this.selectedColor = Arrays.stream(DyeColor.values()).filter(d -> baseLandmark.contains(LandmarkComponentTypes.COLOR) && d.getEntityColor() == baseLandmark.get(LandmarkComponentTypes.COLOR)).findAny().orElse(DyeColor.WHITE);
+		this.selectedColor = Arrays.stream(DyeColor.values()).filter(d -> baseLandmark.contains(LandmarkComponentTypes.COLOR) && d.getTextureDiffuseColor() == baseLandmark.get(LandmarkComponentTypes.COLOR)).findAny().orElse(DyeColor.WHITE);
 		this.selectedTexture = MarkerTextures.getInstance().fromLandmark(baseLandmark);
 		this.zoneTitleEnabled = !Boolean.FALSE.equals(baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.ZONE_TITLE));
 		Integer storedRadius = baseLandmark.get(glam.ardor.roleplayers_atlas.AtlasComponents.ZONE_RADIUS);
@@ -262,8 +176,8 @@ public class MarkerModal extends Component {
 		if (colorRadioGroup != null) updateSelected();
 	}
 
-	private Text zoneTitleText() {
-		return Text.translatable("gui.roleplayers_atlas.marker.zoneTitle", Text.translatable(zoneTitleEnabled ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private net.minecraft.network.chat.Component zoneTitleText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.zoneTitle", net.minecraft.network.chat.Component.translatable(zoneTitleEnabled ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
 	/** How many two-wide rows of settings this kind of mark shows. */
@@ -367,7 +281,7 @@ public class MarkerModal extends Component {
 
 	/** Moves the scrolling middle; the title and the confirm row never move. */
 	private void applyScroll() {
-		for (Map.Entry<net.minecraft.client.gui.widget.ClickableWidget, Integer> entry : widgetBaseY.entrySet()) {
+		for (Map.Entry<net.minecraft.client.gui.components.AbstractWidget, Integer> entry : widgetBaseY.entrySet()) {
 			entry.getKey().setY(entry.getValue() - scrollY);
 		}
 		if (textureScrollBox != null) textureScrollBox.setGuiCoords(textureScrollBox.getGuiX(), textureBaseY - scrollY);
@@ -375,7 +289,7 @@ public class MarkerModal extends Component {
 	}
 
 	/** Registers a widget as part of the scrolling middle and places it. */
-	private <T extends net.minecraft.client.gui.widget.ClickableWidget> T scrolling(T widget, int baseY) {
+	private <T extends net.minecraft.client.gui.components.AbstractWidget> T scrolling(T widget, int baseY) {
 		widgetBaseY.put(widget, baseY);
 		widget.setY(baseY - scrollY);
 		return widget;
@@ -394,18 +308,18 @@ public class MarkerModal extends Component {
 		java.util.List<String> lines = new java.util.ArrayList<>();
 		StringBuilder line = new StringBuilder();
 		for (String word : text.trim().split("\\s+")) {
-			while (textRenderer.getWidth(word) > maxWidth) {
+			while (font.width(word) > maxWidth) {
 				if (!line.isEmpty()) {
 					lines.add(line.toString());
 					line.setLength(0);
 				}
 				int cut = 1;
-				while (cut < word.length() && textRenderer.getWidth(word.substring(0, cut + 1)) <= maxWidth) cut++;
+				while (cut < word.length() && font.width(word.substring(0, cut + 1)) <= maxWidth) cut++;
 				lines.add(word.substring(0, cut));
 				word = word.substring(cut);
 			}
 			String candidate = line.isEmpty() ? word : line + " " + word;
-			if (textRenderer.getWidth(candidate) <= maxWidth) {
+			if (font.width(candidate) <= maxWidth) {
 				line.setLength(0);
 				line.append(candidate);
 			} else {
@@ -419,24 +333,24 @@ public class MarkerModal extends Component {
 	}
 
 	/** Multiline note box: vanilla-textfield look, word-wrapped content, blinking cursor. */
-	private void renderNoteBox(DrawContext context) {
+	private void renderNoteBox(GuiGraphics context) {
 		int x = noteBoxX();
 		int y = noteBoxY();
 		context.fill(x - 1, y - 1, x + NOTE_W + 1, y + noteH + 1, noteFocused ? 0xFFFFFFFF : 0xFFA0A0A0);
 		context.fill(x, y, x + NOTE_W, y + noteH, 0xFF000000);
 		if (noteText.isEmpty() && !noteFocused) {
-			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.note"), x + 4, y + 4, 0xFF707070, false);
+			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.note"), x + 4, y + 4, 0xFF707070, false);
 			return;
 		}
 		java.util.List<String> lines = wrapNote(noteText, NOTE_W - 10);
 		if (lines.isEmpty()) lines = new java.util.ArrayList<>(java.util.List.of(""));
 		int maxLines = (noteH - 8) / 9;
 		int start = Math.max(0, lines.size() - maxLines);
-		boolean cursorBlink = noteFocused && (net.minecraft.util.Util.getMeasuringTimeMs() / 400) % 2 == 0;
+		boolean cursorBlink = noteFocused && (net.minecraft.util.Util.getMillis() / 400) % 2 == 0;
 		for (int i = start; i < lines.size(); i++) {
 			String line = lines.get(i);
 			boolean last = i == lines.size() - 1;
-			context.drawText(textRenderer, Text.literal(last && cursorBlink ? line + "_" : line), x + 4, y + 4 + (i - start) * 9, 0xFFE0E0E0, false);
+			context.drawString(font, net.minecraft.network.chat.Component.literal(last && cursorBlink ? line + "_" : line), x + 4, y + 4 + (i - start) * 9, 0xFFE0E0E0, false);
 		}
 	}
 
@@ -445,33 +359,33 @@ public class MarkerModal extends Component {
 		return mouseX >= noteBoxX() && mouseX < noteBoxX() + NOTE_W && mouseY >= noteBoxY() && mouseY < noteBoxY() + noteH;
 	}
 
-	private Text layerText() {
+	private net.minecraft.network.chat.Component layerText() {
 		glam.ardor.roleplayers_atlas.MarkerLayers.MapLayer layer = glam.ardor.roleplayers_atlas.MarkerLayers.get(markerLayer);
-		return Text.translatable("gui.roleplayers_atlas.marker.layer", layer != null ? layer.name() : markerLayer);
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.layer", layer != null ? layer.name() : markerLayer);
 	}
 
-	private Text hideLabelText() {
-		return Text.translatable("gui.roleplayers_atlas.marker.hideLabel", Text.translatable(hideLabel ? "gui.roleplayers_atlas.marker.hideLabel.hidden" : "gui.roleplayers_atlas.marker.hideLabel.shown"));
+	private net.minecraft.network.chat.Component hideLabelText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.hideLabel", net.minecraft.network.chat.Component.translatable(hideLabel ? "gui.roleplayers_atlas.marker.hideLabel.hidden" : "gui.roleplayers_atlas.marker.hideLabel.shown"));
 	}
 
-	private static Text onOff(String key, boolean value) {
-		return Text.translatable(key, Text.translatable(value ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private static net.minecraft.network.chat.Component onOff(String key, boolean value) {
+		return net.minecraft.network.chat.Component.translatable(key, net.minecraft.network.chat.Component.translatable(value ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
 	/** "Тень: ВКЛ/ВЫКЛ" – the label's shadow (or a route's backing ribbon). */
-	private Text shadowText() {
+	private net.minecraft.network.chat.Component shadowText() {
 		return onOff("gui.roleplayers_atlas.marker.shadow", !labelNoShadow);
 	}
 
-	private class RadiusSlider extends net.minecraft.client.gui.widget.SliderWidget {
+	private class RadiusSlider extends net.minecraft.client.gui.components.AbstractSliderButton {
 		RadiusSlider(int x, int y, int width, int height) {
-			super(x, y, width, height, Text.empty(), (Math.max(4, Math.min(256, zoneRadius)) - 4) / 252.0);
+			super(x, y, width, height, net.minecraft.network.chat.Component.empty(), (Math.max(4, Math.min(256, zoneRadius)) - 4) / 252.0);
 			updateMessage();
 		}
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Text.translatable("gui.roleplayers_atlas.marker.zoneRadius", zoneRadius));
+			setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.zoneRadius", zoneRadius));
 		}
 
 		@Override
@@ -481,15 +395,15 @@ public class MarkerModal extends Component {
 		}
 	}
 
-	private class OpacitySlider extends net.minecraft.client.gui.widget.SliderWidget {
+	private class OpacitySlider extends net.minecraft.client.gui.components.AbstractSliderButton {
 		OpacitySlider(int x, int y, int width, int height) {
-			super(x, y, width, height, Text.empty(), Math.max(0, Math.min(100, markerOpacity)) / 100.0);
+			super(x, y, width, height, net.minecraft.network.chat.Component.empty(), Math.max(0, Math.min(100, markerOpacity)) / 100.0);
 			updateMessage();
 		}
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Text.translatable("gui.roleplayers_atlas.marker.opacity", markerOpacity));
+			setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.opacity", markerOpacity));
 		}
 
 		@Override
@@ -499,15 +413,15 @@ public class MarkerModal extends Component {
 		}
 	}
 
-	private class RotationSlider extends net.minecraft.client.gui.widget.SliderWidget {
+	private class RotationSlider extends net.minecraft.client.gui.components.AbstractSliderButton {
 		RotationSlider(int x, int y, int width, int height) {
-			super(x, y, width, height, Text.empty(), ((labelRotation % 360) + 360) % 360 / 360.0);
+			super(x, y, width, height, net.minecraft.network.chat.Component.empty(), ((labelRotation % 360) + 360) % 360 / 360.0);
 			updateMessage();
 		}
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Text.translatable("gui.roleplayers_atlas.marker.rotation", ((labelRotation % 360) + 360) % 360));
+			setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.rotation", ((labelRotation % 360) + 360) % 360));
 		}
 
 		@Override
@@ -517,27 +431,27 @@ public class MarkerModal extends Component {
 		}
 	}
 
-	private Text letteringText() {
-		return Text.translatable("gui.roleplayers_atlas.marker.lettering", Text.translatable(labelLettering ? "gui.roleplayers_atlas.marker.lettering.letters" : "gui.roleplayers_atlas.marker.lettering.plate"));
+	private net.minecraft.network.chat.Component letteringText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.lettering", net.minecraft.network.chat.Component.translatable(labelLettering ? "gui.roleplayers_atlas.marker.lettering.letters" : "gui.roleplayers_atlas.marker.lettering.plate"));
 	}
 
 	/** "Shown from … up to …": the closest and the farthest zoom the label is drawn at. */
 	private void addZoomRow(int left, int right, int y) {
-		addDrawableChild(zoomMinSlider = scrolling(new ZoomSlider(left, y, BUTTON_WIDTH, 20, true), y));
-		addDrawableChild(zoomMaxSlider = scrolling(new ZoomSlider(right, y, BUTTON_WIDTH, 20, false), y));
+		addRenderableWidget(zoomMinSlider = scrolling(new ZoomSlider(left, y, BUTTON_WIDTH, 20, true), y));
+		addRenderableWidget(zoomMaxSlider = scrolling(new ZoomSlider(right, y, BUTTON_WIDTH, 20, false), y));
 	}
 
-	private class SizeSlider extends net.minecraft.client.gui.widget.SliderWidget {
+	private class SizeSlider extends net.minecraft.client.gui.components.AbstractSliderButton {
 		private static final int MIN = 25, MAX = 400, STEP = 5;
 
 		SizeSlider(int x, int y, int width, int height) {
-			super(x, y, width, height, Text.empty(), (Math.max(MIN, Math.min(MAX, labelSize)) - MIN) / (double) (MAX - MIN));
+			super(x, y, width, height, net.minecraft.network.chat.Component.empty(), (Math.max(MIN, Math.min(MAX, labelSize)) - MIN) / (double) (MAX - MIN));
 			updateMessage();
 		}
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Text.translatable("gui.roleplayers_atlas.marker.size", labelSize));
+			setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.size", labelSize));
 		}
 
 		@Override
@@ -551,11 +465,11 @@ public class MarkerModal extends Component {
 	 * One end of the zoom range. Each slider runs one step past the settable
 	 * levels, and that step means "no limit" on its side.
 	 */
-	protected class ZoomSlider extends net.minecraft.client.gui.widget.SliderWidget {
+	protected class ZoomSlider extends net.minecraft.client.gui.components.AbstractSliderButton {
 		private final boolean closest;
 
 		ZoomSlider(int x, int y, int width, int height, boolean closest) {
-			super(x, y, width, height, Text.empty(), 0);
+			super(x, y, width, height, net.minecraft.network.chat.Component.empty(), 0);
 			this.closest = closest;
 			sync();
 		}
@@ -575,7 +489,7 @@ public class MarkerModal extends Component {
 
 		@Override
 		protected void updateMessage() {
-			setMessage(Text.translatable(closest ? "gui.roleplayers_atlas.marker.zoomFrom" : "gui.roleplayers_atlas.marker.zoomTo",
+			setMessage(net.minecraft.network.chat.Component.translatable(closest ? "gui.roleplayers_atlas.marker.zoomFrom" : "gui.roleplayers_atlas.marker.zoomTo",
 				glam.ardor.roleplayers_atlas.LabelZoom.describe(closest ? zoomMin : zoomMax)));
 		}
 
@@ -605,14 +519,14 @@ public class MarkerModal extends Component {
 	 * with a handle at the start, the middle and the end. Each handle is dragged
 	 * up or down; right-click puts the default bend back.
 	 */
-	protected class CurveEditor extends net.minecraft.client.gui.widget.ClickableWidget {
+	protected class CurveEditor extends net.minecraft.client.gui.components.AbstractWidget {
 		private int dragging = -1;
 		/** Largest preview letter scale, and how far such a letter reaches off the curve. */
 		private static final double PREVIEW_MAX_SCALE = 1.5;
 		private static final int PREVIEW_LETTER_REACH = 10;
 
 		CurveEditor(int x, int y, int width, int height) {
-			super(x, y, width, height, Text.translatable("gui.roleplayers_atlas.marker.curve"));
+			super(x, y, width, height, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve"));
 		}
 
 		/**
@@ -634,11 +548,11 @@ public class MarkerModal extends Component {
 		}
 
 		@Override
-		protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+		protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float delta) {
 			int x = getX(), y = getY(), w = getWidth(), h = getHeight();
 			context.fill(x - 1, y - 1, x + w + 1, y + h + 1, isHovered() || dragging >= 0 ? 0xFFFFFFFF : 0xFFA0A0A0);
 			context.fill(x, y, x + w, y + h, 0xFF000000);
-			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.curve"), x + 4, y + 3, 0xFF707070, false);
+			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve"), x + 4, y + 3, 0xFF707070, false);
 			double half = half(), cx = centerX(), cy = centerY();
 			// Tilted letters at the ends of a steep bend can still poke out; the box clips them.
 			context.enableScissor(x, y, x + w, y + h);
@@ -651,8 +565,8 @@ public class MarkerModal extends Component {
 				int py = (int) Math.round(cy - half * (a + b * u + c * u * u));
 				context.fill(px, py, px + 1, py + 1, 0xFF606060);
 			}
-			String name = textField != null && !textField.getText().isBlank() ? textField.getText() : Text.translatable("gui.roleplayers_atlas.marker.curve.sample").getString();
-			Text[] glyphs = Lettering.glyphs(name);
+			String name = textField != null && !textField.getValue().isBlank() ? textField.getValue() : net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve.sample").getString();
+			net.minecraft.network.chat.Component[] glyphs = Lettering.glyphs(name);
 			double raw = Lettering.rawLength(glyphs, Lettering.PEN_GAP);
 			if (raw > 0) {
 				double scale = Math.min(PREVIEW_MAX_SCALE, half * Lettering.arcLength(labelCurve) / raw);
@@ -669,7 +583,7 @@ public class MarkerModal extends Component {
 				context.fill(hx - 3, hy - 3, hx + 4, hy + 4, 0xFF2E1A0C);
 				context.fill(hx - 2, hy - 2, hx + 3, hy + 3, i == lit ? 0xFFFFE080 : 0xFFE8D9B0);
 			}
-			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.marker.curve.hint"), x + 4, y + h - 11, 0xFF505050, false);
+			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.curve.hint"), x + 4, y + h - 11, 0xFF505050, false);
 		}
 
 		private int nearestHandle(double mouseX) {
@@ -687,41 +601,41 @@ public class MarkerModal extends Component {
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			if (!this.active || !this.visible || !isMouseOver(click.x(), click.y())) return false;
 			if (click.button() == 1) {
 				labelCurve = isTerritory() ? new int[]{0, 20, 0} : Lettering.DEFAULT_CURVE.clone();
 				curveSet = false;
-				playDownSound(MinecraftClient.getInstance().getSoundManager());
+				playDownSound(Minecraft.getInstance().getSoundManager());
 				return true;
 			}
 			return super.mouseClicked(click, doubled);
 		}
 
 		@Override
-		public void onClick(Click click, boolean doubled) {
+		public void onClick(MouseButtonEvent click, boolean doubled) {
 			dragging = nearestHandle(click.x());
 			dragTo(click.y());
 		}
 
 		@Override
-		protected void onDrag(Click click, double offsetX, double offsetY) {
+		protected void onDrag(MouseButtonEvent click, double offsetX, double offsetY) {
 			if (dragging >= 0) dragTo(click.y());
 		}
 
 		@Override
-		public void onRelease(Click click) {
+		public void onRelease(MouseButtonEvent click) {
 			dragging = -1;
 		}
 
 		@Override
-		public void playDownSound(net.minecraft.client.sound.SoundManager soundManager) {
-			soundManager.play(PositionedSoundInstance.ui(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+		public void playDownSound(net.minecraft.client.sounds.SoundManager soundManager) {
+			soundManager.play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 		}
 
 		@Override
-		protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {
-			appendDefaultNarrations(builder);
+		protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput builder) {
+			defaultButtonNarrationText(builder);
 		}
 	}
 
@@ -770,10 +684,10 @@ public class MarkerModal extends Component {
 		widgetBaseY.clear();
 		layoutDialog();
 
-		addDrawableChild(btnDone = ButtonWidget.builder(Text.translatable("gui.done"), (button) -> {
+		addRenderableWidget(btnDone = Button.builder(net.minecraft.network.chat.Component.translatable("gui.done"), (button) -> {
 			if (isSpawn()) {
 				glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.spawnMarkerIcon = selectedTexture.keyId().getPath().replaceFirst("^custom/", "");
-				glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.spawnMarkerColor = selectedColor.getId();
+				glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.spawnMarkerColor = selectedColor.getName();
 				glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.spawnMarkerOpacity = markerOpacity;
 				glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.setAndSave("spawnMarkerIcon", glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.spawnMarkerIcon);
 				glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.setAndSave("spawnMarkerColor", glam.ardor.roleplayers_atlas.RoleplayersAtlas.CONFIG.spawnMarkerColor);
@@ -782,8 +696,8 @@ public class MarkerModal extends Component {
 				closeChild();
 				return;
 			}
-			if (isPenLabel() && textField.getText().isBlank()) return;
-			MutableText label = Text.literal(textField.getText());
+			if (isPenLabel() && textField.getValue().isBlank()) return;
+			MutableComponent label = net.minecraft.network.chat.Component.literal(textField.getValue());
 			WorldLandmarks landmarks = summary.landmarks();
 			if (landmarks != null) {
 				// What was there before this dialog opened, so the whole edit – or
@@ -793,7 +707,7 @@ public class MarkerModal extends Component {
 				boolean penLabel = isPenLabel();
 				boolean route = isRoute();
 				boolean simple = penLabel || route;
-				net.minecraft.util.math.ColumnPos territoryCenter = territory ? glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(baseLandmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new java.util.HashMap<>())) : null;
+				net.minecraft.server.level.ColumnPos territoryCenter = territory ? glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(baseLandmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new java.util.HashMap<>())) : null;
 				Landmark written = WorldAtlasData.copyLandmarkWith(
 					baseLandmark,
 					territory
@@ -802,13 +716,13 @@ public class MarkerModal extends Component {
 						? glam.ardor.roleplayers_atlas.RoleplayersAtlas.id("route/" + baseLandmark.get(LandmarkComponentTypes.POS).getX() + "/" + baseLandmark.get(LandmarkComponentTypes.POS).getZ() + "/" + Integer.toHexString(label.getString().hashCode()))
 						: penLabel
 						? glam.ardor.roleplayers_atlas.RoleplayersAtlas.id("label/" + baseLandmark.get(LandmarkComponentTypes.POS).getX() + "/" + baseLandmark.get(LandmarkComponentTypes.POS).getZ() + "/" + Integer.toHexString(label.getString().hashCode()))
-						: selectedTexture.keyId().withSuffixedPath("/" + selectedColor.getId() + "/" + baseLandmark.get(LandmarkComponentTypes.POS).getX() + "/" + baseLandmark.get(LandmarkComponentTypes.POS).getZ()),
+						: selectedTexture.keyId().withSuffix("/" + selectedColor.getName() + "/" + baseLandmark.get(LandmarkComponentTypes.POS).getX() + "/" + baseLandmark.get(LandmarkComponentTypes.POS).getZ()),
 					copy -> {
 					if (!territory && !simple) {
-						Item item = manager.getOrThrow(RegistryKeys.ITEM).get(selectedTexture.item());
-						if (item != null && !item.getDefaultStack().isEmpty()) copy.set(LandmarkComponentTypes.STACK, item.getDefaultStack().copy());
+						Item item = manager.lookupOrThrow(Registries.ITEM).getValue(selectedTexture.item());
+						if (item != null && !item.getDefaultInstance().isEmpty()) copy.set(LandmarkComponentTypes.STACK, item.getDefaultInstance().copy());
 					}
-					copy.set(LandmarkComponentTypes.COLOR, selectedColor.getEntityColor());
+					copy.set(LandmarkComponentTypes.COLOR, selectedColor.getTextureDiffuseColor());
 					copy.set(LandmarkComponentTypes.NAME, label);
 					// Inscriptions and routes have no zone settings – only color and
 					// opacity. Everything is written explicitly: the copy inherits the
@@ -849,31 +763,31 @@ public class MarkerModal extends Component {
 				});
 				if (penLabel) lastLettering = labelLettering;
 				WorldAtlasData.swapLandmark(summary.dimension(), previous, written,
-					Text.translatable(previous == null ? "gui.roleplayers_atlas.undo.markerAdded" : "gui.roleplayers_atlas.undo.markerEdited", label));
+					net.minecraft.network.chat.Component.translatable(previous == null ? "gui.roleplayers_atlas.undo.markerAdded" : "gui.roleplayers_atlas.undo.markerEdited", label));
 			}
 			((AtlasScreen) getParent()).updateBookmarkerList();
-			ClientPlayerEntity player = MinecraftClient.getInstance().player;
-			if (player != null) MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
+			LocalPlayer player = Minecraft.getInstance().player;
+			if (player != null) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1F));
 			closeChild();
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmY, BUTTON_WIDTH, 20).build());
-		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), (button) -> closeChild())
-			.dimensions(this.width / 2 + BUTTON_SPACING / 2, confirmY, BUTTON_WIDTH, 20).build());
+		}).bounds(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, confirmY, BUTTON_WIDTH, 20).build());
+		addRenderableWidget(btnCancel = Button.builder(net.minecraft.network.chat.Component.translatable("gui.cancel"), (button) -> closeChild())
+			.bounds(this.width / 2 + BUTTON_SPACING / 2, confirmY, BUTTON_WIDTH, 20).build());
 		// A road walked further than it was drawn: pick the pencil back up at its
 		// far end rather than starting again.
-		addDrawableChild(btnExtend = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.route.extend"), (button) -> {
+		addRenderableWidget(btnExtend = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.route.extend"), (button) -> {
 			if (getParent() instanceof AtlasScreen screen) {
 				closeChild();
 				screen.startExtendingRoute(baseLandmark);
 			}
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, extraY, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
+		}).bounds(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, extraY, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
 		// A zone that grew or shrank since it was drawn: take the brush back to it
 		// rather than rubbing it out and painting the whole thing again.
-		addDrawableChild(btnEditArea = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.territory.edit"), (button) -> {
+		addRenderableWidget(btnEditArea = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.territory.edit"), (button) -> {
 			if (getParent() instanceof AtlasScreen screen) {
 				closeChild();
 				screen.startEditingTerritory(baseLandmark);
 			}
-		}).dimensions(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, extraY, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
+		}).bounds(this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2, extraY, BUTTON_WIDTH * 2 + BUTTON_SPACING, 20).build());
 		int settingsLeft = this.width / 2 - BUTTON_WIDTH - BUTTON_SPACING / 2;
 		int settingsRight = settingsLeft + BUTTON_WIDTH + BUTTON_SPACING;
 		// The label-controls row (rotation/shadow) is added only for the marks
@@ -890,7 +804,7 @@ public class MarkerModal extends Component {
 			btnLayer = null;
 			btnDate = null;
 		} else {
-			addDrawableChild(btnLayer = scrolling(ButtonWidget.builder(layerText(), button -> {
+			addRenderableWidget(btnLayer = scrolling(Button.builder(layerText(), button -> {
 				List<glam.ardor.roleplayers_atlas.MarkerLayers.MapLayer> allLayers = glam.ardor.roleplayers_atlas.MarkerLayers.all();
 				int index = 0;
 				for (int i = 0; i < allLayers.size(); i++) {
@@ -898,12 +812,12 @@ public class MarkerModal extends Component {
 				}
 				markerLayer = allLayers.get((index + 1) % allLayers.size()).id();
 				button.setMessage(layerText());
-			}).dimensions(settingsLeft, layerRowBaseY, BUTTON_WIDTH, 20).build(), layerRowBaseY));
+			}).bounds(settingsLeft, layerRowBaseY, BUTTON_WIDTH, 20).build(), layerRowBaseY));
 			// Dating shares the layer row: every kind of mark can carry a date.
-			addDrawableChild(btnDate = scrolling(ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled), button -> {
+			addRenderableWidget(btnDate = scrolling(Button.builder(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled), button -> {
 				dateEnabled = !dateEnabled;
 				button.setMessage(onOff("gui.roleplayers_atlas.marker.dating", dateEnabled));
-			}).dimensions(settingsRight, layerRowBaseY, BUTTON_WIDTH, 20).build(), layerRowBaseY));
+			}).bounds(settingsRight, layerRowBaseY, BUTTON_WIDTH, 20).build(), layerRowBaseY));
 		}
 		if (isSpawn()) {
 			// Only how it looks: the icon row, the ink row and how strongly it shows.
@@ -911,7 +825,7 @@ public class MarkerModal extends Component {
 			btnHideLabel = null;
 			radiusSlider = null;
 			btnDistance = null;
-			addDrawableChild(opacitySlider = scrolling(new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+			addRenderableWidget(opacitySlider = scrolling(new OpacitySlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
 		} else if (isSimple()) {
 			// Inscription/route settings: just the ink color row and opacity –
 			// plus, for a route, whether it tells you how long it is.
@@ -919,75 +833,75 @@ public class MarkerModal extends Component {
 			btnHideLabel = null;
 			radiusSlider = null;
 			if (isRoute()) {
-				addDrawableChild(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
-				addDrawableChild(btnDistance = scrolling(ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.distanceToggle", showDistance), button -> {
+				addRenderableWidget(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+				addRenderableWidget(btnDistance = scrolling(Button.builder(onOff("gui.roleplayers_atlas.marker.distanceToggle", showDistance), button -> {
 					showDistance = !showDistance;
 					button.setMessage(onOff("gui.roleplayers_atlas.marker.distanceToggle", showDistance));
-				}).dimensions(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
+				}).bounds(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
 			} else {
 				btnDistance = null;
-				addDrawableChild(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+				addRenderableWidget(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
 				// Plate or lettering. The dialog lays itself out again on a change:
 				// only lettering has a curve to bend.
-				addDrawableChild(btnLettering = scrolling(ButtonWidget.builder(letteringText(), button -> {
+				addRenderableWidget(btnLettering = scrolling(Button.builder(letteringText(), button -> {
 					labelLettering = !labelLettering;
 					labelFixedSize = !labelLettering;
 					relayout = true;
-				}).dimensions(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
-				addDrawableChild(sizeSlider = scrolling(new SizeSlider(settingsLeft, settingsRowY[2], BUTTON_WIDTH, 20), settingsRowY[2]));
-				addDrawableChild(btnFixedSize = scrolling(ButtonWidget.builder(onOff("gui.roleplayers_atlas.marker.scalesWithMap", !labelFixedSize), button -> {
+				}).bounds(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
+				addRenderableWidget(sizeSlider = scrolling(new SizeSlider(settingsLeft, settingsRowY[2], BUTTON_WIDTH, 20), settingsRowY[2]));
+				addRenderableWidget(btnFixedSize = scrolling(Button.builder(onOff("gui.roleplayers_atlas.marker.scalesWithMap", !labelFixedSize), button -> {
 					labelFixedSize = !labelFixedSize;
 					button.setMessage(onOff("gui.roleplayers_atlas.marker.scalesWithMap", !labelFixedSize));
-				}).dimensions(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
+				}).bounds(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
 				addZoomRow(settingsLeft, settingsRight, settingsRowY[3]);
 			}
 			// Label row: a route only hides its backing ribbon; a pen inscription
 			// can also be turned.
 			if (isRoute()) {
-				addDrawableChild(btnShadow = scrolling(ButtonWidget.builder(shadowText(), button -> {
+				addRenderableWidget(btnShadow = scrolling(Button.builder(shadowText(), button -> {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
-				}).dimensions(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
+				}).bounds(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
 			} else {
-				addDrawableChild(rotationSlider = scrolling(new RotationSlider(settingsLeft, settingsRowY[1], BUTTON_WIDTH, 20), settingsRowY[1]));
-				addDrawableChild(btnShadow = scrolling(ButtonWidget.builder(shadowText(), button -> {
+				addRenderableWidget(rotationSlider = scrolling(new RotationSlider(settingsLeft, settingsRowY[1], BUTTON_WIDTH, 20), settingsRowY[1]));
+				addRenderableWidget(btnShadow = scrolling(Button.builder(shadowText(), button -> {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
-				}).dimensions(settingsRight, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
+				}).bounds(settingsRight, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
 			}
 		} else {
 			btnDistance = null;
-			addDrawableChild(btnZoneTitle = scrolling(ButtonWidget.builder(zoneTitleText(), button -> {
+			addRenderableWidget(btnZoneTitle = scrolling(Button.builder(zoneTitleText(), button -> {
 				zoneTitleEnabled = !zoneTitleEnabled;
 				button.setMessage(zoneTitleText());
-			}).dimensions(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
-			addDrawableChild(radiusSlider = scrolling(new RadiusSlider(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
-			addDrawableChild(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[1], BUTTON_WIDTH, 20), settingsRowY[1]));
-			addDrawableChild(btnHideLabel = scrolling(ButtonWidget.builder(hideLabelText(), button -> {
+			}).bounds(settingsLeft, settingsRowY[0], BUTTON_WIDTH, 20).build(), settingsRowY[0]));
+			addRenderableWidget(radiusSlider = scrolling(new RadiusSlider(settingsRight, settingsRowY[0], BUTTON_WIDTH, 20), settingsRowY[0]));
+			addRenderableWidget(opacitySlider = scrolling(new OpacitySlider(settingsLeft, settingsRowY[1], BUTTON_WIDTH, 20), settingsRowY[1]));
+			addRenderableWidget(btnHideLabel = scrolling(Button.builder(hideLabelText(), button -> {
 				hideLabel = !hideLabel;
 				button.setMessage(hideLabelText());
-			}).dimensions(settingsRight, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
+			}).bounds(settingsRight, settingsRowY[1], BUTTON_WIDTH, 20).build(), settingsRowY[1]));
 			// Territory names are written across the land, so they get the turn and
 			// shadow controls; a plain point marker keeps the old two-row layout.
 			if (isTerritory()) {
-				addDrawableChild(rotationSlider = scrolling(new RotationSlider(settingsLeft, settingsRowY[2], BUTTON_WIDTH, 20), settingsRowY[2]));
-				addDrawableChild(btnShadow = scrolling(ButtonWidget.builder(shadowText(), button -> {
+				addRenderableWidget(rotationSlider = scrolling(new RotationSlider(settingsLeft, settingsRowY[2], BUTTON_WIDTH, 20), settingsRowY[2]));
+				addRenderableWidget(btnShadow = scrolling(Button.builder(shadowText(), button -> {
 					labelNoShadow = !labelNoShadow;
 					button.setMessage(shadowText());
-				}).dimensions(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
-				addDrawableChild(sizeSlider = scrolling(new SizeSlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[3], BUTTON_WIDTH, 20), settingsRowY[3]));
+				}).bounds(settingsRight, settingsRowY[2], BUTTON_WIDTH, 20).build(), settingsRowY[2]));
+				addRenderableWidget(sizeSlider = scrolling(new SizeSlider(this.width / 2 - BUTTON_WIDTH / 2, settingsRowY[3], BUTTON_WIDTH, 20), settingsRowY[3]));
 				addZoomRow(settingsLeft, settingsRight, settingsRowY[4]);
 			}
 		}
 		if (showsCurve()) {
-			addDrawableChild(curveEditor = scrolling(new CurveEditor(noteBoxX(), curveBaseY, NOTE_W, CURVE_H), curveBaseY));
+			addRenderableWidget(curveEditor = scrolling(new CurveEditor(noteBoxX(), curveBaseY, NOTE_W, CURVE_H), curveBaseY));
 		}
-		textField = scrolling(new TextFieldWidget(MinecraftClient.getInstance().textRenderer, (this.width - 200) / 2, nameBaseY, 200, 20, Text.translatable("gui.roleplayers_atlas.marker.label")), nameBaseY);
+		textField = scrolling(new EditBox(Minecraft.getInstance().font, (this.width - 200) / 2, nameBaseY, 200, 20, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.label")), nameBaseY);
 		textField.setEditable(true);
-		textField.setFocusUnlocked(true);
+		textField.setCanLoseFocus(true);
 		textField.setFocused(true);
-		textField.setPlaceholder(Text.translatable("gui.roleplayers_atlas.marker.label"));
-		textField.setText(nameDraft != null ? nameDraft : baseLandmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString());
+		textField.setHint(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.label"));
+		textField.setValue(nameDraft != null ? nameDraft : baseLandmark.getOrDefault(LandmarkComponentTypes.NAME, net.minecraft.network.chat.Component.empty()).getString());
 
 		// The note is a large multiline box below the layer button (see render).
 
@@ -1070,7 +984,7 @@ public class MarkerModal extends Component {
 	}
 
 	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
+	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		double mouseX = click.x(), mouseY = click.y();
 		int button = click.button();
 		// A row scrolled out of the middle is not there to be clicked, even though
@@ -1086,7 +1000,7 @@ public class MarkerModal extends Component {
 	}
 
 	@Override
-	public boolean keyPressed(KeyInput input) {
+	public boolean keyPressed(KeyEvent input) {
 		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
 		if (noteFocused) {
 			if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE && !noteText.isEmpty()) {
@@ -1098,7 +1012,7 @@ public class MarkerModal extends Component {
 				return true;
 			}
 			if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V && (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0) {
-				String clip = MinecraftClient.getInstance().keyboard.getClipboard();
+				String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
 				if (clip != null) noteText = (noteText + clip).substring(0, Math.min(512, noteText.length() + clip.length()));
 				return true;
 			}
@@ -1124,7 +1038,7 @@ public class MarkerModal extends Component {
 	}
 
 	@Override
-	public boolean charTyped(CharInput input) {
+	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
 		int modifiers = input.modifiers();
 		if (noteFocused) {
@@ -1136,20 +1050,20 @@ public class MarkerModal extends Component {
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		// Switching plate/lettering adds or drops the curve row, so the dialog is
 		// laid out again – here, outside the click that asked for it.
 		if (relayout) {
 			relayout = false;
-			nameDraft = textField.getText();
+			nameDraft = textField.getValue();
 			init();
 		}
 		// Manual dim instead of renderBackground: 1.21.6+ only allows one
 		// background blur per frame, and the parent screen already used it.
 		context.fill(0, 0, this.width, this.height, 0x66000000);
-		drawCentered(context, isSpawn() ? Text.translatable("gui.roleplayers_atlas.spawn.name") : Text.translatable("gui.roleplayers_atlas.marker.label"), titleY, 0xDDDDDD, true);
+		drawCentered(context, isSpawn() ? net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.spawn.name") : net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.marker.label"), titleY, 0xDDDDDD, true);
 		// Inscriptions must not be empty – they are nothing but their text.
-		btnDone.active = !isPenLabel() || !textField.getText().isBlank();
+		btnDone.active = !isPenLabel() || !textField.getValue().isBlank();
 		btnCancel.render(context, mouseX, mouseY, partialTick);
 		btnDone.render(context, mouseX, mouseY, partialTick);
 		// Nothing to lengthen on a road that is still being drawn for the first time.

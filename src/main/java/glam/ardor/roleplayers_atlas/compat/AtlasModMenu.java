@@ -6,7 +6,7 @@ import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
 import glam.ardor.roleplayers_atlas.gui.AtlasConfigScreen;
 import glam.ardor.roleplayers_atlas.gui.SettingsLook;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * ModMenu integration: opens the atlas settings.

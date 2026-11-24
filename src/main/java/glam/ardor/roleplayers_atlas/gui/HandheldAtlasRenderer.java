@@ -7,31 +7,31 @@ import glam.ardor.roleplayers_atlas.util.AtlasPainter;
 import glam.ardor.roleplayers_atlas.util.DrawBatcher;
 import glam.ardor.roleplayers_atlas.util.MathUtil;
 import glam.ardor.roleplayers_atlas.MarkerTexture;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import folk.sisby.surveyor.client.SurveyorClient;
 import folk.sisby.surveyor.landmark.Landmark;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.util.BufferAllocator;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Rect2i;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.world.World;
 import org.joml.Vector2d;
 
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
-public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int bookHeight, int mapWidth, int mapHeight, int tilePixels, int tileChunks, double guiScale, double mapOffsetX, double mapOffsetY, int mapScale, PlayerEntity player, WorldAtlasData worldAtlasData, RegistryKey<World> dim) implements AtlasRenderer {
+public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int bookHeight, int mapWidth, int mapHeight, int tilePixels, int tileChunks, double guiScale, double mapOffsetX, double mapOffsetY, int mapScale, Player player, WorldAtlasData worldAtlasData, ResourceKey<Level> dim) implements AtlasRenderer {
 	public static final Identifier BOOK_COVER = RoleplayersAtlas.id("textures/gui/book_cover.png");
 
-	public static HandheldAtlasRenderer fromContext(PlayerEntity player) {
+	public static HandheldAtlasRenderer fromContext(Player player) {
 		return new HandheldAtlasRenderer(
 			0,
 			0,
@@ -46,8 +46,8 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 			-player.getBlockZ(),
 			1,
 			player,
-			WorldAtlasData.getOrCreate(player.getEntityWorld().getRegistryKey()),
-			player.getEntityWorld().getRegistryKey()
+			WorldAtlasData.getOrCreate(player.level().dimension()),
+			player.level().dimension()
 		);
 	}
 
@@ -62,21 +62,21 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 	 * The allocator is kept between frames rather than rebuilt, since it holds
 	 * native memory.
 	 */
-	private static BufferAllocator bookAllocator;
-	private static VertexConsumerProvider.Immediate bookBuffers;
+	private static ByteBufferBuilder bookAllocator;
+	private static MultiBufferSource.BufferSource bookBuffers;
 
-	public void renderHandheldAtlas(MatrixStack matrices, OrderedRenderCommandQueue queue, int light) {
+	public void renderHandheldAtlas(PoseStack matrices, SubmitNodeCollector queue, int light) {
 		if (bookBuffers == null) {
-			bookAllocator = new BufferAllocator(786432);
-			bookBuffers = VertexConsumerProvider.immediate(bookAllocator);
+			bookAllocator = new ByteBufferBuilder(786432);
+			bookBuffers = MultiBufferSource.immediate(bookAllocator);
 		}
-		VertexConsumerProvider.Immediate vertexConsumers = bookBuffers;
+		MultiBufferSource.BufferSource vertexConsumers = bookBuffers;
 
-		matrices.push();
+		matrices.pushPose();
 		// Mirror the vanilla first-person map transform so the book sits in the
 		// hands exactly like a held map, then fit the book spread to map height.
-		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F));
-		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(180.0F));
+		matrices.mulPose(Axis.YP.rotationDegrees(180.0F));
+		matrices.mulPose(Axis.ZP.rotationDegrees(180.0F));
 		// The held book's size scales with the setting (and the live zoom keys).
 		float handScale = 0.38F * (RoleplayersAtlas.CONFIG.handheldScale / 100.0F);
 		matrices.scale(handScale, handScale, handScale);
@@ -93,7 +93,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 
 		AtlasPainter painter = AtlasPainter.world(matrices, vertexConsumers);
 
-		boolean inScreen = MinecraftClient.getInstance().currentScreen instanceof AtlasScreen;
+		boolean inScreen = Minecraft.getInstance().screen instanceof AtlasScreen;
 
 		if (open >= 1.0F) {
 			DrawBatcher.drawSingle(painter, AtlasScreen.BOOK, bookWidth, bookHeight, light, bookX, bookY, 0.3F, bookWidth, bookHeight, 0, 0, bookWidth, bookHeight, 0xFFFFFFFF, false);
@@ -122,14 +122,14 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 			// map content on the front, rotating around the fixed spine. It stays
 			// opaque for the whole swing and lands exactly where the flat left
 			// page takes over.
-			matrices.push();
+			matrices.pushPose();
 			// Z travel of the swing is flattened (fake page flip) so the flap
 			// never pokes into the camera, and the whole flap is lifted towards
 			// the viewer to cover the pages beneath it.
 			matrices.translate(half, 0.0, 0.0);
 			matrices.scale(1.0F, 1.0F, 0.12F);
 			matrices.translate(0.0, 0.0, -6.0);
-			matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-angle));
+			matrices.mulPose(Axis.YP.rotationDegrees(-angle));
 			// Back into book coordinates so map content lands on the flap and
 			// swings open together with the page.
 			matrices.translate(-half, 0.0, 0.0);
@@ -145,12 +145,12 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 			// (negative width) and mirrored UVs so it faces the viewer when the
 			// book is folded shut.
 			DrawBatcher.drawSingle(painter, BOOK_COVER, half, bookHeight, light, half, bookY, 4.0F, -half, bookHeight, half, 0, -half, bookHeight, 0xFFFFFFFF, false);
-			matrices.pop();
+			matrices.popPose();
 		}
 
-		matrices.pop();
+		matrices.popPose();
 
-		queue.submitCustom(matrices, RenderLayers.entityTranslucent(AtlasScreen.BOOK), (entry, vertices) -> vertexConsumers.draw());
+		queue.submitCustomGeometry(matrices, RenderTypes.entityTranslucent(AtlasScreen.BOOK), (entry, vertices) -> vertexConsumers.endBatch());
 	}
 
 	/**
@@ -188,7 +188,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 				double markerX = worldXToScreenX(pos.getX()) - bookX;
 				if (markerX < clipMinX || markerX >= clipMaxX) return;
 			}
-			renderMarker(painter, landmark, texture, -0.3F, light, (x, y) -> (float) MathHelper.clamp(MathUtil.innerDistanceToEdge(mapArea, new Vector2d(x, y)) / 32.0, 0, 1), false, false, 1);
+			renderMarker(painter, landmark, texture, -0.3F, light, (x, y) -> (float) Mth.clamp(MathUtil.innerDistanceToEdge(mapArea, new Vector2d(x, y)) / 32.0, 0, 1), false, false, 1);
 			if (fullPass) {
 				renderMarkerLabel(painter, landmark, AtlasHoldMode.labelAlpha(), light, 1);
 				if (pos == null && landmark.contains(LandmarkComponentTypes.CHUNKS)) {
@@ -204,7 +204,7 @@ public record HandheldAtlasRenderer(int bookX, int bookY, int bookWidth, int boo
 			BlockPos pos = spawnMark.get(LandmarkComponentTypes.POS);
 			double markerX = pos == null ? Double.NaN : worldXToScreenX(pos.getX()) - bookX;
 			if (pos != null && markerX >= clipMinX && markerX < clipMaxX) {
-				renderMarker(painter, spawnMark, spawnTexture, -0.3F, light, (x, y) -> (float) MathHelper.clamp(MathUtil.innerDistanceToEdge(mapArea, new Vector2d(x, y)) / 32.0, 0, 1), false, false, 1);
+				renderMarker(painter, spawnMark, spawnTexture, -0.3F, light, (x, y) -> (float) Mth.clamp(MathUtil.innerDistanceToEdge(mapArea, new Vector2d(x, y)) / 32.0, 0, 1), false, false, 1);
 				if (fullPass) renderMarkerLabel(painter, spawnMark, AtlasHoldMode.labelAlpha(), light, 1);
 			}
 		}

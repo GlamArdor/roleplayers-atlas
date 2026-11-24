@@ -5,15 +5,14 @@ import folk.sisby.surveyor.landmark.Landmark;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import glam.ardor.roleplayers_atlas.reloader.MarkerTextures;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Level;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -55,7 +54,7 @@ public final class XaeroImport {
 
 		/** What to call it on the map: Xaero's own names for its death points are keys, not names. */
 		public String displayName() {
-			if (name.startsWith("gui.xaero_deathpoint")) return Text.translatable("gui.roleplayers_atlas.xaero.deathpoint").getString();
+			if (name.startsWith("gui.xaero_deathpoint")) return Component.translatable("gui.roleplayers_atlas.xaero.deathpoint").getString();
 			return name;
 		}
 	}
@@ -81,7 +80,7 @@ public final class XaeroImport {
 	 * Every set of waypoints Xaero holds for this dimension, the world currently
 	 * being played on first and the rest by when they were last written.
 	 */
-	public static List<Source> sources(RegistryKey<World> dim) {
+	public static List<Source> sources(ResourceKey<Level> dim) {
 		List<Source> found = new ArrayList<>();
 		Path root = root();
 		if (!Files.isDirectory(root)) return found;
@@ -94,7 +93,7 @@ public final class XaeroImport {
 				try (var dims = Files.list(world)) {
 					for (Path dimDir : dims.toList()) {
 						if (!Files.isDirectory(dimDir)) continue;
-						RegistryKey<World> parsed = dimensionOf(dimDir.getFileName().toString());
+						ResourceKey<Level> parsed = dimensionOf(dimDir.getFileName().toString());
 						if (parsed == null || !parsed.equals(dim)) continue;
 						try (var files = Files.list(dimDir)) {
 							for (Path file : files.toList()) {
@@ -123,25 +122,25 @@ public final class XaeroImport {
 	 * name, with the brackets Xaero cannot put in a path spelled out.
 	 */
 	private static String currentWorldFolder() {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.getCurrentServerEntry() != null) return "Multiplayer_" + client.getCurrentServerEntry().address;
-		if (client.getServer() != null) {
-			return client.getServer().getSaveProperties().getLevelName().replace("[", "%lb%").replace("]", "%rb%");
+		Minecraft client = Minecraft.getInstance();
+		if (client.getCurrentServer() != null) return "Multiplayer_" + client.getCurrentServer().ip;
+		if (client.getSingleplayerServer() != null) {
+			return client.getSingleplayerServer().getWorldData().getLevelName().replace("[", "%lb%").replace("]", "%rb%");
 		}
 		return "";
 	}
 
 	/** {@code dim%0} and its kin; anything stranger is read as an identifier. */
-	private static RegistryKey<World> dimensionOf(String folder) {
+	private static ResourceKey<Level> dimensionOf(String folder) {
 		if (!folder.startsWith("dim%")) return null;
 		String id = folder.substring("dim%".length());
 		return switch (id) {
-			case "0" -> World.OVERWORLD;
-			case "-1" -> World.NETHER;
-			case "1" -> World.END;
+			case "0" -> Level.OVERWORLD;
+			case "-1" -> Level.NETHER;
+			case "1" -> Level.END;
 			default -> {
 				Identifier parsed = Identifier.tryParse(id.replace('$', ':'));
-				yield parsed == null ? null : RegistryKey.of(net.minecraft.registry.RegistryKeys.WORLD, parsed);
+				yield parsed == null ? null : ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, parsed);
 			}
 		};
 	}
@@ -210,7 +209,7 @@ public final class XaeroImport {
 
 	/** Xaero's own default set has a translation key for a name; the player's sets are named by hand. */
 	public static String setName(String set) {
-		return DEFAULT_SET.equals(set) ? Text.translatable("gui.roleplayers_atlas.xaero.defaultSet").getString() : set;
+		return DEFAULT_SET.equals(set) ? Component.translatable("gui.roleplayers_atlas.xaero.defaultSet").getString() : set;
 	}
 
 	/**
@@ -221,7 +220,7 @@ public final class XaeroImport {
 	 * same idea as a layer, and losing that grouping would be losing half of
 	 * what was being carried over.
 	 */
-	public static int importWaypoints(List<Waypoint> chosen, RegistryKey<World> dim, boolean setsAsLayers) {
+	public static int importWaypoints(List<Waypoint> chosen, ResourceKey<Level> dim, boolean setsAsLayers) {
 		if (chosen.isEmpty()) return 0;
 		MarkerTexture texture = icon();
 		int written = 0;
@@ -229,12 +228,12 @@ public final class XaeroImport {
 			DyeColor colour = dyeOf(waypoint.colour());
 			BlockPos at = new BlockPos(waypoint.x(), waypoint.y(), waypoint.z());
 			String layer = waypoint.isDeath() ? MarkerLayers.DEATHS_ID : setsAsLayers ? layerFor(waypoint.set(), colour) : MarkerLayers.DEFAULT_ID;
-			Identifier id = texture.keyId().withSuffixedPath("/" + colour.getId() + "/" + at.getX() + "/" + at.getZ());
-			Text name = Text.literal(waypoint.displayName());
+			Identifier id = texture.keyId().withSuffix("/" + colour.getName() + "/" + at.getX() + "/" + at.getZ());
+			Component name = Component.literal(waypoint.displayName());
 			Landmark mark = Landmark.create(SurveyorClient.getClientUuid(), id, b -> b.add(LandmarkComponentTypes.POS, at));
 			String note = waypoint.x() + ", " + waypoint.y() + ", " + waypoint.z();
 			Landmark done = WorldAtlasData.copyLandmarkWith(mark, id, copy -> {
-				copy.set(LandmarkComponentTypes.COLOR, colour.getEntityColor());
+				copy.set(LandmarkComponentTypes.COLOR, colour.getTextureDiffuseColor());
 				copy.set(LandmarkComponentTypes.NAME, name);
 				copy.set(AtlasComponents.NOTE, note);
 				// Brought in by the handful: a walk past a dozen of them should not
@@ -244,7 +243,7 @@ public final class XaeroImport {
 				copy.set(AtlasComponents.DAY, AtlasTime.gameDay());
 				copy.set(AtlasComponents.REAL_TIME, AtlasTime.realMillis());
 			});
-			WorldAtlasData.swapLandmark(dim, null, done, Text.translatable("gui.roleplayers_atlas.undo.markerAdded", name));
+			WorldAtlasData.swapLandmark(dim, null, done, Component.translatable("gui.roleplayers_atlas.undo.markerAdded", name));
 			written++;
 		}
 		return written;
@@ -277,8 +276,8 @@ public final class XaeroImport {
 	 * chosen keeps a red waypoint red.
 	 */
 	public static DyeColor dyeOf(int index) {
-		Formatting formatting = Formatting.byColorIndex(Math.max(0, Math.min(15, index)));
-		Integer rgb = formatting == null ? null : formatting.getColorValue();
+		ChatFormatting formatting = ChatFormatting.getById(Math.max(0, Math.min(15, index)));
+		Integer rgb = formatting == null ? null : formatting.getColor();
 		if (rgb == null) return DyeColor.WHITE;
 		DyeColor nearest = DyeColor.WHITE;
 		int best = Integer.MAX_VALUE;

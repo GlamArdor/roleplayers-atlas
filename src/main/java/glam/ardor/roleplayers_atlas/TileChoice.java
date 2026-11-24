@@ -1,6 +1,6 @@
 package glam.ardor.roleplayers_atlas;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 /**

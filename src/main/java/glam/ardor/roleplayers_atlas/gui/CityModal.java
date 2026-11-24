@@ -1,98 +1,30 @@
 package glam.ardor.roleplayers_atlas.gui;
 
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.CityPaint;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.TileTexture;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ButtonComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ScrollBoxComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.reloader.TileTextures;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.text.Text;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.util.Identifier;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.world.World;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.ArrayList;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Comparator;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.List;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Locale;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.Level;
 
 /**
  * The box of pieces a town is drawn from.
@@ -130,19 +62,19 @@ public class CityModal extends Component {
 
 	private ScrollBoxComponent pickBox;
 	private ScrollBoxComponent sheetBox;
-	private TextFieldWidget searchField;
-	private ButtonWidget btnCancel;
-	private ButtonWidget btnOwn;
-	private ButtonWidget btnShared;
-	private ButtonWidget btnSheetBack;
-	private ButtonWidget btnSheetDropAll;
+	private EditBox searchField;
+	private Button btnCancel;
+	private Button btnOwn;
+	private Button btnShared;
+	private Button btnSheetBack;
+	private Button btnSheetDropAll;
 
-	private @Nullable RegistryKey<World> dim = null;
+	private @Nullable ResourceKey<Level> dim = null;
 
 	/** Every piece the atlas has a drawing for, filtered by the search box. */
 	private final List<Identifier> pieces = new ArrayList<>();
 
-	public void setData(RegistryKey<World> dimension) {
+	public void setData(ResourceKey<Level> dimension) {
 		this.dim = dimension;
 		this.view = View.PICK;
 	}
@@ -166,12 +98,12 @@ public class CityModal extends Component {
 		super.init();
 
 		// The gap above the list matches the one below it, as in the biome window.
-		searchField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, listLeft(), listTop() - ROW_GAP - 12, LIST_W, 12, Text.translatable("gui.roleplayers_atlas.city.search"));
+		searchField = new EditBox(Minecraft.getInstance().font, listLeft(), listTop() - ROW_GAP - 12, LIST_W, 12, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.search"));
 		searchField.setEditable(true);
-		searchField.setFocusUnlocked(true);
-		searchField.setDrawsBackground(false);
-		searchField.setPlaceholder(Text.translatable("gui.roleplayers_atlas.city.search"));
-		searchField.setChangedListener(q -> rebuildPieces());
+		searchField.setCanLoseFocus(true);
+		searchField.setBordered(false);
+		searchField.setHint(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.search"));
+		searchField.setResponder(q -> rebuildPieces());
 
 		pickBox = new ScrollBoxComponent(true, GRID_TILE + GRID_GAP);
 		sheetBox = new ScrollBoxComponent(true, ROW_H);
@@ -180,23 +112,23 @@ public class CityModal extends Component {
 		int bottomY = listTop() + LIST_H + 12;
 		int secondY = bottomY + 24;
 
-		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.done"), button -> closeChild())
-			.dimensions(listLeft(), bottomY, LIST_W, 20).build());
+		addRenderableWidget(btnCancel = Button.builder(net.minecraft.network.chat.Component.translatable("gui.done"), button -> closeChild())
+			.bounds(listLeft(), bottomY, LIST_W, 20).build());
 
-		addDrawableChild(btnOwn = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.city.own"), button -> openSheets(View.OWN))
-			.tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.city.own.tooltip")))
-			.dimensions(listLeft(), secondY, BTN_W, 20).build());
-		addDrawableChild(btnShared = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.city.shared"), button -> openSheets(View.SHARED))
-			.tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.city.shared.tooltip")))
-			.dimensions(listLeft() + BTN_W + SP, secondY, BTN_W, 20).build());
+		addRenderableWidget(btnOwn = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.own"), button -> openSheets(View.OWN))
+			.tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.own.tooltip")))
+			.bounds(listLeft(), secondY, BTN_W, 20).build());
+		addRenderableWidget(btnShared = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.shared"), button -> openSheets(View.SHARED))
+			.tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.shared.tooltip")))
+			.bounds(listLeft() + BTN_W + SP, secondY, BTN_W, 20).build());
 
-		addDrawableChild(btnSheetDropAll = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.city.sheetDropAll"), button -> {
+		addRenderableWidget(btnSheetDropAll = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.sheetDropAll"), button -> {
 			if (view == View.SHARED) CityPaint.dropAllImported();
 			else if (dim != null) CityPaint.clearAll(dim);
 			closeSheets();
-		}).dimensions(listLeft(), bottomY, BTN_W, 20).build());
-		addDrawableChild(btnSheetBack = ButtonWidget.builder(Text.translatable("gui.back"), button -> closeSheets())
-			.dimensions(listLeft() + BTN_W + SP, bottomY, BTN_W, 20).build());
+		}).bounds(listLeft(), bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnSheetBack = Button.builder(net.minecraft.network.chat.Component.translatable("gui.back"), button -> closeSheets())
+			.bounds(listLeft() + BTN_W + SP, bottomY, BTN_W, 20).build());
 
 		rebuildPieces();
 	}
@@ -208,7 +140,7 @@ public class CityModal extends Component {
 	 */
 	private void rebuildPieces() {
 		pieces.clear();
-		String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
+		String query = searchField == null ? "" : searchField.getValue().trim().toLowerCase(Locale.ROOT);
 		for (Identifier id : TileTextures.getInstance().getTextures().keySet()) {
 			if (!id.getPath().startsWith("structure/")) continue;
 			// Searched by what is written on screen as well as by the raw path –
@@ -269,7 +201,7 @@ public class CityModal extends Component {
 	}
 
 	private void afterTearOut() {
-		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
+		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
 		if (sheetCount() > 0) rebuildSheets();
 		else closeSheets();
 	}
@@ -287,23 +219,23 @@ public class CityModal extends Component {
 	 * each of them five times. Anything without a translation falls back to its
 	 * file name tidied into words – honest about there being nothing better.
 	 */
-	static Text pieceName(Identifier piece) {
+	static net.minecraft.network.chat.Component pieceName(Identifier piece) {
 		String path = piece.getPath();
 		int slash = path.lastIndexOf('/');
 		String leaf = slash < 0 ? path : path.substring(slash + 1);
 		String key = "tile.roleplayers_atlas.piece." + leaf;
-		Text translated = Text.translatable(key);
+		net.minecraft.network.chat.Component translated = net.minecraft.network.chat.Component.translatable(key);
 		if (!translated.getString().equals(key)) return translated;
-		return Text.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(leaf.replaceAll("[_-]", " ")));
+		return net.minecraft.network.chat.Component.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(leaf.replaceAll("[_-]", " ")));
 	}
 
 	/** Where it comes from – a plains village, a nether fortress – so two wells can be told apart. */
-	static Text familyName(Identifier piece) {
+	static net.minecraft.network.chat.Component familyName(Identifier piece) {
 		String family = pieceFamily(piece);
 		String key = "tile.roleplayers_atlas.family." + family.replace('/', '.');
-		Text translated = Text.translatable(key);
+		net.minecraft.network.chat.Component translated = net.minecraft.network.chat.Component.translatable(key);
 		if (!translated.getString().equals(key)) return translated;
-		return Text.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(family.replaceAll("[/_-]", " ")));
+		return net.minecraft.network.chat.Component.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(family.replaceAll("[/_-]", " ")));
 	}
 
 	static String pieceFamily(Identifier piece) {
@@ -334,7 +266,7 @@ public class CityModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -343,15 +275,15 @@ public class CityModal extends Component {
 			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
 			TileTexture texture = textureOf(piece);
 			if (texture != null) BiomeModal.drawTile(context, texture, x, y, GRID_TILE);
-			if (piece.equals(held())) context.drawStrokedRectangle(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
+			if (piece.equals(held())) context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) {
-				context.drawStrokedRectangle(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
+				context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
 			}
 			context.disableScissor();
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -365,10 +297,10 @@ public class CityModal extends Component {
 			setSize(LIST_W, ROW_H);
 		}
 
-		abstract void drawContent(DrawContext context, int x, int y);
+		abstract void drawContent(GuiGraphics context, int x, int y);
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -377,13 +309,13 @@ public class CityModal extends Component {
 			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
 			drawContent(context, x, y);
-			Text drop = Text.translatable("gui.roleplayers_atlas.biomes.sheetDrop");
-			context.drawText(textRenderer, drop, x + getWidth() - textRenderer.getWidth(drop) - 3, y + 6, 0xFFC8A05A, true);
+			net.minecraft.network.chat.Component drop = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sheetDrop");
+			context.drawString(font, drop, x + getWidth() - font.width(drop) - 3, y + 6, 0xFFC8A05A, true);
 			context.disableScissor();
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -407,16 +339,16 @@ public class CityModal extends Component {
 		}
 
 		@Override
-		void drawContent(DrawContext context, int x, int y) {
+		void drawContent(GuiGraphics context, int x, int y) {
 			TileTexture texture = textureOf(piece);
 			if (texture != null) BiomeModal.drawTile(context, texture, x + 2, y + 2, TILE_SIZE);
 			int textX = x + TILE_SIZE + 6;
-			Text amount = Text.translatable("gui.roleplayers_atlas.city.ownCount", familyName(piece), count);
-			int amountW = textRenderer.getWidth(amount);
-			context.drawText(textRenderer, textRenderer.trimToWidth(pieceName(piece).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
-			context.drawText(textRenderer, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
+			net.minecraft.network.chat.Component amount = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.ownCount", familyName(piece), count);
+			int amountW = font.width(amount);
+			context.drawString(font, font.plainSubstrByWidth(pieceName(piece).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
+			context.drawString(font, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
 			// The name it goes by underneath, dim, the same as in the biome window.
-			context.drawText(textRenderer, textRenderer.trimToWidth(piece.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
+			context.drawString(font, font.plainSubstrByWidth(piece.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
 		}
 	}
 
@@ -432,19 +364,19 @@ public class CityModal extends Component {
 		}
 
 		@Override
-		void drawContent(DrawContext context, int x, int y) {
-			context.drawText(textRenderer, textRenderer.trimToWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
-			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.city.sharedCount", CityPaint.importedCount(author)), x + 4, y + 11, 0xFF9A8C70, true);
+		void drawContent(GuiGraphics context, int x, int y) {
+			context.drawString(font, font.plainSubstrByWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
+			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.sharedCount", CityPaint.importedCount(author)), x + 4, y + 11, 0xFF9A8C70, true);
 		}
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, switch (view) {
-			case OWN -> Text.translatable("gui.roleplayers_atlas.city.ownTitle");
-			case SHARED -> Text.translatable("gui.roleplayers_atlas.city.sharedTitle");
-			case PICK -> Text.translatable("gui.roleplayers_atlas.city.title");
+			case OWN -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.ownTitle");
+			case SHARED -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.sharedTitle");
+			case PICK -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.title");
 		}, listTop() - ROW_GAP - 12 - 12, 0xDDDDDD, true);
 
 		boolean picking = view == View.PICK;
@@ -452,10 +384,10 @@ public class CityModal extends Component {
 		btnCancel.visible = picking;
 		btnOwn.visible = picking;
 		btnOwn.active = dim != null && CityPaint.ownCount(dim) > 0;
-		btnOwn.setMessage(Text.translatable("gui.roleplayers_atlas.city.own", dim == null ? 0 : CityPaint.ownCount(dim)));
+		btnOwn.setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.own", dim == null ? 0 : CityPaint.ownCount(dim)));
 		btnShared.visible = picking;
 		btnShared.active = CityPaint.hasImported();
-		btnShared.setMessage(Text.translatable("gui.roleplayers_atlas.city.shared", CityPaint.importedAuthors().size()));
+		btnShared.setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.shared", CityPaint.importedAuthors().size()));
 		btnSheetBack.visible = !picking;
 		btnSheetDropAll.visible = !picking;
 
@@ -466,7 +398,7 @@ public class CityModal extends Component {
 			btnOwn.render(context, mouseX, mouseY, partialTick);
 			btnShared.render(context, mouseX, mouseY, partialTick);
 			if (pieces.isEmpty()) {
-				drawCentered(context, Text.translatable("gui.roleplayers_atlas.city.none"), listTop() + LIST_H / 2 - 4, 0xAAAAAA, true);
+				drawCentered(context, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.city.none"), listTop() + LIST_H / 2 - 4, 0xAAAAAA, true);
 			}
 		} else {
 			btnSheetBack.render(context, mouseX, mouseY, partialTick);
@@ -478,10 +410,10 @@ public class CityModal extends Component {
 			for (Component child : pickBox.getViewport().getChildren()) {
 				for (Component row : child.getChildren()) {
 					if (row instanceof PieceButton piece && !piece.isClipped && piece.isMouseOver(mouseX, mouseY) && mouseY >= listTop() && mouseY < listTop() + LIST_H) {
-						context.drawTooltip(textRenderer, List.of(
+						context.setComponentTooltipForNextFrame(font, List.of(
 							pieceName(piece.piece),
-							familyName(piece.piece).copy().formatted(net.minecraft.util.Formatting.GRAY),
-							Text.literal(piece.piece.toString()).formatted(net.minecraft.util.Formatting.DARK_GRAY)
+							familyName(piece.piece).copy().withStyle(net.minecraft.ChatFormatting.GRAY),
+							net.minecraft.network.chat.Component.literal(piece.piece.toString()).withStyle(net.minecraft.ChatFormatting.DARK_GRAY)
 						), mouseX, mouseY);
 					}
 				}
@@ -490,7 +422,7 @@ public class CityModal extends Component {
 	}
 
 	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
+	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		double mouseX = click.x(), mouseY = click.y();
 		int button = click.button();
 		if (view == View.PICK && searchField.isVisible()) {
@@ -502,7 +434,7 @@ public class CityModal extends Component {
 	}
 
 	@Override
-	public boolean keyPressed(KeyInput input) {
+	public boolean keyPressed(KeyEvent input) {
 		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
 		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
 			if (view == View.PICK) closeChild();
@@ -513,7 +445,7 @@ public class CityModal extends Component {
 	}
 
 	@Override
-	public boolean charTyped(CharInput input) {
+	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
 		int modifiers = input.modifiers();
 		return super.charTyped(input) || searchField.charTyped(input);

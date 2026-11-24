@@ -1,12 +1,11 @@
 package glam.ardor.roleplayers_atlas;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 /**
  * Dating for everything drawn on the map.
@@ -35,9 +34,9 @@ public final class AtlasTime {
 	}
 
 	public static long gameDay() {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.world == null) return 0;
-		return Math.max(0, client.world.getTime() / 24000L);
+		Minecraft client = Minecraft.getInstance();
+		if (client.level == null) return 0;
+		return Math.max(0, client.level.getGameTime() / 24000L);
 	}
 
 	public static long realMillis() {
@@ -67,8 +66,8 @@ public final class AtlasTime {
 			String date = moment.format(DATE);
 			String time = moment.format(TIME);
 			return reckoning() == AtlasConfig.Reckoning.REIGN
-				? Text.translatable("gui.roleplayers_atlas.marker.date.moscow", date, time).getString()
-				: Text.translatable("gui.roleplayers_atlas.marker.date.local", date, time).getString();
+				? Component.translatable("gui.roleplayers_atlas.marker.date.moscow", date, time).getString()
+				: Component.translatable("gui.roleplayers_atlas.marker.date.local", date, time).getString();
 		} catch (Exception e) {
 			return "";
 		}
@@ -86,13 +85,13 @@ public final class AtlasTime {
 	 * before the expedition, which is the one thing about it that is certainly
 	 * true.
 	 */
-	public static Text inWorldDate(Long day, Long realTime) {
+	public static Component inWorldDate(Long day, Long realTime) {
 		if (reckoning() == AtlasConfig.Reckoning.REIGN) {
-			if (realTime == null || realTime <= 0) return Text.translatable("gui.roleplayers_atlas.marker.date.beforeExpedition");
+			if (realTime == null || realTime <= 0) return Component.translatable("gui.roleplayers_atlas.marker.date.beforeExpedition");
 			ReignCalendar.Date date = ReignCalendar.of(realTime);
-			return Text.translatable("gui.roleplayers_atlas.marker.date.cycle", date.cycle(), date.unia(), date.year());
+			return Component.translatable("gui.roleplayers_atlas.marker.date.cycle", date.cycle(), date.unia(), date.year());
 		}
-		return Text.translatable("gui.roleplayers_atlas.marker.date.day", day == null ? 0L : day);
+		return Component.translatable("gui.roleplayers_atlas.marker.date.day", day == null ? 0L : day);
 	}
 
 	/** Whether either half of a stamp would say anything at all. */
@@ -105,32 +104,32 @@ public final class AtlasTime {
 	 * brackets, or both. Null when the settings have both halves turned off,
 	 * or when neither half has anything to say.
 	 */
-	public static MutableText dateText(Long day, Long realTime) {
-		MutableText inWorld = RoleplayersAtlas.CONFIG.showMarkDate ? inWorldDate(day, realTime).copy() : null;
+	public static MutableComponent dateText(Long day, Long realTime) {
+		MutableComponent inWorld = RoleplayersAtlas.CONFIG.showMarkDate ? inWorldDate(day, realTime).copy() : null;
 		String ooc = RoleplayersAtlas.CONFIG.showRealDate ? realDateTime(realTime == null ? 0L : realTime) : "";
 		if (inWorld == null && ooc.isEmpty()) return null;
-		if (inWorld == null) return Text.translatable("gui.roleplayers_atlas.marker.date.ooc", ooc);
+		if (inWorld == null) return Component.translatable("gui.roleplayers_atlas.marker.date.ooc", ooc);
 		if (ooc.isEmpty()) return inWorld;
-		return inWorld.append(" ").append(Text.translatable("gui.roleplayers_atlas.marker.date.ooc", ooc));
+		return inWorld.append(" ").append(Component.translatable("gui.roleplayers_atlas.marker.date.ooc", ooc));
 	}
 
 	/** Today's date line, for the seal on an exported scroll. */
 	public static String stampNow() {
-		MutableText text = dateText(gameDay(), realMillis());
+		MutableComponent text = dateText(gameDay(), realMillis());
 		return text == null ? "" : text.getString();
 	}
 
 	/** "Со слов Name, 12 цикл 15 унии 226 года ((...))" for marks copied from someone else's scroll. */
-	public static Text hearsay(String author, Long day, Long realTime) {
-		MutableText text = dateText(day, realTime);
+	public static Component hearsay(String author, Long day, Long realTime) {
+		MutableComponent text = dateText(day, realTime);
 		return text == null
-			? Text.translatable("gui.roleplayers_atlas.marker.hearsayPlain", author)
-			: Text.translatable("gui.roleplayers_atlas.marker.hearsayDated", author, text);
+			? Component.translatable("gui.roleplayers_atlas.marker.hearsayPlain", author)
+			: Component.translatable("gui.roleplayers_atlas.marker.hearsayDated", author, text);
 	}
 
 	/** The name this client signs its scrolls with. */
 	public static String selfName() {
-		MinecraftClient client = MinecraftClient.getInstance();
+		Minecraft client = Minecraft.getInstance();
 		return client.player == null ? "" : client.player.getGameProfile().name();
 	}
 

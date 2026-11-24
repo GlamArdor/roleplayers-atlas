@@ -8,19 +8,19 @@ import folk.sisby.surveyor.terrain.RegionSummary;
 import folk.sisby.surveyor.util.RegionPos;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.nbt.NbtByteArray;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.ByteArrayTag;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.NbtSizeTracker;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -63,17 +63,17 @@ public final class MapShare {
 		}
 	}
 
-	public static Path export(RegistryKey<World> dim, WorldSummary summary, DynamicRegistryManager manager, List<Landmark> landmarks, boolean includeTerrain, boolean includeCorrections, boolean signed, String name) throws IOException {
-		NbtCompound root = new NbtCompound();
+	public static Path export(ResourceKey<Level> dim, WorldSummary summary, RegistryAccess manager, List<Landmark> landmarks, boolean includeTerrain, boolean includeCorrections, boolean signed, String name) throws IOException {
+		CompoundTag root = new CompoundTag();
 		root.putInt("Version", 1);
-		root.putString("Dimension", dim.getValue().toString());
+		root.putString("Dimension", dim.identifier().toString());
 
-		NbtList landmarkList = new NbtList();
+		ListTag landmarkList = new ListTag();
 		for (Landmark landmark : landmarks) {
 			// Signing happens on a copy: the scroll carries the cartographer's
 			// name, the marks on the author's own map stay untouched.
 			Landmark written = signed ? sign(landmark) : landmark;
-			NbtCompound entry = new NbtCompound();
+			CompoundTag entry = new CompoundTag();
 			entry.putString("Id", written.id().toString());
 			entry.put("Data", written.toNbt());
 			landmarkList.add(entry);
@@ -82,18 +82,18 @@ public final class MapShare {
 
 		// Definitions of custom layers used by the exported landmarks, so the
 		// importer sees the same names and colors.
-		NbtList layerList = new NbtList();
+		ListTag layerList = new ListTag();
 		for (Landmark landmark : landmarks) {
 			String layerId = RoleplayersAtlas.layerOf(landmark);
 			if (MarkerLayers.DEFAULT_ID.equals(layerId)) continue;
 			MarkerLayers.MapLayer layer = MarkerLayers.get(layerId);
 			if (layer == null) continue;
 			boolean already = false;
-			for (NbtElement el : layerList) {
-				if (el instanceof NbtCompound c && layerId.equals(c.getString("Id").orElse(null))) already = true;
+			for (Tag el : layerList) {
+				if (el instanceof CompoundTag c && layerId.equals(c.getString("Id").orElse(null))) already = true;
 			}
 			if (already) continue;
-			NbtCompound layerEntry = new NbtCompound();
+			CompoundTag layerEntry = new CompoundTag();
 			layerEntry.putString("Id", layer.id());
 			layerEntry.putString("Name", layer.name());
 			layerEntry.putInt("Color", layer.color());
@@ -102,18 +102,18 @@ public final class MapShare {
 		root.put("Layers", layerList);
 
 		if (includeTerrain && summary.terrain() != null) {
-			NbtList terrainList = new NbtList();
+			ListTag terrainList = new ListTag();
 			Map<RegionPos, BitSet> regions = summary.terrain().bitSet(SurveyorClient.getExploration());
 			for (Map.Entry<RegionPos, BitSet> entry : regions.entrySet()) {
 				if (entry.getValue().isEmpty()) continue;
 				RegionSummary region = summary.terrain().getRegion(entry.getKey());
 				if (region == null) continue;
 				S2CUpdateRegionPacket packet = S2CUpdateRegionPacket.of(dim, false, entry.getKey(), region, entry.getValue());
-				RegistryByteBuf buf = new RegistryByteBuf(Unpooled.buffer(), manager);
+				RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), manager);
 				S2CUpdateRegionPacket.CODEC.encode(buf, packet);
 				byte[] bytes = new byte[buf.readableBytes()];
 				buf.readBytes(bytes);
-				NbtCompound regionEntry = new NbtCompound();
+				CompoundTag regionEntry = new CompoundTag();
 				regionEntry.putInt("X", entry.getKey().x());
 				regionEntry.putInt("Z", entry.getKey().z());
 				regionEntry.putByteArray("Data", bytes);
@@ -126,16 +126,16 @@ public final class MapShare {
 		// corrections they inherited from a third scroll stay where they came from,
 		// so a sheet never gets passed along under the wrong name.
 		if (includeCorrections) {
-			NbtList biomeList = new NbtList();
+			ListTag biomeList = new ListTag();
 			BiomeOverrides.all().forEach((from, to) -> {
-				NbtCompound entry = new NbtCompound();
+				CompoundTag entry = new CompoundTag();
 				entry.putString("From", from.toString());
 				entry.putString("To", to.toString());
 				biomeList.add(entry);
 			});
-			NbtList chunkList = new NbtList();
+			ListTag chunkList = new ListTag();
 			BiomeOverrides.ownPatches(dim).forEach((pos, look) -> {
-				NbtCompound entry = new NbtCompound();
+				CompoundTag entry = new CompoundTag();
 				entry.putInt("X", pos.x);
 				entry.putInt("Z", pos.z);
 				entry.putString("To", look.toString());
@@ -144,16 +144,16 @@ public final class MapShare {
 			// Towns drawn by hand travel in the same sheet: they are the same kind
 			// of thing – the cartographer's own reading of the land, written over
 			// what the game had to say about it.
-			NbtList cityList = new NbtList();
+			ListTag cityList = new ListTag();
 			CityPaint.ownCells(dim).forEach((pos, tile) -> {
-				NbtCompound entry = new NbtCompound();
+				CompoundTag entry = new CompoundTag();
 				entry.putInt("X", pos.x);
 				entry.putInt("Z", pos.z);
 				entry.putString("To", tile.toString());
 				cityList.add(entry);
 			});
 			if (!biomeList.isEmpty() || !chunkList.isEmpty() || !cityList.isEmpty()) {
-				NbtCompound corrections = new NbtCompound();
+				CompoundTag corrections = new CompoundTag();
 				corrections.put("Biomes", biomeList);
 				corrections.put("Chunks", chunkList);
 				corrections.put("Cities", cityList);
@@ -198,7 +198,7 @@ public final class MapShare {
 		if (existing != null) return existing;
 		int hue = Math.floorMod(author.hashCode(), 360);
 		int rgb = java.awt.Color.HSBtoRGB(hue / 360.0F, 0.55F, 0.85F) & 0xFFFFFF;
-		MarkerLayers.MapLayer layer = new MarkerLayers.MapLayer(id, Text.translatable("gui.roleplayers_atlas.layer.scroll", author).getString(), rgb);
+		MarkerLayers.MapLayer layer = new MarkerLayers.MapLayer(id, Component.translatable("gui.roleplayers_atlas.layer.scroll", author).getString(), rgb);
 		MarkerLayers.put(layer);
 		return layer;
 	}
@@ -215,22 +215,22 @@ public final class MapShare {
 	                      int regions, int biomeCorrections, int patches, int towns, List<String> authors) {
 	}
 
-	public static @Nullable Preview peek(Path file, RegistryKey<World> dim) {
-		NbtCompound root;
+	public static @Nullable Preview peek(Path file, ResourceKey<Level> dim) {
+		CompoundTag root;
 		try (InputStream in = Files.newInputStream(file)) {
-			root = NbtIo.readCompressed(in, NbtSizeTracker.ofUnlimitedBytes());
+			root = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
 		} catch (Exception e) {
 			return null;
 		}
 		String dimension = root.getString("Dimension").orElse("");
 		int markers = 0, labels = 0, routes = 0, territories = 0;
 		java.util.LinkedHashSet<String> authors = new java.util.LinkedHashSet<>();
-		if (root.get("Landmarks") instanceof NbtList landmarkList) {
-			for (NbtElement el : landmarkList) {
-				if (!(el instanceof NbtCompound entry)) continue;
+		if (root.get("Landmarks") instanceof ListTag landmarkList) {
+			for (Tag el : landmarkList) {
+				if (!(el instanceof CompoundTag entry)) continue;
 				Identifier id = entry.getString("Id").map(Identifier::tryParse).orElse(null);
 				if (id == null) continue;
-				NbtElement data = entry.get("Data");
+				Tag data = entry.get("Data");
 				if (data != null) {
 					var parsed = Landmark.createCodec(SurveyorClient.getClientUuid(), id).parse(NbtOps.INSTANCE, data).result();
 					if (parsed.isPresent()) {
@@ -247,32 +247,32 @@ public final class MapShare {
 				else markers++;
 			}
 		}
-		int regions = root.get("Terrain") instanceof NbtList terrain ? terrain.size() : 0;
+		int regions = root.get("Terrain") instanceof ListTag terrain ? terrain.size() : 0;
 		int biomes = 0, patches = 0, towns = 0;
-		if (root.get("Corrections") instanceof NbtCompound corrections) {
-			if (corrections.get("Biomes") instanceof NbtList list) biomes = list.size();
-			if (corrections.get("Chunks") instanceof NbtList list) patches = list.size();
-			if (corrections.get("Cities") instanceof NbtList list) towns = list.size();
+		if (root.get("Corrections") instanceof CompoundTag corrections) {
+			if (corrections.get("Biomes") instanceof ListTag list) biomes = list.size();
+			if (corrections.get("Chunks") instanceof ListTag list) patches = list.size();
+			if (corrections.get("Cities") instanceof ListTag list) towns = list.size();
 			corrections.getString("Author").filter(a -> !a.isBlank()).ifPresent(authors::add);
 		}
-		return new Preview(dimension, dim.getValue().toString().equals(dimension), markers, labels, routes, territories, regions, biomes, patches, towns, List.copyOf(authors));
+		return new Preview(dimension, dim.identifier().toString().equals(dimension), markers, labels, routes, territories, regions, biomes, patches, towns, List.copyOf(authors));
 	}
 
-	public static ImportResult importFile(Path file, RegistryKey<World> dim, WorldSummary summary, DynamicRegistryManager manager) {
+	public static ImportResult importFile(Path file, ResourceKey<Level> dim, WorldSummary summary, RegistryAccess manager) {
 		return importFile(file, dim, summary, manager, true);
 	}
 
-	public static ImportResult importFile(Path file, RegistryKey<World> dim, WorldSummary summary, DynamicRegistryManager manager, boolean takeCities) {
-		NbtCompound root;
+	public static ImportResult importFile(Path file, ResourceKey<Level> dim, WorldSummary summary, RegistryAccess manager, boolean takeCities) {
+		CompoundTag root;
 		try (InputStream in = Files.newInputStream(file)) {
-			root = NbtIo.readCompressed(in, NbtSizeTracker.ofUnlimitedBytes());
+			root = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
 		} catch (Exception e) {
 			RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] Failed to read map scroll {}", file, e);
 			return new ImportResult(0, 0, 0, "read_failed");
 		}
 
 		Optional<String> dimId = root.getString("Dimension");
-		if (dimId.isEmpty() || !dim.getValue().toString().equals(dimId.get())) return new ImportResult(0, 0, 0, "wrong_dimension");
+		if (dimId.isEmpty() || !dim.identifier().toString().equals(dimId.get())) return new ImportResult(0, 0, 0, "wrong_dimension");
 
 		// What the map said before the scroll was read, so the whole reading can
 		// be taken back as one act. Terrain is the exception and stays: it is
@@ -286,7 +286,7 @@ public final class MapShare {
 		ImportResult result = AtlasUndo.withRecordingOff(() -> readInto(root, file, dim, summary, manager, takeCities, landmarksTouched));
 
 		if (result.error() == null) {
-			AtlasUndo.pushReversible(Text.translatable("gui.roleplayers_atlas.undo.import"),
+			AtlasUndo.pushReversible(Component.translatable("gui.roleplayers_atlas.undo.import"),
 				() -> {
 					landmarksTouched.forEach((written, previous) -> {
 						if (summary.landmarks() == null) return;
@@ -300,21 +300,21 @@ public final class MapShare {
 					CityPaint.restore(townsBefore);
 					WorldAtlasData data = WorldAtlasData.WORLDS.get(dim);
 					if (data != null) data.invalidateTileBatches();
-					if (net.minecraft.client.MinecraftClient.getInstance().currentScreen instanceof glam.ardor.roleplayers_atlas.gui.AtlasScreen as) as.updateBookmarkerList();
+					if (net.minecraft.client.Minecraft.getInstance().screen instanceof glam.ardor.roleplayers_atlas.gui.AtlasScreen as) as.updateBookmarkerList();
 				},
 				() -> importFile(file, dim, summary, manager, takeCities));
 		}
 		return result;
 	}
 
-	private static ImportResult readInto(NbtCompound root, Path file, RegistryKey<World> dim, WorldSummary summary, DynamicRegistryManager manager, boolean takeCities, Map<Landmark, Landmark> landmarksTouched) {
+	private static ImportResult readInto(CompoundTag root, Path file, ResourceKey<Level> dim, WorldSummary summary, RegistryAccess manager, boolean takeCities, Map<Landmark, Landmark> landmarksTouched) {
 		int landmarkCount = 0;
 		java.util.Set<String> keptLayers = new java.util.HashSet<>();
-		if (root.get("Landmarks") instanceof NbtList landmarkList && summary.landmarks() != null) {
-			for (NbtElement el : landmarkList) {
-				if (!(el instanceof NbtCompound entry)) continue;
+		if (root.get("Landmarks") instanceof ListTag landmarkList && summary.landmarks() != null) {
+			for (Tag el : landmarkList) {
+				if (!(el instanceof CompoundTag entry)) continue;
 				Identifier id = entry.getString("Id").map(Identifier::tryParse).orElse(null);
-				NbtElement data = entry.get("Data");
+				Tag data = entry.get("Data");
 				if (id == null || data == null) continue;
 				var parsed = Landmark.createCodec(SurveyorClient.getClientUuid(), id).parse(NbtOps.INSTANCE, data).result();
 				if (parsed.isEmpty()) continue;
@@ -337,9 +337,9 @@ public final class MapShare {
 		}
 
 		// Only the scroll's own layer definitions that something still sits in.
-		if (root.get("Layers") instanceof NbtList layerList) {
-			for (NbtElement el : layerList) {
-				if (!(el instanceof NbtCompound entry)) continue;
+		if (root.get("Layers") instanceof ListTag layerList) {
+			for (Tag el : layerList) {
+				if (!(el instanceof CompoundTag entry)) continue;
 				String layerId = entry.getString("Id").orElse(null);
 				String layerName = entry.getString("Name").orElse(null);
 				if (layerId == null || layerName == null || MarkerLayers.DEFAULT_ID.equals(layerId)) continue;
@@ -351,11 +351,11 @@ public final class MapShare {
 		}
 
 		int regionCount = 0;
-		if (root.get("Terrain") instanceof NbtList terrainList && summary.terrain() != null) {
-			for (NbtElement el : terrainList) {
-				if (!(el instanceof NbtCompound entry) || !(entry.get("Data") instanceof NbtByteArray dataArray)) continue;
+		if (root.get("Terrain") instanceof ListTag terrainList && summary.terrain() != null) {
+			for (Tag el : terrainList) {
+				if (!(el instanceof CompoundTag entry) || !(entry.get("Data") instanceof ByteArrayTag dataArray)) continue;
 				try {
-					RegistryByteBuf buf = new RegistryByteBuf(Unpooled.wrappedBuffer(dataArray.getByteArray()), manager);
+					RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.wrappedBuffer(dataArray.getAsByteArray()), manager);
 					S2CUpdateRegionPacket packet = S2CUpdateRegionPacket.CODEC.decode(buf);
 					RegionPos regionPos = packet.regionPos();
 					RegionSummary region = summary.terrain().getRegion(regionPos);
@@ -382,22 +382,22 @@ public final class MapShare {
 	 * scroll can never quietly overrule a correction its reader made – and the
 	 * whole sheet can be torn out again in one go.
 	 */
-	private static int importCorrections(NbtCompound root, Path file, RegistryKey<World> dim, boolean takeCities) {
-		if (!(root.get("Corrections") instanceof NbtCompound tag)) return 0;
+	private static int importCorrections(CompoundTag root, Path file, ResourceKey<Level> dim, boolean takeCities) {
+		if (!(root.get("Corrections") instanceof CompoundTag tag)) return 0;
 		Map<Identifier, Identifier> theirBiomes = new java.util.LinkedHashMap<>();
-		if (tag.get("Biomes") instanceof NbtList biomeList) {
-			for (NbtElement el : biomeList) {
-				if (!(el instanceof NbtCompound entry)) continue;
+		if (tag.get("Biomes") instanceof ListTag biomeList) {
+			for (Tag el : biomeList) {
+				if (!(el instanceof CompoundTag entry)) continue;
 				Identifier from = entry.getString("From").map(Identifier::tryParse).orElse(null);
 				Identifier to = entry.getString("To").map(Identifier::tryParse).orElse(null);
 				if (from != null && to != null) theirBiomes.put(from, to);
 			}
 		}
-		Map<net.minecraft.util.math.ChunkPos, Identifier> theirCells = readCells(tag.get("Chunks"));
+		Map<net.minecraft.world.level.ChunkPos, Identifier> theirCells = readCells(tag.get("Chunks"));
 		// Someone else's towns are the one part of a scroll a reader may want to
 		// leave on the page: they redraw ground the reader may have their own
 		// plans for. Left off, the rest of the sheet still comes in.
-		Map<net.minecraft.util.math.ChunkPos, Identifier> theirTowns = takeCities ? readCells(tag.get("Cities")) : Map.of();
+		Map<net.minecraft.world.level.ChunkPos, Identifier> theirTowns = takeCities ? readCells(tag.get("Cities")) : Map.of();
 		if (theirBiomes.isEmpty() && theirCells.isEmpty() && theirTowns.isEmpty()) return 0;
 
 		String author = tag.getString("Author").filter(a -> !a.isBlank())
@@ -408,25 +408,25 @@ public final class MapShare {
 			BiomeOverrides.setAll(theirBiomes, dim, theirCells);
 			// Grouped by piece: each call writes the file and redraws, and a town
 			// of two hundred cells is not worth two hundred of either.
-			Map<Identifier, java.util.List<net.minecraft.util.math.ChunkPos>> byPiece = new java.util.LinkedHashMap<>();
+			Map<Identifier, java.util.List<net.minecraft.world.level.ChunkPos>> byPiece = new java.util.LinkedHashMap<>();
 			theirTowns.forEach((pos, tile) -> byPiece.computeIfAbsent(tile, k -> new java.util.ArrayList<>()).add(pos));
 			byPiece.forEach((tile, drawn) -> CityPaint.set(dim, drawn, tile));
 		} else {
-			BiomeOverrides.putImported(author, theirBiomes, theirCells.isEmpty() ? Map.of() : Map.of(dim.getValue(), theirCells));
+			BiomeOverrides.putImported(author, theirBiomes, theirCells.isEmpty() ? Map.of() : Map.of(dim.identifier(), theirCells));
 			CityPaint.putImported(author, dim, theirTowns);
 		}
 		return theirBiomes.size() + theirCells.size() + theirTowns.size();
 	}
 
-	private static Map<net.minecraft.util.math.ChunkPos, Identifier> readCells(@org.jetbrains.annotations.Nullable NbtElement from) {
-		Map<net.minecraft.util.math.ChunkPos, Identifier> out = new java.util.LinkedHashMap<>();
-		if (!(from instanceof NbtList list)) return out;
-		for (NbtElement el : list) {
-			if (!(el instanceof NbtCompound entry)) continue;
+	private static Map<net.minecraft.world.level.ChunkPos, Identifier> readCells(@org.jetbrains.annotations.Nullable Tag from) {
+		Map<net.minecraft.world.level.ChunkPos, Identifier> out = new java.util.LinkedHashMap<>();
+		if (!(from instanceof ListTag list)) return out;
+		for (Tag el : list) {
+			if (!(el instanceof CompoundTag entry)) continue;
 			Identifier to = entry.getString("To").map(Identifier::tryParse).orElse(null);
 			Integer x = entry.getInt("X").orElse(null);
 			Integer z = entry.getInt("Z").orElse(null);
-			if (to != null && x != null && z != null) out.put(new net.minecraft.util.math.ChunkPos(x, z), to);
+			if (to != null && x != null && z != null) out.put(new net.minecraft.world.level.ChunkPos(x, z), to);
 		}
 		return out;
 	}

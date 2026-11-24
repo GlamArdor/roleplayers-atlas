@@ -1,14 +1,13 @@
 package glam.ardor.roleplayers_atlas.util;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
-
+import com.mojang.blaze3d.platform.NativeImage;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
 
 /**
  * Flat white copies of marker textures (alpha preserved, RGB forced to white),
@@ -27,22 +26,22 @@ public final class SilhouetteTextures {
 	}
 
 	private static Identifier create(Identifier textureId) {
-		Identifier silhouetteId = textureId.withSuffixedPath(".silhouette");
+		Identifier silhouetteId = textureId.withSuffix(".silhouette");
 		try {
-			Resource resource = MinecraftClient.getInstance().getResourceManager().getResource(textureId).orElse(null);
+			Resource resource = Minecraft.getInstance().getResourceManager().getResource(textureId).orElse(null);
 			if (resource == null) return textureId;
 			NativeImage image;
-			try (InputStream in = resource.getInputStream()) {
+			try (InputStream in = resource.open()) {
 				image = NativeImage.read(in);
 			}
 			// The alpha channel is the top byte in either packing, so OR-ing the
 			// low 24 bits to full white is channel-order agnostic.
 			for (int y = 0; y < image.getHeight(); y++) {
 				for (int x = 0; x < image.getWidth(); x++) {
-					image.setColorArgb(x, y, image.getColorArgb(x, y) | 0x00FFFFFF);
+					image.setPixel(x, y, image.getPixel(x, y) | 0x00FFFFFF);
 				}
 			}
-			MinecraftClient.getInstance().getTextureManager().registerTexture(silhouetteId, new NativeImageBackedTexture(silhouetteId::toString, image));
+			Minecraft.getInstance().getTextureManager().register(silhouetteId, new DynamicTexture(silhouetteId::toString, image));
 			return silhouetteId;
 		} catch (Exception e) {
 			return textureId;

@@ -1,28 +1,12 @@
 package glam.ardor.roleplayers_atlas.gui;
 
-import net.minecraft.client.input.KeyInput;
 import glam.ardor.roleplayers_atlas.ParchmentExport;
-import net.minecraft.client.input.KeyInput;
 import glam.ardor.roleplayers_atlas.WorldAtlasData;
-import net.minecraft.client.input.KeyInput;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
-
-import net.minecraft.client.input.KeyInput;
 import java.nio.file.Path;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.KeyEvent;
 
 /**
  * Map snapshot dialog: save the current map view or the whole explored map,
@@ -41,23 +25,23 @@ public class ScreenshotModal extends Component {
 
 	private WorldAtlasData data;
 
-	private ButtonWidget btnMarkers;
-	private ButtonWidget btnZones;
-	private ButtonWidget btnRoutes;
-	private ButtonWidget btnLabels;
-	private ButtonWidget btnAuthor;
-	private ButtonWidget btnTime;
-	private ButtonWidget btnFrame;
-	private ButtonWidget btnView;
-	private ButtonWidget btnFull;
-	private ButtonWidget btnCancel;
+	private Button btnMarkers;
+	private Button btnZones;
+	private Button btnRoutes;
+	private Button btnLabels;
+	private Button btnAuthor;
+	private Button btnTime;
+	private Button btnFrame;
+	private Button btnView;
+	private Button btnFull;
+	private Button btnCancel;
 
 	void setData(WorldAtlasData data) {
 		this.data = data;
 	}
 
-	private static Text toggleText(String key, boolean value) {
-		return Text.translatable(key, Text.translatable(value ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private static net.minecraft.network.chat.Component toggleText(String key, boolean value) {
+		return net.minecraft.network.chat.Component.translatable(key, net.minecraft.network.chat.Component.translatable(value ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
 	@Override
@@ -67,53 +51,53 @@ public class ScreenshotModal extends Component {
 
 		int left = this.width / 2 - 102;
 		int right = this.width / 2 + 2;
-		addDrawableChild(btnMarkers = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.markers", includeMarkers), button -> {
+		addRenderableWidget(btnMarkers = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.markers", includeMarkers), button -> {
 			includeMarkers = !includeMarkers;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.markers", includeMarkers));
-		}).dimensions(left, this.height / 2 - 34, 100, 20).build());
-		addDrawableChild(btnZones = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.zones", includeZones), button -> {
+		}).bounds(left, this.height / 2 - 34, 100, 20).build());
+		addRenderableWidget(btnZones = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.zones", includeZones), button -> {
 			includeZones = !includeZones;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.zones", includeZones));
-		}).dimensions(right, this.height / 2 - 34, 100, 20).build());
-		addDrawableChild(btnRoutes = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.routes", includeRoutes), button -> {
+		}).bounds(right, this.height / 2 - 34, 100, 20).build());
+		addRenderableWidget(btnRoutes = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.routes", includeRoutes), button -> {
 			includeRoutes = !includeRoutes;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.routes", includeRoutes));
-		}).dimensions(left, this.height / 2 - 10, 100, 20).build());
-		addDrawableChild(btnLabels = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.labels", includeLabels), button -> {
+		}).bounds(left, this.height / 2 - 10, 100, 20).build());
+		addRenderableWidget(btnLabels = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.labels", includeLabels), button -> {
 			includeLabels = !includeLabels;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.labels", includeLabels));
-		}).dimensions(right, this.height / 2 - 10, 100, 20).build());
+		}).bounds(right, this.height / 2 - 10, 100, 20).build());
 
-		addDrawableChild(btnAuthor = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.author", stampAuthor), button -> {
+		addRenderableWidget(btnAuthor = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.author", stampAuthor), button -> {
 			stampAuthor = !stampAuthor;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.author", stampAuthor));
-		}).dimensions(left, this.height / 2 + 14, 100, 20).build());
-		addDrawableChild(btnTime = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.time", stampTime), button -> {
+		}).bounds(left, this.height / 2 + 14, 100, 20).build());
+		addRenderableWidget(btnTime = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.time", stampTime), button -> {
 			stampTime = !stampTime;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.time", stampTime));
-		}).dimensions(right, this.height / 2 + 14, 100, 20).build());
-		addDrawableChild(btnFrame = ButtonWidget.builder(toggleText("gui.roleplayers_atlas.screenshot.frame", stampFrame), button -> {
+		}).bounds(right, this.height / 2 + 14, 100, 20).build());
+		addRenderableWidget(btnFrame = Button.builder(toggleText("gui.roleplayers_atlas.screenshot.frame", stampFrame), button -> {
 			stampFrame = !stampFrame;
 			button.setMessage(toggleText("gui.roleplayers_atlas.screenshot.frame", stampFrame));
-		}).dimensions(this.width / 2 - 102, this.height / 2 + 38, 204, 20).build());
+		}).bounds(this.width / 2 - 102, this.height / 2 + 38, 204, 20).build());
 
-		addDrawableChild(btnView = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.screenshot.view"), button -> {
+		addRenderableWidget(btnView = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.screenshot.view"), button -> {
 			ParchmentExport.setDecoration(stampAuthor, stampTime, stampFrame);
 			if (getParent() instanceof AtlasScreen screen) screen.scheduleViewCapture(includeMarkers, includeZones, includeRoutes, includeLabels);
 			closeChild();
-		}).dimensions(this.width / 2 - 102, this.height / 2 + 66, 204, 20).build());
-		addDrawableChild(btnFull = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.screenshot.full"), button -> {
+		}).bounds(this.width / 2 - 102, this.height / 2 + 66, 204, 20).build());
+		addRenderableWidget(btnFull = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.screenshot.full"), button -> {
 			// Stitched from real in-game renders – pixel identical to the map.
 			ParchmentExport.setDecoration(stampAuthor, stampTime, stampFrame);
 			if (getParent() instanceof AtlasScreen screen) screen.scheduleFullCapture(includeMarkers, includeZones, includeRoutes, includeLabels);
 			closeChild();
-		}).tooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.translatable("gui.roleplayers_atlas.screenshot.fullWarning"))).dimensions(this.width / 2 - 102, this.height / 2 + 90, 204, 20).build());
-		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), button -> closeChild())
-			.dimensions(this.width / 2 - 102, this.height / 2 + 118, 204, 20).build());
+		}).tooltip(net.minecraft.client.gui.components.Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.screenshot.fullWarning"))).bounds(this.width / 2 - 102, this.height / 2 + 90, 204, 20).build());
+		addRenderableWidget(btnCancel = Button.builder(net.minecraft.network.chat.Component.translatable("gui.cancel"), button -> closeChild())
+			.bounds(this.width / 2 - 102, this.height / 2 + 118, 204, 20).build());
 	}
 
 	@Override
-	public boolean keyPressed(KeyInput input) {
+	public boolean keyPressed(KeyEvent input) {
 		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
 		if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
 			closeChild();
@@ -127,9 +111,9 @@ public class ScreenshotModal extends Component {
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
-		drawCentered(context, Text.translatable("gui.roleplayers_atlas.screenshot"), this.height / 2 - 56, 0xDDDDDD, true);
+		drawCentered(context, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.screenshot"), this.height / 2 - 56, 0xDDDDDD, true);
 		btnMarkers.render(context, mouseX, mouseY, partialTick);
 		btnZones.render(context, mouseX, mouseY, partialTick);
 		btnRoutes.render(context, mouseX, mouseY, partialTick);

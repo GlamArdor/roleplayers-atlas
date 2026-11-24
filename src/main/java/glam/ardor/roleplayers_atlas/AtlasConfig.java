@@ -5,15 +5,14 @@ import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.IntegerRange;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
 import folk.sisby.surveyor.client.SurveyorClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.world.World;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 @SuppressWarnings("CanBeFinal")
 public class AtlasConfig extends WrappedConfig {
@@ -296,7 +295,7 @@ public class AtlasConfig extends WrappedConfig {
 	@Comment("Options to adjust map behaviour for custom or modified dimensions.")
 	public Dimensions dimensions = new Dimensions();
 
-	public static class Dimensions implements Section {
+	public static class Dimensions implements folk.sisby.kaleido.api.WrappedConfig.Section {
 		@Comment("Cycle order and coordinate scales of each dimension.")
 		@Comment("If not 0, the relative position of the player will be shown.")
 		public Map<String, Integer> scales = ValueMap.builder(0)
@@ -305,20 +304,20 @@ public class AtlasConfig extends WrappedConfig {
 			.put("minecraft:the_end", 0)
 			.build();
 
-		public List<RegistryKey<World>> getOrder(ClientPlayNetworkHandler handler) {
-			List<RegistryKey<World>> dims = new ArrayList<>(SurveyorClient.getSummaries(handler).keySet().stream().sorted(Comparator.comparing(RegistryKey::toString)).toList());
+		public List<ResourceKey<Level>> getOrder(ClientPacketListener handler) {
+			List<ResourceKey<Level>> dims = new ArrayList<>(SurveyorClient.getSummaries(handler).keySet().stream().sorted(Comparator.comparing(ResourceKey::toString)).toList());
 			dims.removeIf(WorldAtlasData::isEmpty);
-			scales.keySet().removeIf(v -> handler.getWorldKeys().stream().noneMatch(d -> d.getValue().toString().equals(v)));
-			dims.stream().filter(dim -> !scales.containsKey(dim.getValue().toString())).forEach(dim -> scales.put(dim.getValue().toString(), 0));
-			return dims.stream().sorted(Comparator.comparing(dim -> scales.keySet().stream().toList().indexOf(dim.getValue().toString()))).toList();
+			scales.keySet().removeIf(v -> handler.levels().stream().noneMatch(d -> d.identifier().toString().equals(v)));
+			dims.stream().filter(dim -> !scales.containsKey(dim.identifier().toString())).forEach(dim -> scales.put(dim.identifier().toString(), 0));
+			return dims.stream().sorted(Comparator.comparing(dim -> scales.keySet().stream().toList().indexOf(dim.identifier().toString()))).toList();
 		}
 
-		public Map<RegistryKey<World>, Integer> getScales(ClientPlayNetworkHandler handler) {
-			List<RegistryKey<World>> dims = new ArrayList<>(SurveyorClient.getSummaries(handler).keySet().stream().sorted(Comparator.comparing(RegistryKey::toString)).toList());
+		public Map<ResourceKey<Level>, Integer> getScales(ClientPacketListener handler) {
+			List<ResourceKey<Level>> dims = new ArrayList<>(SurveyorClient.getSummaries(handler).keySet().stream().sorted(Comparator.comparing(ResourceKey::toString)).toList());
 			dims.removeIf(WorldAtlasData::isEmpty);
-			scales.keySet().removeIf(v -> handler.getWorldKeys().stream().noneMatch(d -> d.getValue().toString().equals(v)));
-			dims.stream().filter(dim -> !scales.containsKey(dim.getValue().toString())).forEach(dim -> scales.put(dim.getValue().toString(), 0));
-			return dims.stream().collect(Collectors.toMap(k -> k, k -> scales.get(k.getValue().toString())));
+			scales.keySet().removeIf(v -> handler.levels().stream().noneMatch(d -> d.identifier().toString().equals(v)));
+			dims.stream().filter(dim -> !scales.containsKey(dim.identifier().toString())).forEach(dim -> scales.put(dim.identifier().toString(), 0));
+			return dims.stream().collect(Collectors.toMap(k -> k, k -> scales.get(k.identifier().toString())));
 		}
 	}
 }

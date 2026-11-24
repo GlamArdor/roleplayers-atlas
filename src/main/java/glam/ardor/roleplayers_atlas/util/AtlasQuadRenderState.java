@@ -1,11 +1,11 @@
 package glam.ardor.roleplayers_atlas.util;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.gui.render.state.SimpleGuiElementRenderState;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
+import net.minecraft.client.renderer.RenderPipelines;
 import org.joml.Matrix3x2f;
 import org.joml.Vector2f;
 
@@ -14,7 +14,7 @@ import org.joml.Vector2f;
  * so a strip of them tears open wherever the shape it follows turns; this state
  * lets the corners be shared between neighbouring strips instead.
  */
-public record AtlasQuadRenderState(Matrix3x2f pose, float[] xs, float[] ys, int color, ScreenRect bounds) implements SimpleGuiElementRenderState {
+public record AtlasQuadRenderState(Matrix3x2f pose, float[] xs, float[] ys, int color, ScreenRectangle bounds) implements GuiElementRenderState {
 	public static AtlasQuadRenderState of(Matrix3x2f pose, float[] xs, float[] ys, int color) {
 		float minX = Float.MAX_VALUE;
 		float minY = Float.MAX_VALUE;
@@ -30,16 +30,16 @@ public record AtlasQuadRenderState(Matrix3x2f pose, float[] xs, float[] ys, int 
 		}
 		int x = (int) Math.floor(minX);
 		int y = (int) Math.floor(minY);
-		ScreenRect bounds = new ScreenRect(x, y, (int) Math.ceil(maxX) - x + 1, (int) Math.ceil(maxY) - y + 1);
+		ScreenRectangle bounds = new ScreenRectangle(x, y, (int) Math.ceil(maxX) - x + 1, (int) Math.ceil(maxY) - y + 1);
 		return new AtlasQuadRenderState(pose, xs, ys, color, bounds);
 	}
 
 	@Override
-	public void setupVertices(VertexConsumer vertices) {
+	public void buildVertices(VertexConsumer vertices) {
 		// Depth is no longer passed in: since 1.21.9 the GUI renderer assigns it
 		// per element, and the vertex itself is plain 2D.
 		for (int i = 0; i < 4; i++) {
-			vertices.vertex(this.pose, this.xs[i], this.ys[i]).color(this.color);
+			vertices.addVertexWith2DPose(this.pose, this.xs[i], this.ys[i]).setColor(this.color);
 		}
 	}
 
@@ -50,11 +50,11 @@ public record AtlasQuadRenderState(Matrix3x2f pose, float[] xs, float[] ys, int 
 
 	@Override
 	public TextureSetup textureSetup() {
-		return TextureSetup.empty();
+		return TextureSetup.noTexture();
 	}
 
 	@Override
-	public ScreenRect scissorArea() {
+	public ScreenRectangle scissorArea() {
 		return null;
 	}
 }

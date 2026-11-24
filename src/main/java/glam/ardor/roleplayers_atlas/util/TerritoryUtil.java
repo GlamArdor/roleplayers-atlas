@@ -1,13 +1,12 @@
 package glam.ardor.roleplayers_atlas.util;
 
 import folk.sisby.surveyor.util.RegionPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.ColumnPos;
-
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import net.minecraft.server.level.ColumnPos;
+import net.minecraft.world.level.ChunkPos;
 
 /** Helpers for chunk-area (territory) landmarks. */
 public final class TerritoryUtil {
@@ -34,8 +33,8 @@ public final class TerritoryUtil {
 		long sumX = 0, sumZ = 0;
 		int count = 0;
 		for (ChunkPos chunk : RegionPos.regionsToChunks(regions)) {
-			sumX += chunk.getStartX() + 8;
-			sumZ += chunk.getStartZ() + 8;
+			sumX += chunk.getMinBlockX() + 8;
+			sumZ += chunk.getMinBlockZ() + 8;
 			count++;
 		}
 		if (count == 0) return new ColumnPos(0, 0);

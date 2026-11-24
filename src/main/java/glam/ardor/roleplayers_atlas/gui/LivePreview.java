@@ -2,8 +2,6 @@ package glam.ardor.roleplayers_atlas.gui;
 
 import glam.ardor.roleplayers_atlas.AtlasConfig;
 import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -12,6 +10,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * Makes the Cloth settings screen show its own effect while it is open.
@@ -62,11 +62,11 @@ public final class LivePreview {
 		snapshot = copyOf(RoleplayersAtlas.CONFIG);
 	}
 
-	public static void tick(MinecraftClient client) {
+	public static void tick(Minecraft client) {
 		if (owner == null) {
 			return;
 		}
-		if (client.currentScreen == owner) {
+		if (client.screen == owner) {
 			awaySince = 0L;
 			for (Runnable applier : appliers) {
 				try {
@@ -82,7 +82,7 @@ public final class LivePreview {
 			awaySince = now;
 			return;
 		}
-		if (client.currentScreen == null || now - awaySince > AWAY_MILLIS) {
+		if (client.screen == null || now - awaySince > AWAY_MILLIS) {
 			finish();
 		}
 	}

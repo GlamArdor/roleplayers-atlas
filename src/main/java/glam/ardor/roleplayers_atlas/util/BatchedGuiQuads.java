@@ -1,10 +1,10 @@
 package glam.ardor.roleplayers_atlas.util;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.gui.render.state.SimpleGuiElementRenderState;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import org.joml.Matrix3x2f;
 
 /**
@@ -12,18 +12,18 @@ import org.joml.Matrix3x2f;
  * map subtiles become one draw instead of one gui element each, which is what
  * keeps close zoom levels smooth.
  */
-public final class BatchedGuiQuads implements SimpleGuiElementRenderState {
+public final class BatchedGuiQuads implements GuiElementRenderState {
 	private final RenderPipeline pipeline;
 	private final TextureSetup textureSetup;
 	private final Matrix3x2f pose;
-	private final ScreenRect scissorArea;
+	private final ScreenRectangle scissorArea;
 	/** Packed per quad: x1, y1, x2, y2, u1, v1, u2, v2. */
 	private final float[] quads;
 	private final int[] colors;
 	private final int count;
-	private final ScreenRect bounds;
+	private final ScreenRectangle bounds;
 
-	public BatchedGuiQuads(RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f pose, ScreenRect scissorArea, float[] quads, int[] colors, int count, ScreenRect bounds) {
+	public BatchedGuiQuads(RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f pose, ScreenRectangle scissorArea, float[] quads, int[] colors, int count, ScreenRectangle bounds) {
 		this.pipeline = pipeline;
 		this.textureSetup = textureSetup;
 		this.pose = pose;
@@ -35,7 +35,7 @@ public final class BatchedGuiQuads implements SimpleGuiElementRenderState {
 	}
 
 	@Override
-	public void setupVertices(VertexConsumer vertices) {
+	public void buildVertices(VertexConsumer vertices) {
 		// Depth is no longer passed in: since 1.21.9 the GUI renderer assigns it
 		// per element, and the vertex itself is plain 2D.
 		for (int i = 0; i < count; i++) {
@@ -43,10 +43,10 @@ public final class BatchedGuiQuads implements SimpleGuiElementRenderState {
 			float x1 = quads[q], y1 = quads[q + 1], x2 = quads[q + 2], y2 = quads[q + 3];
 			float u1 = quads[q + 4], v1 = quads[q + 5], u2 = quads[q + 6], v2 = quads[q + 7];
 			int color = colors[i];
-			vertices.vertex(pose, x1, y1).texture(u1, v1).color(color);
-			vertices.vertex(pose, x1, y2).texture(u1, v2).color(color);
-			vertices.vertex(pose, x2, y2).texture(u2, v2).color(color);
-			vertices.vertex(pose, x2, y1).texture(u2, v1).color(color);
+			vertices.addVertexWith2DPose(pose, x1, y1).setUv(u1, v1).setColor(color);
+			vertices.addVertexWith2DPose(pose, x1, y2).setUv(u1, v2).setColor(color);
+			vertices.addVertexWith2DPose(pose, x2, y2).setUv(u2, v2).setColor(color);
+			vertices.addVertexWith2DPose(pose, x2, y1).setUv(u2, v1).setColor(color);
 		}
 	}
 
@@ -61,12 +61,12 @@ public final class BatchedGuiQuads implements SimpleGuiElementRenderState {
 	}
 
 	@Override
-	public ScreenRect scissorArea() {
+	public ScreenRectangle scissorArea() {
 		return scissorArea;
 	}
 
 	@Override
-	public ScreenRect bounds() {
+	public ScreenRectangle bounds() {
 		return bounds;
 	}
 }

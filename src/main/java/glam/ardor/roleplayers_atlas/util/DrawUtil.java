@@ -1,10 +1,10 @@
 package glam.ardor.roleplayers_atlas.util;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import glam.ardor.roleplayers_atlas.mixin.MixinDrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ColorHelper;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 
@@ -19,18 +19,18 @@ public class DrawUtil {
 		painter.pop();
 	}
 
-	public static void fill(AtlasPainter painter, RenderLayer layer, float z, int light, int x1, int y1, int x2, int y2, float alpha, float[] color) {
+	public static void fill(AtlasPainter painter, RenderType layer, float z, int light, int x1, int y1, int x2, int y2, float alpha, float[] color) {
 		if (painter.isGui()) {
-			painter.context().fill(x1, y1, x2, y2, ColorHelper.getArgb((int) (alpha * 255), (int) (color[0] * 255), (int) (color[1] * 255), (int) (color[2] * 255)));
+			painter.context().fill(x1, y1, x2, y2, ARGB.color((int) (alpha * 255), (int) (color[0] * 255), (int) (color[1] * 255), (int) (color[2] * 255)));
 			return;
 		}
 		VertexConsumer vertexConsumer = painter.vertexConsumers().getBuffer(layer);
-		Matrix4f matrix4f = painter.matrices().peek().getPositionMatrix();
+		Matrix4f matrix4f = painter.matrices().last().pose();
 
-		vertexConsumer.vertex(matrix4f, x1, y1, z).color(color[0], color[1], color[2], alpha).light(light);
-		vertexConsumer.vertex(matrix4f, x1, y2, z).color(color[0], color[1], color[2], alpha).light(light);
-		vertexConsumer.vertex(matrix4f, x2, y2, z).color(color[0], color[1], color[2], alpha).light(light);
-		vertexConsumer.vertex(matrix4f, x2, y1, z).color(color[0], color[1], color[2], alpha).light(light);
+		vertexConsumer.addVertex(matrix4f, x1, y1, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x1, y2, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x2, y2, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, x2, y1, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class DrawUtil {
 	 * render state below doesn't carry, and covers the handheld book too, where
 	 * there is no scissor at all.
 	 */
-	public static void quadClipped(AtlasPainter painter, RenderLayer layer, float z, int light, double[] qx, double[] qy, double clipX1, double clipY1, double clipX2, double clipY2, float alpha, float[] color) {
+	public static void quadClipped(AtlasPainter painter, RenderType layer, float z, int light, double[] qx, double[] qy, double clipX1, double clipY1, double clipX2, double clipY2, float alpha, float[] color) {
 		double[] px = new double[12];
 		double[] py = new double[12];
 		double[] cx = new double[12];
@@ -88,21 +88,21 @@ public class DrawUtil {
 		};
 	}
 
-	private static void quad(AtlasPainter painter, RenderLayer layer, float z, int light, double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, float alpha, float[] color) {
+	private static void quad(AtlasPainter painter, RenderType layer, float z, int light, double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, float alpha, float[] color) {
 		if (painter.isGui()) {
 			float[] xs = {(float) x0, (float) x1, (float) x2, (float) x3};
 			float[] ys = {(float) y0, (float) y1, (float) y2, (float) y3};
-			int argb = ColorHelper.getArgb((int) (alpha * 255), (int) (color[0] * 255), (int) (color[1] * 255), (int) (color[2] * 255));
+			int argb = ARGB.color((int) (alpha * 255), (int) (color[0] * 255), (int) (color[1] * 255), (int) (color[2] * 255));
 			((MixinDrawContext) (Object) painter.context()).roleplayers_atlas$getState()
-				.addSimpleElement(AtlasQuadRenderState.of(new Matrix3x2f(painter.context().getMatrices()), xs, ys, argb));
+				.submitGuiElement(AtlasQuadRenderState.of(new Matrix3x2f(painter.context().pose()), xs, ys, argb));
 			return;
 		}
 		VertexConsumer vertexConsumer = painter.vertexConsumers().getBuffer(layer);
-		Matrix4f matrix4f = painter.matrices().peek().getPositionMatrix();
+		Matrix4f matrix4f = painter.matrices().last().pose();
 
-		vertexConsumer.vertex(matrix4f, (float) x0, (float) y0, z).color(color[0], color[1], color[2], alpha).light(light);
-		vertexConsumer.vertex(matrix4f, (float) x1, (float) y1, z).color(color[0], color[1], color[2], alpha).light(light);
-		vertexConsumer.vertex(matrix4f, (float) x2, (float) y2, z).color(color[0], color[1], color[2], alpha).light(light);
-		vertexConsumer.vertex(matrix4f, (float) x3, (float) y3, z).color(color[0], color[1], color[2], alpha).light(light);
+		vertexConsumer.addVertex(matrix4f, (float) x0, (float) y0, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x1, (float) y1, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x2, (float) y2, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
+		vertexConsumer.addVertex(matrix4f, (float) x3, (float) y3, z).setColor(color[0], color[1], color[2], alpha).setLight(light);
 	}
 }

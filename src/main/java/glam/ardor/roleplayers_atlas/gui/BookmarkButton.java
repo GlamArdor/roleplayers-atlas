@@ -3,11 +3,11 @@ package glam.ardor.roleplayers_atlas.gui;
 import glam.ardor.roleplayers_atlas.RoleplayersAtlas;
 import glam.ardor.roleplayers_atlas.gui.core.ToggleButtonComponent;
 import glam.ardor.roleplayers_atlas.util.ColorUtil;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
 
 public class BookmarkButton extends ToggleButtonComponent {
@@ -18,7 +18,7 @@ public class BookmarkButton extends ToggleButtonComponent {
 	public static final int WIDTH = 24;
 	public static final int HEIGHT = 18;
 
-	protected Text title;
+	protected Component title;
 	protected Identifier iconTexture;
 	protected final float[] backgroundTint;
 	protected final float[] iconTint;
@@ -28,7 +28,7 @@ public class BookmarkButton extends ToggleButtonComponent {
 	protected final boolean vertical;
 	protected final Identifier backgroundTexture;
 
-	public BookmarkButton(Identifier backgroundTexture, Text title, Identifier iconTexture, @Nullable Integer backgroundTint, @Nullable Integer iconTint, int iconWidth, int iconHeight, boolean backwards, boolean vertical) {
+	public BookmarkButton(Identifier backgroundTexture, Component title, Identifier iconTexture, @Nullable Integer backgroundTint, @Nullable Integer iconTint, int iconWidth, int iconHeight, boolean backwards, boolean vertical) {
 		super(false);
 		this.backgroundTexture = backgroundTexture;
 		this.title = title;
@@ -43,7 +43,7 @@ public class BookmarkButton extends ToggleButtonComponent {
 		setSize(vertical ? HEIGHT : WIDTH, vertical ? WIDTH : HEIGHT);
 	}
 
-	public BookmarkButton(Text title, Identifier iconTexture, @Nullable Integer backgroundTint, @Nullable Integer iconTint, int iconWidth, int iconHeight, boolean backwards, boolean vertical) {
+	public BookmarkButton(Component title, Identifier iconTexture, @Nullable Integer backgroundTint, @Nullable Integer iconTint, int iconWidth, int iconHeight, boolean backwards, boolean vertical) {
 		this(vertical ? (backwards ? TEXTURE_TOP : TEXTURE_BOTTOM) : (backwards ? TEXTURE_LEFT : TEXTURE_RIGHT), title, iconTexture, backgroundTint, iconTint, iconWidth, iconHeight, backwards, vertical);
 	}
 
@@ -51,26 +51,26 @@ public class BookmarkButton extends ToggleButtonComponent {
 		this.iconTexture = iconTexture;
 	}
 
-	public Text getTitle() {
+	public Component getTitle() {
 		return title;
 	}
 
-	public void setTitle(Text title) {
+	public void setTitle(Component title) {
 		this.title = title;
 	}
 
-	public void drawIcon(DrawContext context, int x, int y) {
-		int tint = iconTint != null ? ColorHelper.getArgb(255, (int) (iconTint[0] * 255), (int) (iconTint[1] * 255), (int) (iconTint[2] * 255)) : 0xFFFFFFFF;
-		context.drawTexture(RenderPipelines.GUI_TEXTURED, iconTexture, x, y, 0, 0, iconWidth, iconHeight, iconWidth, iconHeight, tint);
+	public void drawIcon(GuiGraphics context, int x, int y) {
+		int tint = iconTint != null ? ARGB.color(255, (int) (iconTint[0] * 255), (int) (iconTint[1] * 255), (int) (iconTint[2] * 255)) : 0xFFFFFFFF;
+		context.blit(RenderPipelines.GUI_TEXTURED, iconTexture, x, y, 0, 0, iconWidth, iconHeight, iconWidth, iconHeight, tint);
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		boolean mouseOver = isMouseOver(mouseX, mouseY);
 		boolean isExtended = mouseOver || isSelected();
 
-		int backgroundArgb = backgroundTint != null ? ColorHelper.getArgb(255, (int) (backgroundTint[0] * 255), (int) (backgroundTint[1] * 255), (int) (backgroundTint[2] * 255)) : 0xFFFFFFFF;
-		context.drawTexture(RenderPipelines.GUI_TEXTURED, backgroundTexture, getGuiX(), getGuiY(), !vertical || isExtended ? 0 : HEIGHT, vertical || isExtended ? 0 : HEIGHT, vertical ? HEIGHT : WIDTH, vertical ? WIDTH : HEIGHT, vertical ? HEIGHT : WIDTH, vertical ? WIDTH : HEIGHT, vertical ? HEIGHT * 2 : WIDTH, vertical ? WIDTH : HEIGHT * 2, backgroundArgb);
+		int backgroundArgb = backgroundTint != null ? ARGB.color(255, (int) (backgroundTint[0] * 255), (int) (backgroundTint[1] * 255), (int) (backgroundTint[2] * 255)) : 0xFFFFFFFF;
+		context.blit(RenderPipelines.GUI_TEXTURED, backgroundTexture, getGuiX(), getGuiY(), !vertical || isExtended ? 0 : HEIGHT, vertical || isExtended ? 0 : HEIGHT, vertical ? HEIGHT : WIDTH, vertical ? WIDTH : HEIGHT, vertical ? HEIGHT : WIDTH, vertical ? WIDTH : HEIGHT, vertical ? HEIGHT * 2 : WIDTH, vertical ? WIDTH : HEIGHT * 2, backgroundArgb);
 
 		if (iconTexture != null) {
 			int iconX = getGuiX() + (!vertical ? (10 - iconWidth / 2 + (isExtended ? (backwards ? 3 : 1) : (backwards ? 4 : 0))) : (9 - iconHeight / 2));
@@ -82,31 +82,31 @@ public class BookmarkButton extends ToggleButtonComponent {
 	}
 
 	/** How the tool is used, shown greyed under its name. */
-	private Text hint = null;
+	private Component hint = null;
 	/** The title and the wrapped hint, worked out on first use and kept. */
-	private java.util.List<Text> tooltipLines = null;
+	private java.util.List<Component> tooltipLines = null;
 
-	public void setHint(Text text) {
+	public void setHint(Component text) {
 		this.hint = text;
 		this.tooltipLines = null;
 	}
 
-	public void renderTooltip(DrawContext context, int mouseX, int mouseY, float partialTick, boolean mouseOver) {
+	public void renderTooltip(GuiGraphics context, int mouseX, int mouseY, float partialTick, boolean mouseOver) {
 		if (!mouseOver || title.getString().isEmpty()) return;
 		if (hint == null) {
-			context.drawTooltip(textRenderer, title, mouseX, mouseY);
+			context.setTooltipForNextFrame(font, title, mouseX, mouseY);
 			return;
 		}
 		// Wrapped here rather than when the hint is set: buttons are built before
 		// the screen has a font to measure with.
 		if (tooltipLines == null) {
-			java.util.List<Text> lines = new java.util.ArrayList<>();
+			java.util.List<Component> lines = new java.util.ArrayList<>();
 			lines.add(title);
-			for (net.minecraft.text.StringVisitable line : textRenderer.getTextHandler().wrapLines(hint.getString(), 190, net.minecraft.text.Style.EMPTY)) {
-				lines.add(Text.literal(line.getString()).formatted(net.minecraft.util.Formatting.GRAY));
+			for (net.minecraft.network.chat.FormattedText line : font.getSplitter().splitLines(hint.getString(), 190, net.minecraft.network.chat.Style.EMPTY)) {
+				lines.add(Component.literal(line.getString()).withStyle(net.minecraft.ChatFormatting.GRAY));
 			}
 			tooltipLines = lines;
 		}
-		context.drawTooltip(textRenderer, tooltipLines, mouseX, mouseY);
+		context.setComponentTooltipForNextFrame(font, tooltipLines, mouseX, mouseY);
 	}
 }

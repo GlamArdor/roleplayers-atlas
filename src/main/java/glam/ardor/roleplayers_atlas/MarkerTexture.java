@@ -2,30 +2,30 @@ package glam.ardor.roleplayers_atlas;
 
 import glam.ardor.roleplayers_atlas.util.AtlasPainter;
 import glam.ardor.roleplayers_atlas.util.DrawBatcher;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 import org.joml.Vector2d;
 
 public record MarkerTexture(Identifier id, Identifier accentId, Identifier item, int offsetX, int offsetY, int textureWidth, int textureHeight, int mipLevels, int nearClip, int farClip) {
 	public static Identifier idToTexture(Identifier id) {
-		return id.withPrefixedPath("textures/atlas/marker/").withSuffixedPath(".png");
+		return id.withPrefix("textures/atlas/marker/").withSuffix(".png");
 	}
 
 	public static MarkerTexture ofId(Identifier id, Identifier item, int offsetX, int offsetY, int width, int height, int mipLevels, int nearClip, int farClip, boolean accent) {
-		return new MarkerTexture(idToTexture(id), accent ? idToTexture(id.withSuffixedPath("_accent")) : null, item, offsetX, offsetY, width, height, mipLevels, nearClip, farClip);
+		return new MarkerTexture(idToTexture(id), accent ? idToTexture(id.withSuffix("_accent")) : null, item, offsetX, offsetY, width, height, mipLevels, nearClip, farClip);
 	}
 
 	public static MarkerTexture centered(Identifier id, Identifier item, int width, int height, int mipLevels, int nearClip, int farClip, boolean accent) {
 		return ofId(id, item, -width / 2, -height / 2, width, height, mipLevels, nearClip, farClip, accent);
 	}
 
-	public static final MarkerTexture DEFAULT = centered(RoleplayersAtlas.id("custom/point"), Identifier.of("minecraft", "emerald"), 32, 32, 0, 1, Integer.MAX_VALUE, true);
+	public static final MarkerTexture DEFAULT = centered(RoleplayersAtlas.id("custom/point"), Identifier.fromNamespaceAndPath("minecraft", "emerald"), 32, 32, 0, 1, Integer.MAX_VALUE, true);
 
 	public Identifier keyId() {
-		return Identifier.of(id.getNamespace(), id.getPath().substring("textures/atlas/marker/".length(), id.getPath().length() - 4));
+		return Identifier.fromNamespaceAndPath(id.getNamespace(), id.getPath().substring("textures/atlas/marker/".length(), id.getPath().length() - 4));
 	}
 
 	public String displayId() {
@@ -51,20 +51,20 @@ public record MarkerTexture(Identifier id, Identifier accentId, Identifier item,
 	}
 
 	public Vector2d getCenter(int tileChunks) {
-		int mipLevel = MathHelper.clamp(MathHelper.ceilLog2(tileChunks), 0, mipLevels);
+		int mipLevel = Mth.clamp(Mth.ceillog2(tileChunks), 0, mipLevels);
 		return new Vector2d(((double) offsetX + (double) textureWidth / 2.0) / (double) (1 << mipLevel), ((double) offsetY + (double) textureHeight / 2.0) / (double) (1 << mipLevel));
 	}
 
 	public double getSquaredSize(int tileChunks) {
-		int mipLevel = MathHelper.clamp(MathHelper.ceilLog2(tileChunks), 0, mipLevels);
+		int mipLevel = Mth.clamp(Mth.ceillog2(tileChunks), 0, mipLevels);
 		return textureWidth * textureHeight / (double) (1 << mipLevel);
 	}
 
-	public void drawIcon(DrawContext context, int x, int y, float[] accent) {
-		context.drawTexture(RenderPipelines.GUI_TEXTURED, id, x, y, 0, 0, textureWidth, textureHeight, textureWidth, textureHeight, fullTextureWidth(), textureHeight);
+	public void drawIcon(GuiGraphics context, int x, int y, float[] accent) {
+		context.blit(RenderPipelines.GUI_TEXTURED, id, x, y, 0, 0, textureWidth, textureHeight, textureWidth, textureHeight, fullTextureWidth(), textureHeight);
 		if (accentId != null && accent != null) {
-			int accentArgb = ColorHelper.getArgb(255, (int) (accent[0] * 255), (int) (accent[1] * 255), (int) (accent[2] * 255));
-			context.drawTexture(RenderPipelines.GUI_TEXTURED, accentId, x, y, 0, 0, textureWidth, textureHeight, textureWidth, textureHeight, fullTextureWidth(), textureHeight, accentArgb);
+			int accentArgb = ARGB.color(255, (int) (accent[0] * 255), (int) (accent[1] * 255), (int) (accent[2] * 255));
+			context.blit(RenderPipelines.GUI_TEXTURED, accentId, x, y, 0, 0, textureWidth, textureHeight, textureWidth, textureHeight, fullTextureWidth(), textureHeight, accentArgb);
 		}
 	}
 
@@ -75,7 +75,7 @@ public record MarkerTexture(Identifier id, Identifier accentId, Identifier item,
 		painter.translate(markerX, markerY);
 		painter.scale(markerScale);
 		if (tileChunks > 1 && mipLevels > 0) {
-			int mipLevel = MathHelper.clamp(MathHelper.ceilLog2(tileChunks), 0, mipLevels);
+			int mipLevel = Mth.clamp(Mth.ceillog2(tileChunks), 0, mipLevels);
 			DrawBatcher.drawSingle(painter, silhouette, fullTextureWidth(), textureHeight, light, offsetX / (1 << mipLevel), offsetY / (1 << mipLevel), z, textureWidth / (1 << mipLevel), textureHeight / (1 << mipLevel), getU(mipLevel), 0, textureWidth / (1 << mipLevel), textureHeight / (1 << mipLevel), argb, false);
 		} else {
 			DrawBatcher.drawSingle(painter, silhouette, fullTextureWidth(), textureHeight, light, offsetX, offsetY, z, textureWidth, textureHeight, 0, 0, textureWidth, textureHeight, argb, false);
@@ -88,10 +88,10 @@ public record MarkerTexture(Identifier id, Identifier accentId, Identifier item,
 		painter.push();
 		painter.translate(markerX, markerY);
 		painter.scale(markerScale);
-		int mainArgb = ColorHelper.getArgb((int) (alpha * 255), (int) (tint * 255), (int) (tint * 255), (int) (tint * 255));
-		int accentArgb = accent != null ? ColorHelper.getArgb((int) (alpha * 255), (int) (tint * accent[0] * 255), (int) (tint * accent[1] * 255), (int) (tint * accent[2] * 255)) : 0;
+		int mainArgb = ARGB.color((int) (alpha * 255), (int) (tint * 255), (int) (tint * 255), (int) (tint * 255));
+		int accentArgb = accent != null ? ARGB.color((int) (alpha * 255), (int) (tint * accent[0] * 255), (int) (tint * accent[1] * 255), (int) (tint * accent[2] * 255)) : 0;
 		if (tileChunks > 1 && mipLevels > 0) {
-			int mipLevel = MathHelper.clamp(MathHelper.ceilLog2(tileChunks), 0, mipLevels);
+			int mipLevel = Mth.clamp(Mth.ceillog2(tileChunks), 0, mipLevels);
 			DrawBatcher.drawSingle(painter, id, fullTextureWidth(), textureHeight, light, offsetX / (1 << mipLevel), offsetY / (1 << mipLevel), z, textureWidth / (1 << mipLevel), textureHeight / (1 << mipLevel), getU(mipLevel), 0, textureWidth / (1 << mipLevel), textureHeight / (1 << mipLevel), mainArgb, false);
 			if (accentId != null && accent != null) {
 				DrawBatcher.drawSingle(painter, accentId, fullTextureWidth(), textureHeight, light, offsetX / (1 << mipLevel), offsetY / (1 << mipLevel), z, textureWidth / (1 << mipLevel), textureHeight / (1 << mipLevel), getU(mipLevel), 0, textureWidth / (1 << mipLevel), textureHeight / (1 << mipLevel), accentArgb, false);

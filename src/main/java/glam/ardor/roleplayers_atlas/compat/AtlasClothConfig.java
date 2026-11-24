@@ -8,9 +8,8 @@ import glam.ardor.roleplayers_atlas.gui.SettingsLook;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,12 +36,12 @@ public final class AtlasClothConfig {
 	/** Widgets to read back into the config every tick, so the map follows the edits. */
 	private static final List<Runnable> LIVE = new ArrayList<>();
 
-	private static Text label(String key) {
-		return Text.translatable("config.roleplayers_atlas." + key);
+	private static Component label(String key) {
+		return Component.translatable("config.roleplayers_atlas." + key);
 	}
 
-	private static Text tip(String key) {
-		return Text.translatable("config.roleplayers_atlas." + key + ".tooltip");
+	private static Component tip(String key) {
+		return Component.translatable("config.roleplayers_atlas." + key + ".tooltip");
 	}
 
 	public static Screen create(Screen parent) {
@@ -58,7 +57,7 @@ public final class AtlasClothConfig {
 		boolean wasMarkDate = config.showMarkDate;
 		ConfigBuilder builder = ConfigBuilder.create()
 			.setParentScreen(parent)
-			.setTitle(Text.translatable("gui.roleplayers_atlas.config"))
+			.setTitle(Component.translatable("gui.roleplayers_atlas.config"))
 			.setSavingRunnable(() -> {
 				LivePreview.markSaved();
 				config.saveFields();
@@ -81,13 +80,13 @@ public final class AtlasClothConfig {
 
 		ConfigEntryBuilder e = builder.entryBuilder();
 
-		ConfigCategory map = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.map"));
+		ConfigCategory map = builder.getOrCreateCategory(Component.translatable("roleplayers_atlas.category.map"));
 		map.addEntry(toggle(e, "fullscreen", config.fullscreen, true, v -> config.fullscreen = v));
 		map.addEntry(toggle(e, "keepZoom", config.keepZoom, false, v -> config.keepZoom = v));
 		map.addEntry(toggle(e, "keepOffset", config.keepOffset, false, v -> config.keepOffset = v));
 		var emptyEntry = e.startEnumSelector(label("emptyHandling"), AtlasConfig.EmptyHandling.class, config.emptyHandling)
 			.setDefaultValue(AtlasConfig.EmptyHandling.EMPTY)
-			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.emptyHandling." + v.name().toLowerCase()))
+			.setEnumNameProvider(v -> Component.translatable("gui.roleplayers_atlas.config.emptyHandling." + v.name().toLowerCase()))
 			.setTooltip(tip("emptyHandling"))
 			.setSaveConsumer(v -> config.emptyHandling = v)
 			.build();
@@ -95,7 +94,7 @@ public final class AtlasClothConfig {
 		LIVE.add(() -> config.emptyHandling = emptyEntry.getValue());
 		map.addEntry(toggle(e, "stabilizeHeldMap", config.stabilizeHeldMap, false, v -> config.stabilizeHeldMap = v));
 		map.addEntry(intSlider(e, "handheldScale", config.handheldScale, 100, 50, 200,
-			v -> Text.translatable("config.roleplayers_atlas.percent", v), v -> config.handheldScale = v));
+			v -> Component.translatable("config.roleplayers_atlas.percent", v), v -> config.handheldScale = v));
 		map.addEntry(toggle(e, "showHints", config.showHints, true, v -> config.showHints = v));
 		map.addEntry(intSlider(e, "mapScale", config.mapScale, 0, -2, 10, null, v -> config.mapScale = v));
 		map.addEntry(intSlider(e, "maxTileChunks", config.maxTileChunks, 5, 0, 6, null, v -> config.maxTileChunks = v));
@@ -110,10 +109,10 @@ public final class AtlasClothConfig {
 		map.addEntry(chunkEntry);
 		LIVE.add(() -> config.chunkTickLimit = chunkEntry.getValue());
 
-		ConfigCategory marks = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.marks"));
+		ConfigCategory marks = builder.getOrCreateCategory(Component.translatable("roleplayers_atlas.category.marks"));
 		var quickMarkEntry = e.startEnumSelector(label("quickMark"), AtlasConfig.QuickMark.class, config.quickMark)
 			.setDefaultValue(AtlasConfig.QuickMark.LOOKING)
-			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.quickMark." + v.name().toLowerCase()))
+			.setEnumNameProvider(v -> Component.translatable("gui.roleplayers_atlas.config.quickMark." + v.name().toLowerCase()))
 			.setTooltip(tip("quickMark"))
 			.setSaveConsumer(v -> config.quickMark = v)
 			.build();
@@ -126,7 +125,7 @@ public final class AtlasClothConfig {
 			var iconEntry = e.startSelector(label("quickMarkIcon"), icons.toArray(new String[0]),
 					icons.contains(config.quickMarkIcon) ? config.quickMarkIcon : icons.getFirst())
 				.setDefaultValue("red_x_small")
-				.setNameProvider(v -> Text.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(v.replace('_', ' '))))
+				.setNameProvider(v -> Component.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(v.replace('_', ' '))))
 				.setTooltip(tip("quickMarkIcon"))
 				.setSaveConsumer(v -> config.quickMarkIcon = v)
 				.build();
@@ -134,10 +133,10 @@ public final class AtlasClothConfig {
 			LIVE.add(() -> config.quickMarkIcon = iconEntry.getValue());
 		}
 		marks.addEntry(intSlider(e, "quickMarkRange", config.quickMarkRange, 256, 16, 512,
-			v -> Text.translatable("config.roleplayers_atlas.blocks", v), v -> config.quickMarkRange = v));
+			v -> Component.translatable("config.roleplayers_atlas.blocks", v), v -> config.quickMarkRange = v));
 		var sortEntry = e.startEnumSelector(label("markerSort"), AtlasConfig.MarkerSort.class, config.markerSort)
 			.setDefaultValue(AtlasConfig.MarkerSort.KIND)
-			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.sort." + v.name().toLowerCase()))
+			.setEnumNameProvider(v -> Component.translatable("gui.roleplayers_atlas.sort." + v.name().toLowerCase()))
 			.setTooltip(tip("markerSort"))
 			.setSaveConsumer(v -> config.markerSort = v)
 			.build();
@@ -146,7 +145,7 @@ public final class AtlasClothConfig {
 		// Travelling by map: whether it is offered, and what it says to do it.
 		var teleportEntry = e.startEnumSelector(label("teleport"), AtlasConfig.Teleport.class, config.teleport)
 			.setDefaultValue(AtlasConfig.Teleport.AUTO)
-			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.teleport." + v.name().toLowerCase()))
+			.setEnumNameProvider(v -> Component.translatable("gui.roleplayers_atlas.config.teleport." + v.name().toLowerCase()))
 			.setTooltip(tip("teleport"))
 			.setSaveConsumer(v -> config.teleport = v)
 			.build();
@@ -161,7 +160,7 @@ public final class AtlasClothConfig {
 		LIVE.add(() -> config.teleportCommand = teleportCommandEntry.getValue());
 		var reckoningEntry = e.startEnumSelector(label("reckoning"), AtlasConfig.Reckoning.class, config.reckoning)
 			.setDefaultValue(AtlasConfig.Reckoning.REIGN)
-			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.reckoning." + v.name().toLowerCase()))
+			.setEnumNameProvider(v -> Component.translatable("gui.roleplayers_atlas.config.reckoning." + v.name().toLowerCase()))
 			.setTooltip(tip("reckoning"))
 			.setSaveConsumer(v -> config.reckoning = v)
 			.build();
@@ -173,7 +172,7 @@ public final class AtlasClothConfig {
 		marks.addEntry(toggle(e, "hideDeathsByDefault", config.hideDeathsByDefault, false, v -> config.hideDeathsByDefault = v));
 		var graveEntry = e.startEnumSelector(label("graveStyle"), AtlasConfig.GraveStyle.class, config.graveStyle)
 			.setDefaultValue(AtlasConfig.GraveStyle.EUPHEMISMS)
-			.setEnumNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.graveStyle." + v.name().toLowerCase()))
+			.setEnumNameProvider(v -> Component.translatable("gui.roleplayers_atlas.config.graveStyle." + v.name().toLowerCase()))
 			.setTooltip(tip("graveStyle"))
 			.setSaveConsumer(v -> config.graveStyle = v)
 			.build();
@@ -184,18 +183,18 @@ public final class AtlasClothConfig {
 		marks.addEntry(toggle(e, "spawnMarker", config.spawnMarker, true, v -> config.spawnMarker = v));
 		marks.addEntry(toggle(e, "hearthFollowsBeds", config.hearthFollowsBeds, false, v -> config.hearthFollowsBeds = v));
 		marks.addEntry(intSlider(e, "guideArrowOpacity", config.guideArrowOpacity, 100, 10, 100,
-			v -> Text.translatable("config.roleplayers_atlas.percent", v), v -> config.guideArrowOpacity = v));
+			v -> Component.translatable("config.roleplayers_atlas.percent", v), v -> config.guideArrowOpacity = v));
 		marks.addEntry(toggle(e, "clearTrackingOnArrival", config.clearTrackingOnArrival, true, v -> config.clearTrackingOnArrival = v));
 
-		ConfigCategory titles = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.titles"));
+		ConfigCategory titles = builder.getOrCreateCategory(Component.translatable("roleplayers_atlas.category.titles"));
 		titles.addEntry(toggle(e, "zoneTitles", config.zoneTitles, true, v -> config.zoneTitles = v));
 		titles.addEntry(toggle(e, "zoneTitleSound", config.zoneTitleSound, false, v -> config.zoneTitleSound = v));
 		titles.addEntry(intSlider(e, "zoneTitleSeconds", config.zoneTitleSeconds, 3, 1, 30,
-			v -> Text.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleSeconds = v));
+			v -> Component.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleSeconds = v));
 		titles.addEntry(intSlider(e, "zoneTitleCooldown", config.zoneTitleCooldown, 0, 0, 600,
-			v -> Text.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleCooldown = v));
+			v -> Component.translatable("config.roleplayers_atlas.seconds", v), v -> config.zoneTitleCooldown = v));
 
-		ConfigCategory terrain = builder.getOrCreateCategory(Text.translatable("roleplayers_atlas.category.terrain"));
+		ConfigCategory terrain = builder.getOrCreateCategory(Component.translatable("roleplayers_atlas.category.terrain"));
 		terrain.addEntry(intField(e, "elevationLow", config.elevationLow, 10, v -> config.elevationLow = v));
 		terrain.addEntry(intField(e, "elevationMid", config.elevationMid, 20, v -> config.elevationMid = v));
 		terrain.addEntry(intField(e, "elevationHigh", config.elevationHigh, 50, v -> config.elevationHigh = v));
@@ -211,7 +210,7 @@ public final class AtlasClothConfig {
 			: config.fallbackFailHandling;
 		var fallbackEntry = e.startSelector(label("fallbackFailHandling"), fallbacks, fallback)
 			.setDefaultValue(AtlasConfig.FallbackHandling.MISSING)
-			.setNameProvider(v -> Text.translatable("gui.roleplayers_atlas.config.fallbackFailHandling." + v.name().toLowerCase()))
+			.setNameProvider(v -> Component.translatable("gui.roleplayers_atlas.config.fallbackFailHandling." + v.name().toLowerCase()))
 			.setTooltip(tip("fallbackFailHandling"))
 			.setSaveConsumer(v -> config.fallbackFailHandling = v)
 			.build();
@@ -237,7 +236,7 @@ public final class AtlasClothConfig {
 
 	private static me.shedaniel.clothconfig2.api.AbstractConfigListEntry<?> intSlider(ConfigEntryBuilder e,
 			String key, int value, int fallback, int min, int max,
-			java.util.function.IntFunction<Text> display, Consumer<Integer> save) {
+			java.util.function.IntFunction<Component> display, Consumer<Integer> save) {
 		var builder = e.startIntSlider(label(key), value, min, max)
 			.setDefaultValue(fallback)
 			.setTooltip(tip(key))

@@ -1,94 +1,29 @@
 package glam.ardor.roleplayers_atlas.gui;
 
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.BiomeOverrides;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.TileTexture;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ButtonComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ScrollBoxComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.reloader.BiomeTileProviders;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.text.Text;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.util.Identifier;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.ArrayList;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Comparator;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.List;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Locale;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 
 /**
  * Correcting how a biome is drawn.
@@ -143,17 +78,17 @@ public class BiomeModal extends Component {
 	private ScrollBoxComponent listBox;
 	private ScrollBoxComponent pickBox;
 	private ScrollBoxComponent sheetBox;
-	private TextFieldWidget searchField;
-	private ButtonWidget btnGuessedOnly;
-	private ButtonWidget btnResetAll;
-	private ButtonWidget btnDone;
-	private ButtonWidget btnPickCancel;
-	private ButtonWidget btnPickClear;
-	private ButtonWidget btnPickApply;
-	private ButtonWidget btnOwn;
-	private ButtonWidget btnShared;
-	private ButtonWidget btnSheetBack;
-	private ButtonWidget btnSheetDropAll;
+	private EditBox searchField;
+	private Button btnGuessedOnly;
+	private Button btnResetAll;
+	private Button btnDone;
+	private Button btnPickCancel;
+	private Button btnPickClear;
+	private Button btnPickApply;
+	private Button btnOwn;
+	private Button btnShared;
+	private Button btnSheetBack;
+	private Button btnSheetDropAll;
 	/** Highlighted in the grid, waiting for Apply. */
 	private @Nullable Identifier chosenLook = null;
 	private View view = View.LIST;
@@ -165,8 +100,8 @@ public class BiomeModal extends Component {
 	private @Nullable Identifier focus = null;
 
 	/** The chunks a chosen look will be painted onto, when the window came from a selection. */
-	private @Nullable java.util.Set<net.minecraft.util.math.ChunkPos> patchCells = null;
-	private @Nullable net.minecraft.registry.RegistryKey<net.minecraft.world.World> patchDim = null;
+	private @Nullable java.util.Set<net.minecraft.world.level.ChunkPos> patchCells = null;
+	private @Nullable net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> patchDim = null;
 
 	public void setData(@Nullable Identifier focus) {
 		this.focus = focus;
@@ -178,7 +113,7 @@ public class BiomeModal extends Component {
 	}
 
 	/** Opened straight onto the grid, to paint the marked-out area. */
-	public void setPatchData(net.minecraft.registry.RegistryKey<net.minecraft.world.World> dimension, java.util.Set<net.minecraft.util.math.ChunkPos> cells) {
+	public void setPatchData(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension, java.util.Set<net.minecraft.world.level.ChunkPos> cells) {
 		this.focus = null;
 		this.guessedOnly = false;
 		this.patchDim = dimension;
@@ -188,15 +123,15 @@ public class BiomeModal extends Component {
 	}
 
 	/** The dimension whose painting this window is talking about. */
-	private net.minecraft.registry.RegistryKey<net.minecraft.world.World> dimension() {
+	private net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension() {
 		if (patchDim != null) return patchDim;
-		return MinecraftClient.getInstance().world == null ? null : MinecraftClient.getInstance().world.getRegistryKey();
+		return Minecraft.getInstance().level == null ? null : Minecraft.getInstance().level.dimension();
 	}
 
 	private void collect() {
 		entries.clear();
 		Map<Identifier, BiomeTileProviders.Source> sources = BiomeTileProviders.getInstance().sources();
-		String query = searchField == null ? "" : searchField.getText().trim().toLowerCase(Locale.ROOT);
+		String query = searchField == null ? "" : searchField.getValue().trim().toLowerCase(Locale.ROOT);
 		sources.forEach((biome, source) -> {
 			if (guessedOnly && (source == BiomeTileProviders.Source.EXACT || source == BiomeTileProviders.Source.TAGS)) return;
 			if (!query.isEmpty() && !biome.toString().toLowerCase(Locale.ROOT).contains(query)) return;
@@ -225,18 +160,18 @@ public class BiomeModal extends Component {
 		removeAllChildren();
 		super.init();
 
-		searchField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, listLeft(), listTop() - ROW_GAP - 12, SEARCH_W, 12, Text.translatable("gui.roleplayers_atlas.biomes.search"));
+		searchField = new EditBox(Minecraft.getInstance().font, listLeft(), listTop() - ROW_GAP - 12, SEARCH_W, 12, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.search"));
 		searchField.setEditable(true);
-		searchField.setFocusUnlocked(true);
-		searchField.setDrawsBackground(false);
-		searchField.setPlaceholder(Text.translatable("gui.roleplayers_atlas.biomes.search"));
-		searchField.setChangedListener(q -> rebuildList());
+		searchField.setCanLoseFocus(true);
+		searchField.setBordered(false);
+		searchField.setHint(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.search"));
+		searchField.setResponder(q -> rebuildList());
 
-		addDrawableChild(btnGuessedOnly = ButtonWidget.builder(guessedOnlyText(), button -> {
+		addRenderableWidget(btnGuessedOnly = Button.builder(guessedOnlyText(), button -> {
 			guessedOnly = !guessedOnly;
 			button.setMessage(guessedOnlyText());
 			rebuildList();
-		}).dimensions(listLeft() + LIST_W - TOGGLE_W, listTop() - ROW_GAP - 16, TOGGLE_W, 16).build());
+		}).bounds(listLeft() + LIST_W - TOGGLE_W, listTop() - ROW_GAP - 16, TOGGLE_W, 16).build());
 
 		listBox = new ScrollBoxComponent(true, ROW_H);
 		addChild(listBox);
@@ -248,22 +183,22 @@ public class BiomeModal extends Component {
 
 		int bottomY = listTop() + LIST_H + 12;
 		int secondY = bottomY + 24;
-		addDrawableChild(btnResetAll = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.biomes.resetAll"), button -> {
+		addRenderableWidget(btnResetAll = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.resetAll"), button -> {
 			BiomeOverrides.resetAll();
 			rebuildList();
-		}).dimensions(listLeft(), bottomY, BTN_W, 20).build());
-		addDrawableChild(btnDone = ButtonWidget.builder(Text.translatable("gui.done"), button -> closeChild())
-			.dimensions(listLeft() + BTN_W + SP, bottomY, BTN_W, 20).build());
+		}).bounds(listLeft(), bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnDone = Button.builder(net.minecraft.network.chat.Component.translatable("gui.done"), button -> closeChild())
+			.bounds(listLeft() + BTN_W + SP, bottomY, BTN_W, 20).build());
 
 		// Grid row: cancel, unpaint, apply.
-		addDrawableChild(btnPickCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), button -> stopPicking())
-			.dimensions(listLeft(), bottomY, BTN3_W, 20).build());
+		addRenderableWidget(btnPickCancel = Button.builder(net.minecraft.network.chat.Component.translatable("gui.cancel"), button -> stopPicking())
+			.bounds(listLeft(), bottomY, BTN3_W, 20).build());
 		// Painting an area can also mean unpainting it, which is a choice of its own.
-		addDrawableChild(btnPickClear = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.biomes.clearPatch"), button -> {
+		addRenderableWidget(btnPickClear = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.clearPatch"), button -> {
 			if (patchCells != null && patchDim != null) BiomeOverrides.setPatches(patchDim, patchCells, null);
 			closeChild();
-		}).dimensions(listLeft() + BTN3_W + SP, bottomY, BTN3_W, 20).build());
-		addDrawableChild(btnPickApply = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.biomes.applyPatch"), button -> {
+		}).bounds(listLeft() + BTN3_W + SP, bottomY, BTN3_W, 20).build());
+		addRenderableWidget(btnPickApply = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.applyPatch"), button -> {
 			if (chosenLook == null) return;
 			if (patchCells != null && patchDim != null) {
 				BiomeOverrides.setPatches(patchDim, patchCells, chosenLook);
@@ -272,26 +207,26 @@ public class BiomeModal extends Component {
 				BiomeOverrides.set(picking, chosenLook);
 				stopPicking();
 			}
-		}).dimensions(listLeft() + (BTN3_W + SP) * 2, bottomY, BTN3_W, 20).build());
+		}).bounds(listLeft() + (BTN3_W + SP) * 2, bottomY, BTN3_W, 20).build());
 
 		// The two ledgers of painting, side by side: yours and everyone else's.
-		addDrawableChild(btnOwn = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.biomes.own"), button -> openSheets(View.OWN))
-			.tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.biomes.own.tooltip")))
-			.dimensions(listLeft(), secondY, BTN_W, 20).build());
-		addDrawableChild(btnShared = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.biomes.shared"), button -> openSheets(View.SHARED))
-			.tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.biomes.shared.tooltip")))
-			.dimensions(listLeft() + BTN_W + SP, secondY, BTN_W, 20).build());
+		addRenderableWidget(btnOwn = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.own"), button -> openSheets(View.OWN))
+			.tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.own.tooltip")))
+			.bounds(listLeft(), secondY, BTN_W, 20).build());
+		addRenderableWidget(btnShared = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.shared"), button -> openSheets(View.SHARED))
+			.tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.shared.tooltip")))
+			.bounds(listLeft() + BTN_W + SP, secondY, BTN_W, 20).build());
 
-		addDrawableChild(btnSheetBack = ButtonWidget.builder(Text.translatable("gui.back"), button -> closeSheets())
-			.dimensions(listLeft() + BTN_W + SP, bottomY, BTN_W, 20).build());
-		addDrawableChild(btnSheetDropAll = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.biomes.sheetDropAll"), button -> {
+		addRenderableWidget(btnSheetBack = Button.builder(net.minecraft.network.chat.Component.translatable("gui.back"), button -> closeSheets())
+			.bounds(listLeft() + BTN_W + SP, bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnSheetDropAll = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sheetDropAll"), button -> {
 			if (view == View.SHARED) {
 				BiomeOverrides.dropAllImported();
 			} else if (dimension() != null) {
 				BiomeOverrides.clearPatches(dimension());
 			}
 			closeSheets();
-		}).dimensions(listLeft(), bottomY, BTN_W, 20).build());
+		}).bounds(listLeft(), bottomY, BTN_W, 20).build());
 
 		rebuildList();
 		// Selected an area first: the list has nothing to say, go straight to
@@ -299,8 +234,8 @@ public class BiomeModal extends Component {
 		if (patchCells != null) startPicking(null);
 	}
 
-	private Text guessedOnlyText() {
-		return Text.translatable("gui.roleplayers_atlas.biomes.guessedOnly", Text.translatable(guessedOnly ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private net.minecraft.network.chat.Component guessedOnlyText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.guessedOnly", net.minecraft.network.chat.Component.translatable(guessedOnly ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
 	private int listTop() {
@@ -392,7 +327,7 @@ public class BiomeModal extends Component {
 
 	/** Rebuilt after something was torn out, dropping back to the list once it is bare. */
 	private void afterTearOut() {
-		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
+		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
 		if (sheetCount() > 0) rebuildSheets();
 		else closeSheets();
 	}
@@ -415,11 +350,11 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		void drawContent(DrawContext context, int x, int y) {
+		void drawContent(GuiGraphics context, int x, int y) {
 			BiomeOverrides.Sheet sheet = BiomeOverrides.importedSheet(author);
-			context.drawText(textRenderer, textRenderer.trimToWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
+			context.drawString(font, font.plainSubstrByWidth(author, getWidth() - 60), x + 4, y + 2, 0xFFF0E4C8, true);
 			if (sheet != null) {
-				context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.biomes.sharedCounts", sheet.biomeCount(), sheet.patchCount()), x + 4, y + 11, 0xFF9A8C70, true);
+				context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sharedCounts", sheet.biomeCount(), sheet.patchCount()), x + 4, y + 11, 0xFF9A8C70, true);
 			}
 		}
 	}
@@ -439,17 +374,17 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		void drawContent(DrawContext context, int x, int y) {
+		void drawContent(GuiGraphics context, int x, int y) {
 			TileTexture texture = tileOf(look);
 			if (texture != null) drawTile(context, texture, x + 2, y + 2);
 			int textX = x + TILE_SIZE + 6;
-			Text amount = Text.translatable("gui.roleplayers_atlas.biomes.ownCount", count);
-			int amountW = textRenderer.getWidth(amount);
-			context.drawText(textRenderer, textRenderer.trimToWidth(friendlyName(look).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
-			context.drawText(textRenderer, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
+			net.minecraft.network.chat.Component amount = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.ownCount", count);
+			int amountW = font.width(amount);
+			context.drawString(font, font.plainSubstrByWidth(friendlyName(look).getString(), getWidth() - 56 - TILE_SIZE - amountW), textX, y + 2, 0xFFF0E4C8, true);
+			context.drawString(font, amount, x + getWidth() - 50 - amountW, y + 2, 0xFF9A8C70, true);
 			// The name it goes by underneath, dim: a translation is what you read,
 			// but the id is what you type into a config or say to an admin.
-			context.drawText(textRenderer, textRenderer.trimToWidth(look.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
+			context.drawString(font, font.plainSubstrByWidth(look.toString(), getWidth() - 56 - TILE_SIZE), textX, y + 11, 0xFF7A6E58, true);
 		}
 	}
 
@@ -459,10 +394,10 @@ public class BiomeModal extends Component {
 			setSize(LIST_W, ROW_H);
 		}
 
-		abstract void drawContent(DrawContext context, int x, int y);
+		abstract void drawContent(GuiGraphics context, int x, int y);
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -471,13 +406,13 @@ public class BiomeModal extends Component {
 			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
 			drawContent(context, x, y);
-			Text drop = Text.translatable("gui.roleplayers_atlas.biomes.sheetDrop");
-			context.drawText(textRenderer, drop, x + getWidth() - textRenderer.getWidth(drop) - 3, y + 6, 0xFFC8A05A, true);
+			net.minecraft.network.chat.Component drop = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sheetDrop");
+			context.drawString(font, drop, x + getWidth() - font.width(drop) - 3, y + 6, 0xFFC8A05A, true);
 			context.disableScissor();
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -498,18 +433,18 @@ public class BiomeModal extends Component {
 	 * glance. Tile art is brown lines on nothing at all, so it needs the paper
 	 * put behind it or there is nothing to see.
 	 */
-	static void drawTile(DrawContext context, TileTexture texture, int x, int y) {
+	static void drawTile(GuiGraphics context, TileTexture texture, int x, int y) {
 		drawTile(context, texture, x, y, TILE_SIZE);
 	}
 
 	/** The same at any size – the grid draws them large enough to actually read. */
-	static void drawTile(DrawContext context, TileTexture texture, int x, int y, int size) {
+	static void drawTile(GuiGraphics context, TileTexture texture, int x, int y, int size) {
 		int half = size / 2;
 		context.fill(x, y, x + size, y + size, PAPER);
 		for (int[] part : FULL_TILE) {
-			context.drawTexture(RenderPipelines.GUI_TEXTURED, texture.id(), x + part[0] * half, y + part[1] * half, part[2] * 8, part[3] * 8, half, half, 8, 8, 32, 48);
+			context.blit(RenderPipelines.GUI_TEXTURED, texture.id(), x + part[0] * half, y + part[1] * half, part[2] * 8, part[3] * 8, half, half, 8, 8, 32, 48);
 		}
-		context.drawStrokedRectangle(x, y, size, size, PAPER_EDGE);
+		context.renderOutline(x, y, size, size, PAPER_EDGE);
 	}
 
 	/**
@@ -519,16 +454,16 @@ public class BiomeModal extends Component {
 	 * usually ships none, so its path is tidied into words instead – better than
 	 * showing a raw key, and honest about there being nothing better to show.
 	 */
-	static Text friendlyName(Identifier biome) {
+	static net.minecraft.network.chat.Component friendlyName(Identifier biome) {
 		String key = "biome." + biome.getNamespace() + "." + biome.getPath().replace('/', '.');
-		Text translated = Text.translatable(key);
+		net.minecraft.network.chat.Component translated = net.minecraft.network.chat.Component.translatable(key);
 		if (!translated.getString().equals(key)) return translated;
-		return Text.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(biome.getPath().replaceAll("[/_-]", " ")));
+		return net.minecraft.network.chat.Component.literal(org.apache.commons.lang3.text.WordUtils.capitalizeFully(biome.getPath().replaceAll("[/_-]", " ")));
 	}
 
 	private static @Nullable TileTexture tileOf(@Nullable Identifier look) {
 		if (look == null) return null;
-		return BiomeTileProviders.getInstance().getTileProvider(look).getTexture(net.minecraft.util.math.ChunkPos.ORIGIN, null);
+		return BiomeTileProviders.getInstance().getTileProvider(look).getTexture(net.minecraft.world.level.ChunkPos.ZERO, null);
 	}
 
 	/** One biome: what it is, what it's drawn as, where that came from. */
@@ -542,7 +477,7 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -559,20 +494,20 @@ public class BiomeModal extends Component {
 			int textX = x + TILE_SIZE + 6;
 			// Top line: what it is called, then where its look came from, right
 			// aligned. Bottom line: the id, dimmer, for anyone who needs it.
-			Text source = Text.translatable("gui.roleplayers_atlas.biomes.source." + entry.source.name().toLowerCase(Locale.ROOT));
-			int sourceW = textRenderer.getWidth(source);
+			net.minecraft.network.chat.Component source = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.source." + entry.source.name().toLowerCase(Locale.ROOT));
+			int sourceW = font.width(source);
 			int nameRoom = x + getWidth() - sourceW - 6 - textX;
-			context.drawText(textRenderer, textRenderer.trimToWidth(friendlyName(entry.biome).getString(), nameRoom), textX, y + 2, 0xFFF0E4C8, true);
-			context.drawText(textRenderer, source, x + getWidth() - sourceW - 3, y + 2, sourceInk(entry.source), true);
+			context.drawString(font, font.plainSubstrByWidth(friendlyName(entry.biome).getString(), nameRoom), textX, y + 2, 0xFFF0E4C8, true);
+			context.drawString(font, source, x + getWidth() - sourceW - 3, y + 2, sourceInk(entry.source), true);
 
 			// Only your own word can be taken back here; someone else's sheet is
 			// torn out whole, from the ledger that lists them.
 			boolean corrected = BiomeOverrides.all().containsKey(entry.biome);
-			Text reset = Text.translatable("gui.roleplayers_atlas.biomes.reset");
-			int idRoom = getWidth() - (TILE_SIZE + 6) - (corrected ? textRenderer.getWidth(reset) + 8 : 4);
-			context.drawText(textRenderer, textRenderer.trimToWidth(entry.biome.toString(), idRoom), textX, y + 11, 0xFF9A8C70, true);
+			net.minecraft.network.chat.Component reset = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.reset");
+			int idRoom = getWidth() - (TILE_SIZE + 6) - (corrected ? font.width(reset) + 8 : 4);
+			context.drawString(font, font.plainSubstrByWidth(entry.biome.toString(), idRoom), textX, y + 11, 0xFF9A8C70, true);
 			if (corrected) {
-				context.drawText(textRenderer, reset, x + getWidth() - textRenderer.getWidth(reset) - 3, y + 11, 0xFFC8A05A, true);
+				context.drawString(font, reset, x + getWidth() - font.width(reset) - 3, y + 11, 0xFFC8A05A, true);
 			}
 			context.disableScissor();
 		}
@@ -590,7 +525,7 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -598,7 +533,7 @@ public class BiomeModal extends Component {
 			// The reset word on the bottom right takes the click back to the guess.
 			if (BiomeOverrides.all().containsKey(entry.biome) && mouseX >= getGuiX() + getWidth() - 46 && mouseY >= getGuiY() + ROW_H / 2) {
 				BiomeOverrides.set(entry.biome, null);
-				MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
+				Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F));
 				rebuildList();
 				return true;
 			}
@@ -619,7 +554,7 @@ public class BiomeModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -629,15 +564,15 @@ public class BiomeModal extends Component {
 			TileTexture texture = tileOf(look);
 			if (texture != null) drawTile(context, texture, x, y, GRID_TILE);
 			boolean chosen = chosenLook != null ? look.equals(chosenLook) : (picking != null && look.equals(BiomeTileProviders.getInstance().drawnAs(picking)));
-			if (chosen) context.drawStrokedRectangle(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
+			if (chosen) context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFF8FB4D8);
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) {
-				context.drawStrokedRectangle(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
+				context.renderOutline(x - 1, y - 1, GRID_TILE + 2, GRID_TILE + 2, 0xFFFFE8B0);
 			}
 			context.disableScissor();
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -646,15 +581,15 @@ public class BiomeModal extends Component {
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
 		drawCentered(context, switch (view) {
-			case SHARED -> Text.translatable("gui.roleplayers_atlas.biomes.sharedTitle");
-			case OWN -> Text.translatable("gui.roleplayers_atlas.biomes.ownTitle");
-			case LIST -> Text.translatable("gui.roleplayers_atlas.biomes.title");
+			case SHARED -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.sharedTitle");
+			case OWN -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.ownTitle");
+			case LIST -> net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.title");
 			case PICK -> picking != null
-				? Text.translatable("gui.roleplayers_atlas.biomes.pickTitle", friendlyName(picking))
-				: Text.translatable("gui.roleplayers_atlas.biomes.patchTitle", patchCells == null ? 0 : patchCells.size());
+				? net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.pickTitle", friendlyName(picking))
+				: net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.patchTitle", patchCells == null ? 0 : patchCells.size());
 		}, listTop() - ROW_GAP - 16 - 12, 0xDDDDDD, true);
 
 		boolean listing = view == View.LIST;
@@ -675,10 +610,10 @@ public class BiomeModal extends Component {
 		int painted = dimension() == null ? 0 : BiomeOverrides.ownPatches(dimension()).size();
 		btnOwn.visible = listing;
 		btnOwn.active = painted > 0;
-		btnOwn.setMessage(Text.translatable("gui.roleplayers_atlas.biomes.own", painted));
+		btnOwn.setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.own", painted));
 		btnShared.visible = listing;
 		btnShared.active = BiomeOverrides.hasImported();
-		btnShared.setMessage(Text.translatable("gui.roleplayers_atlas.biomes.shared", BiomeOverrides.importedAuthors().size()));
+		btnShared.setMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.shared", BiomeOverrides.importedAuthors().size()));
 
 		context.fillGradient(listLeft(), listTop(), listLeft() + LIST_W, listTop() + LIST_H, 0x66101010, 0x77101010);
 		if (sheets) {
@@ -692,7 +627,7 @@ public class BiomeModal extends Component {
 			btnOwn.render(context, mouseX, mouseY, partialTick);
 			btnShared.render(context, mouseX, mouseY, partialTick);
 			if (entries.isEmpty()) {
-				drawCentered(context, Text.translatable("gui.roleplayers_atlas.biomes.none"), listTop() + LIST_H / 2 - 4, 0xAAAAAA, true);
+				drawCentered(context, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.biomes.none"), listTop() + LIST_H / 2 - 4, 0xAAAAAA, true);
 			}
 		} else {
 			btnPickCancel.render(context, mouseX, mouseY, partialTick);
@@ -706,7 +641,7 @@ public class BiomeModal extends Component {
 			for (Component child : pickBox.getViewport().getChildren()) {
 				for (Component row : child.getChildren()) {
 					if (row instanceof LookButton look && !look.isClipped && look.isMouseOver(mouseX, mouseY) && mouseY >= listTop() && mouseY < listTop() + LIST_H) {
-						context.drawTooltip(textRenderer, java.util.List.of(friendlyName(look.look), Text.literal(look.look.toString()).formatted(net.minecraft.util.Formatting.DARK_GRAY)), mouseX, mouseY);
+						context.setComponentTooltipForNextFrame(font, java.util.List.of(friendlyName(look.look), net.minecraft.network.chat.Component.literal(look.look.toString()).withStyle(net.minecraft.ChatFormatting.DARK_GRAY)), mouseX, mouseY);
 					}
 				}
 			}
@@ -714,7 +649,7 @@ public class BiomeModal extends Component {
 	}
 
 	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
+	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		double mouseX = click.x(), mouseY = click.y();
 		int button = click.button();
 		if (view == View.LIST && searchField.isVisible()) {
@@ -726,7 +661,7 @@ public class BiomeModal extends Component {
 	}
 
 	@Override
-	public boolean keyPressed(KeyInput input) {
+	public boolean keyPressed(KeyEvent input) {
 		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
 		// Escape steps back one view at a time, and out of the window from the
 		// list. Left to the screen behind it, it would shut the book instead.
@@ -747,7 +682,7 @@ public class BiomeModal extends Component {
 	}
 
 	@Override
-	public boolean charTyped(CharInput input) {
+	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
 		int modifiers = input.modifiers();
 		return super.charTyped(input) || searchField.charTyped(input);

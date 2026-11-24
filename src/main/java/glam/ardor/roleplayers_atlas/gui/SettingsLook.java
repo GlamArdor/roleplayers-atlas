@@ -1,7 +1,7 @@
 package glam.ardor.roleplayers_atlas.gui;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * Remembers which screen object is the atlas settings, so the blur-and-darkening
@@ -20,7 +20,7 @@ public final class SettingsLook {
 	}
 
 	public static boolean isOurs() {
-		Screen current = MinecraftClient.getInstance().currentScreen;
+		Screen current = Minecraft.getInstance().screen;
 		return current != null && current == armed;
 	}
 }

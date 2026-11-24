@@ -5,11 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import glam.ardor.roleplayers_atlas.util.WorldKey;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Reader;
@@ -191,18 +191,18 @@ public final class BiomeOverrides {
 			if (look.equals(before)) return;
 			biomes.put(biome, look);
 		}
-		AtlasUndo.push(Text.translatable("gui.roleplayers_atlas.undo.biome"), () -> set(biome, before));
+		AtlasUndo.push(Component.translatable("gui.roleplayers_atlas.undo.biome"), () -> set(biome, before));
 		saveAndRedraw();
 	}
 
 	// --- corrections by chunk ---
 
-	public static @Nullable Identifier patch(RegistryKey<World> dimension, ChunkPos pos) {
-		Map<ChunkPos, Identifier> cells = patches.get(dimension.getValue());
+	public static @Nullable Identifier patch(ResourceKey<Level> dimension, ChunkPos pos) {
+		Map<ChunkPos, Identifier> cells = patches.get(dimension.identifier());
 		Identifier own = cells == null ? null : cells.get(pos);
 		if (own != null) return own;
 		for (Sheet sheet : shared.values()) {
-			Map<ChunkPos, Identifier> theirs = sheet.patches.get(dimension.getValue());
+			Map<ChunkPos, Identifier> theirs = sheet.patches.get(dimension.identifier());
 			Identifier look = theirs == null ? null : theirs.get(pos);
 			if (look != null) return look;
 		}
@@ -210,11 +210,11 @@ public final class BiomeOverrides {
 	}
 
 	/** Paints the given chunks, or lifts their patches if the look is null. */
-	public static void setPatches(RegistryKey<World> dimension, Collection<ChunkPos> cells, @Nullable Identifier look) {
+	public static void setPatches(ResourceKey<Level> dimension, Collection<ChunkPos> cells, @Nullable Identifier look) {
 		if (cells.isEmpty()) return;
 		Map<ChunkPos, Identifier> target = new HashMap<>();
 		cells.forEach(pos -> target.put(pos, look));
-		applyCells(dimension, target, Text.translatable("gui.roleplayers_atlas.undo.patch", cells.size()));
+		applyCells(dimension, target, Component.translatable("gui.roleplayers_atlas.undo.patch", cells.size()));
 	}
 
 	/**
@@ -223,17 +223,17 @@ public final class BiomeOverrides {
 	 * before doing it. That symmetry is what makes taking a step back and going
 	 * forward again the same machinery rather than two.
 	 */
-	private static void applyCells(RegistryKey<World> dimension, Map<ChunkPos, Identifier> target, Text description) {
+	private static void applyCells(ResourceKey<Level> dimension, Map<ChunkPos, Identifier> target, Component description) {
 		if (target.isEmpty()) return;
-		Map<ChunkPos, Identifier> existing = patches.get(dimension.getValue());
+		Map<ChunkPos, Identifier> existing = patches.get(dimension.identifier());
 		Map<ChunkPos, Identifier> before = new HashMap<>();
 		target.keySet().forEach(pos -> before.put(pos, existing == null ? null : existing.get(pos)));
-		Map<ChunkPos, Identifier> into = patches.computeIfAbsent(dimension.getValue(), k -> new HashMap<>());
+		Map<ChunkPos, Identifier> into = patches.computeIfAbsent(dimension.identifier(), k -> new HashMap<>());
 		target.forEach((pos, look) -> {
 			if (look == null) into.remove(pos);
 			else into.put(pos, look);
 		});
-		if (into.isEmpty()) patches.remove(dimension.getValue());
+		if (into.isEmpty()) patches.remove(dimension.identifier());
 		AtlasUndo.push(description, () -> applyCells(dimension, before, description));
 		saveAndRedraw();
 	}
@@ -243,14 +243,14 @@ public final class BiomeOverrides {
 	 * write and one redraw for the lot – applied one at a time, a scroll with
 	 * fifty corrections on it would redraw the map fifty times.
 	 */
-	public static void setAll(Map<Identifier, Identifier> newBiomes, RegistryKey<World> dimension, Map<ChunkPos, Identifier> newCells) {
+	public static void setAll(Map<Identifier, Identifier> newBiomes, ResourceKey<Level> dimension, Map<ChunkPos, Identifier> newCells) {
 		Map<Identifier, Identifier> mergedBiomes = new HashMap<>(biomes);
 		if (newBiomes != null) mergedBiomes.putAll(newBiomes);
 		Map<Identifier, Map<ChunkPos, Identifier>> mergedPatches = new HashMap<>();
 		patches.forEach((dim, cells) -> mergedPatches.put(dim, new HashMap<>(cells)));
-		if (newCells != null && !newCells.isEmpty()) mergedPatches.computeIfAbsent(dimension.getValue(), k -> new HashMap<>()).putAll(newCells);
+		if (newCells != null && !newCells.isEmpty()) mergedPatches.computeIfAbsent(dimension.identifier(), k -> new HashMap<>()).putAll(newCells);
 		if (mergedBiomes.equals(biomes) && mergedPatches.equals(patches)) return;
-		applyAll(mergedBiomes, mergedPatches, shared, Text.translatable("gui.roleplayers_atlas.undo.import"));
+		applyAll(mergedBiomes, mergedPatches, shared, Component.translatable("gui.roleplayers_atlas.undo.import"));
 	}
 
 	public static int patchCount() {
@@ -258,27 +258,27 @@ public final class BiomeOverrides {
 	}
 
 	/** Everywhere you painted in this dimension, so the map can show it back. */
-	public static Set<ChunkPos> patchedChunks(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> cells = patches.get(dimension.getValue());
+	public static Set<ChunkPos> patchedChunks(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> cells = patches.get(dimension.identifier());
 		return cells == null ? Set.of() : java.util.Collections.unmodifiableSet(cells.keySet());
 	}
 
 	/** Everywhere a scroll painted here that you didn't paint yourself. */
-	public static Set<ChunkPos> importedChunks(RegistryKey<World> dimension) {
+	public static Set<ChunkPos> importedChunks(ResourceKey<Level> dimension) {
 		if (shared.isEmpty()) return Set.of();
 		Set<ChunkPos> out = new LinkedHashSet<>();
 		for (Sheet sheet : shared.values()) {
-			Map<ChunkPos, Identifier> cells = sheet.patches.get(dimension.getValue());
+			Map<ChunkPos, Identifier> cells = sheet.patches.get(dimension.identifier());
 			if (cells != null) out.addAll(cells.keySet());
 		}
-		Map<ChunkPos, Identifier> mine = patches.get(dimension.getValue());
+		Map<ChunkPos, Identifier> mine = patches.get(dimension.identifier());
 		if (mine != null) out.removeAll(mine.keySet());
 		return out;
 	}
 
 	/** Your own patches in one dimension, for writing onto a scroll. */
-	public static Map<ChunkPos, Identifier> ownPatches(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> cells = patches.get(dimension.getValue());
+	public static Map<ChunkPos, Identifier> ownPatches(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> cells = patches.get(dimension.identifier());
 		return cells == null ? Map.of() : java.util.Collections.unmodifiableMap(cells);
 	}
 
@@ -288,8 +288,8 @@ public final class BiomeOverrides {
 	 * chunk corrections has: nobody remembers coordinates, but everyone
 	 * remembers painting a stretch of coast as swamp.
 	 */
-	public static Map<Identifier, Integer> ownPatchLooks(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> cells = patches.get(dimension.getValue());
+	public static Map<Identifier, Integer> ownPatchLooks(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> cells = patches.get(dimension.identifier());
 		if (cells == null || cells.isEmpty()) return Map.of();
 		Map<Identifier, Integer> out = new LinkedHashMap<>();
 		cells.values().forEach(look -> out.merge(look, 1, Integer::sum));
@@ -297,23 +297,23 @@ public final class BiomeOverrides {
 	}
 
 	/** Lifts every cell you painted as one particular look. */
-	public static void clearPatchesOf(RegistryKey<World> dimension, Identifier look) {
-		Map<ChunkPos, Identifier> cells = patches.get(dimension.getValue());
+	public static void clearPatchesOf(ResourceKey<Level> dimension, Identifier look) {
+		Map<ChunkPos, Identifier> cells = patches.get(dimension.identifier());
 		if (cells == null) return;
 		Map<ChunkPos, Identifier> target = new HashMap<>();
 		cells.forEach((pos, was) -> {
 			if (look.equals(was)) target.put(pos, null);
 		});
-		applyCells(dimension, target, Text.translatable("gui.roleplayers_atlas.undo.patch", target.size()));
+		applyCells(dimension, target, Component.translatable("gui.roleplayers_atlas.undo.patch", target.size()));
 	}
 
 	/** Lifts every patch you made in one dimension, leaving scrolls and biome corrections alone. */
-	public static void clearPatches(RegistryKey<World> dimension) {
-		Map<ChunkPos, Identifier> cells = patches.get(dimension.getValue());
+	public static void clearPatches(ResourceKey<Level> dimension) {
+		Map<ChunkPos, Identifier> cells = patches.get(dimension.identifier());
 		if (cells == null) return;
 		Map<ChunkPos, Identifier> target = new HashMap<>();
 		cells.keySet().forEach(pos -> target.put(pos, null));
-		applyCells(dimension, target, Text.translatable("gui.roleplayers_atlas.undo.patch", target.size()));
+		applyCells(dimension, target, Component.translatable("gui.roleplayers_atlas.undo.patch", target.size()));
 	}
 
 	// --- what came in on other people's scrolls ---
@@ -349,7 +349,7 @@ public final class BiomeOverrides {
 		if (sheet.isEmpty()) return;
 		Map<String, Sheet> target = new LinkedHashMap<>(shared);
 		target.put(author, sheet);
-		applySheets(target, Text.translatable("gui.roleplayers_atlas.undo.sheet", author));
+		applySheets(target, Component.translatable("gui.roleplayers_atlas.undo.sheet", author));
 	}
 
 	/** Tears out one cartographer's sheet whole. Yours are not touched. */
@@ -357,17 +357,17 @@ public final class BiomeOverrides {
 		if (!shared.containsKey(author)) return;
 		Map<String, Sheet> target = new LinkedHashMap<>(shared);
 		target.remove(author);
-		applySheets(target, Text.translatable("gui.roleplayers_atlas.undo.sheet", author));
+		applySheets(target, Component.translatable("gui.roleplayers_atlas.undo.sheet", author));
 	}
 
 	/** Tears out everyone else's sheets at once. */
 	public static void dropAllImported() {
 		if (shared.isEmpty()) return;
-		applySheets(Map.of(), Text.translatable("gui.roleplayers_atlas.undo.sheetsAll", shared.size()));
+		applySheets(Map.of(), Component.translatable("gui.roleplayers_atlas.undo.sheetsAll", shared.size()));
 	}
 
 	/** The one way the guest sheets ever change, filing the state they replace. */
-	private static void applySheets(Map<String, Sheet> target, Text description) {
+	private static void applySheets(Map<String, Sheet> target, Component description) {
 		Map<String, Sheet> copied = new LinkedHashMap<>(target);
 		Map<String, Sheet> before = new LinkedHashMap<>(shared);
 		shared.clear();
@@ -393,7 +393,7 @@ public final class BiomeOverrides {
 	}
 
 	public static void restore(State state) {
-		applyAll(state.biomes(), state.patches(), state.shared(), Text.translatable("gui.roleplayers_atlas.undo.import"));
+		applyAll(state.biomes(), state.patches(), state.shared(), Component.translatable("gui.roleplayers_atlas.undo.import"));
 	}
 
 	/** Nothing of your own left to write down. */
@@ -403,11 +403,11 @@ public final class BiomeOverrides {
 
 	public static void resetAll() {
 		if (isEmpty()) return;
-		applyAll(Map.of(), Map.of(), Map.of(), Text.translatable("gui.roleplayers_atlas.undo.resetAll"));
+		applyAll(Map.of(), Map.of(), Map.of(), Component.translatable("gui.roleplayers_atlas.undo.resetAll"));
 	}
 
 	/** Replaces the lot at once, filing what it replaced. */
-	private static void applyAll(Map<Identifier, Identifier> newBiomes, Map<Identifier, Map<ChunkPos, Identifier>> newPatches, Map<String, Sheet> newShared, Text description) {
+	private static void applyAll(Map<Identifier, Identifier> newBiomes, Map<Identifier, Map<ChunkPos, Identifier>> newPatches, Map<String, Sheet> newShared, Component description) {
 		// Copied first: a caller may well have handed us one of the live maps, and
 		// clearing it before reading it would empty what it was asked to keep.
 		newBiomes = new HashMap<>(newBiomes);

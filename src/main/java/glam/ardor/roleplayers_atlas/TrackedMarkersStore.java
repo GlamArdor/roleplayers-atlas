@@ -4,9 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ServerInfo;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -30,15 +29,15 @@ public final class TrackedMarkersStore {
 	private TrackedMarkersStore() {
 	}
 
-	private static String currentWorldId(MinecraftClient client) {
-		if (client.isInSingleplayer() && client.getServer() != null) {
-			return "sp:" + client.getServer().getSaveProperties().getLevelName();
+	private static String currentWorldId(Minecraft client) {
+		if (client.isLocalServer() && client.getSingleplayerServer() != null) {
+			return "sp:" + client.getSingleplayerServer().getWorldData().getLevelName();
 		}
-		ServerInfo entry = client.getCurrentServerEntry();
-		return entry != null ? "mp:" + entry.address : null;
+		ServerData entry = client.getCurrentServer();
+		return entry != null ? "mp:" + entry.ip : null;
 	}
 
-	public static void load(MinecraftClient client) {
+	public static void load(Minecraft client) {
 		worldId = currentWorldId(client);
 		RoleplayersAtlas.trackedMarkers.clear();
 		if (worldId == null || !Files.exists(FILE)) return;

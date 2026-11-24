@@ -1,7 +1,7 @@
 package glam.ardor.roleplayers_atlas.util;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.InputUtil;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
 
 /**
  * Screen lost its static hasShiftDown/hasControlDown/hasAltDown helpers in 1.21.9,
@@ -18,20 +18,20 @@ public final class AtlasInput {
 	}
 
 	private static boolean pressed(int leftKey, int rightKey) {
-		var window = MinecraftClient.getInstance().getWindow();
+		var window = Minecraft.getInstance().getWindow();
 		if (window == null) return false;
-		return InputUtil.isKeyPressed(window, leftKey) || InputUtil.isKeyPressed(window, rightKey);
+		return InputConstants.isKeyDown(window, leftKey) || InputConstants.isKeyDown(window, rightKey);
 	}
 
 	public static boolean hasShiftDown() {
-		return pressed(InputUtil.GLFW_KEY_LEFT_SHIFT, InputUtil.GLFW_KEY_RIGHT_SHIFT);
+		return pressed(InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT);
 	}
 
 	public static boolean hasControlDown() {
-		return pressed(InputUtil.GLFW_KEY_LEFT_CONTROL, InputUtil.GLFW_KEY_RIGHT_CONTROL);
+		return pressed(InputConstants.KEY_LCONTROL, InputConstants.KEY_RCONTROL);
 	}
 
 	public static boolean hasAltDown() {
-		return pressed(InputUtil.GLFW_KEY_LEFT_ALT, InputUtil.GLFW_KEY_RIGHT_ALT);
+		return pressed(InputConstants.KEY_LALT, InputConstants.KEY_RALT);
 	}
 }

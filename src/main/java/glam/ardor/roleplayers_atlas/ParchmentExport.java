@@ -2,20 +2,10 @@ package glam.ardor.roleplayers_atlas;
 
 import glam.ardor.roleplayers_atlas.gui.tiles.SubTile;
 import glam.ardor.roleplayers_atlas.util.Rect;
+import com.mojang.blaze3d.platform.NativeImage;
 import folk.sisby.surveyor.landmark.Landmark;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
 import folk.sisby.surveyor.util.RegionPos;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.ScreenshotRecorder;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.resource.Resource;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -24,6 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Screenshot;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.world.level.ChunkPos;
 
 /**
  * Map snapshots: saving map images to the screenshots folder – either a crop
@@ -92,7 +89,7 @@ public final class ParchmentExport {
 	}
 
 	/** Called at the end of every client tick: the framebuffer now holds the finished frame with the GUI. */
-	public static void tickCapture(MinecraftClient client) {
+	public static void tickCapture(Minecraft client) {
 		if (captureDelay < 0) return;
 		if (captureDelay > 0) {
 			captureDelay--;
@@ -103,8 +100,8 @@ public final class ParchmentExport {
 		int y = capY;
 		int wantW = capW;
 		int wantH = capH;
-		ScreenshotRecorder.takeScreenshot(client.getFramebuffer(), full -> {
-			var player = MinecraftClient.getInstance().player;
+		Screenshot.takeScreenshot(client.getMainRenderTarget(), full -> {
+			var player = Minecraft.getInstance().player;
 			try {
 				int w = Math.min(wantW, full.getWidth() - x);
 				int h = Math.min(wantH, full.getHeight() - y);
@@ -115,7 +112,7 @@ public final class ParchmentExport {
 				NativeImage crop = new NativeImage(w, h, false);
 				for (int py = 0; py < h; py++) {
 					for (int px = 0; px < w; px++) {
-						crop.setColorArgb(px, py, full.getColorArgb(x + px, y + py));
+						crop.setPixel(px, py, full.getPixel(x + px, y + py));
 					}
 				}
 				full.close();
@@ -124,29 +121,29 @@ public final class ParchmentExport {
 				if (framed != crop) framed.close();
 				crop.close();
 				if (player != null) {
-					player.sendMessage(Text.translatable("gui.roleplayers_atlas.screenshot.saved", fileLink(file)), false);
+					player.displayClientMessage(Component.translatable("gui.roleplayers_atlas.screenshot.saved", fileLink(file)), false);
 					AtlasSounds.exportDone();
 				}
 			} catch (Exception e) {
 				RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] View capture failed", e);
-				if (player != null) player.sendMessage(Text.translatable("gui.roleplayers_atlas.screenshot.failed"), false);
+				if (player != null) player.displayClientMessage(Component.translatable("gui.roleplayers_atlas.screenshot.failed"), false);
 			}
 		});
 	}
 
 	/** Vanilla-screenshot-style clickable filename that opens the saved image. */
-	public static Text fileLink(Path file) {
-		return Text.literal(file.getFileName().toString()).styled(style -> style
-			.withUnderline(true)
-			.withClickEvent(new net.minecraft.text.ClickEvent.OpenFile(file.toAbsolutePath())));
+	public static Component fileLink(Path file) {
+		return Component.literal(file.getFileName().toString()).withStyle(style -> style
+			.withUnderlined(true)
+			.withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenFile(file.toAbsolutePath())));
 	}
 
 	/** Same, for files nothing can open on their own – the click reveals the folder instead. */
-	public static Text folderLink(Path file) {
+	public static Component folderLink(Path file) {
 		Path folder = file.toAbsolutePath().getParent();
-		return Text.literal(file.getFileName().toString()).styled(style -> style
-			.withUnderline(true)
-			.withClickEvent(new net.minecraft.text.ClickEvent.OpenFile(folder == null ? file.toAbsolutePath() : folder)));
+		return Component.literal(file.getFileName().toString()).withStyle(style -> style
+			.withUnderlined(true)
+			.withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenFile(folder == null ? file.toAbsolutePath() : folder)));
 	}
 
 	// Decoration for saved map images: the cartographer's name, the date, and a
@@ -189,7 +186,7 @@ public final class ParchmentExport {
 		else framed.fillRect(0, 0, width, height, PARCHMENT);
 		for (int y = 0; y < map.getHeight(); y++) {
 			for (int x = 0; x < map.getWidth(); x++) {
-				framed.setColorArgb(border + x, border + y, map.getColorArgb(x, y));
+				framed.setPixel(border + x, border + y, map.getPixel(x, y));
 			}
 		}
 
@@ -237,7 +234,7 @@ public final class ParchmentExport {
 				} else {
 					color = lit ? (speck == 0 ? 0xFF9D8A51 : 0xFF937D42) : (speck == 0 ? 0xFFB4A062 : 0xFF9D8A51);
 				}
-				image.setColorArgb(x, y, color);
+				image.setPixel(x, y, color);
 			}
 		}
 	}
@@ -250,11 +247,11 @@ public final class ParchmentExport {
 	}
 
 	public static Path save(NativeImage image, String prefix) throws IOException {
-		Path dir = MinecraftClient.getInstance().runDirectory.toPath().resolve("screenshots");
+		Path dir = Minecraft.getInstance().gameDirectory.toPath().resolve("screenshots");
 		Files.createDirectories(dir);
 		String stamp = new java.text.SimpleDateFormat("yyyy-MM-dd_HH.mm.ss").format(new java.util.Date());
 		Path file = dir.resolve(prefix + "_" + stamp + ".png");
-		image.writeTo(file);
+		image.writeToFile(file);
 		return file;
 	}
 
@@ -263,14 +260,14 @@ public final class ParchmentExport {
 		int srcA = src >>> 24;
 		if (srcA == 0) return;
 		if (srcA == 255) {
-			dst.setColorArgb(x, y, src);
+			dst.setPixel(x, y, src);
 			return;
 		}
-		int d = dst.getColorArgb(x, y);
+		int d = dst.getPixel(x, y);
 		int outR = ((src >> 16 & 0xFF) * srcA + (d >> 16 & 0xFF) * (255 - srcA)) / 255;
 		int outG = ((src >> 8 & 0xFF) * srcA + (d >> 8 & 0xFF) * (255 - srcA)) / 255;
 		int outB = ((src & 0xFF) * srcA + (d & 0xFF) * (255 - srcA)) / 255;
-		dst.setColorArgb(x, y, 0xFF000000 | (outR << 16) | (outG << 8) | outB);
+		dst.setPixel(x, y, 0xFF000000 | (outR << 16) | (outG << 8) | outB);
 	}
 
 	private static void blendRect(NativeImage dst, int x, int y, int w, int h, int argb) {
@@ -284,9 +281,9 @@ public final class ParchmentExport {
 	private static NativeImage loadTexture(Identifier id, Map<Identifier, NativeImage> cache) {
 		return cache.computeIfAbsent(id, key -> {
 			try {
-				Resource resource = MinecraftClient.getInstance().getResourceManager().getResource(key).orElse(null);
+				Resource resource = Minecraft.getInstance().getResourceManager().getResource(key).orElse(null);
 				if (resource == null) return null;
-				try (InputStream in = resource.getInputStream()) {
+				try (InputStream in = resource.open()) {
 					return NativeImage.read(in);
 				}
 			} catch (Exception e) {
@@ -321,7 +318,7 @@ public final class ParchmentExport {
 		NativeImage image = new NativeImage(width, height, false);
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				image.setColorArgb(x, y, PARCHMENT);
+				image.setPixel(x, y, PARCHMENT);
 			}
 		}
 
@@ -339,7 +336,7 @@ public final class ParchmentExport {
 				for (int y = 0; y < 8; y++) {
 					for (int x = 0; x < 8; x++) {
 						if (srcX + x >= tex.getWidth() || srcY + y >= tex.getHeight()) continue;
-						blendPixel(image, dstX + x, dstY + y, tex.getColorArgb(srcX + x, srcY + y));
+						blendPixel(image, dstX + x, dstY + y, tex.getPixel(srcX + x, srcY + y));
 					}
 				}
 			}
@@ -360,8 +357,8 @@ public final class ParchmentExport {
 				int rgb = color == null ? 0xFFFFFF : color & 0xFFFFFF;
 				Set<ChunkPos> chunks = RegionPos.regionsToChunks(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>()));
 				for (ChunkPos chunk : chunks) {
-					int x = (int) Math.round(toPxX.applyAsDouble(chunk.getStartX()));
-					int y = (int) Math.round(toPxZ.applyAsDouble(chunk.getStartZ()));
+					int x = (int) Math.round(toPxX.applyAsDouble(chunk.getMinBlockX()));
+					int y = (int) Math.round(toPxZ.applyAsDouble(chunk.getMinBlockZ()));
 					blendRect(image, x, y, 16, 16, 0x40000000 | rgb);
 					if (!chunks.contains(new ChunkPos(chunk.x - 1, chunk.z))) blendRect(image, x, y, 1, 16, 0x80000000 | rgb);
 					if (!chunks.contains(new ChunkPos(chunk.x + 1, chunk.z))) blendRect(image, x + 15, y, 1, 16, 0x80000000 | rgb);
@@ -413,7 +410,7 @@ public final class ParchmentExport {
 				for (int y = 0; y < texture.textureHeight(); y++) {
 					for (int x = 0; x < texture.textureWidth(); x++) {
 						if (x >= tex.getWidth() || y >= tex.getHeight()) continue;
-						blendPixel(image, dx + x, dy + y, tex.getColorArgb(x, y));
+						blendPixel(image, dx + x, dy + y, tex.getPixel(x, y));
 					}
 				}
 			});
@@ -425,9 +422,9 @@ public final class ParchmentExport {
 			allMarkers.forEach((landmark, texture) -> {
 				if (!RoleplayersAtlas.layerVisible(landmark)) return;
 				if (landmark.contains(LandmarkComponentTypes.POS) || !landmark.contains(LandmarkComponentTypes.CHUNKS)) return;
-				String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString();
+				String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Component.empty()).getString();
 				if (name.isBlank()) return;
-				net.minecraft.util.math.ColumnPos center = glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>()));
+				net.minecraft.server.level.ColumnPos center = glam.ardor.roleplayers_atlas.util.TerritoryUtil.centroid(landmark.getOrDefault(LandmarkComponentTypes.CHUNKS, new HashMap<>()));
 				drawPlateText(image, name.toUpperCase(java.util.Locale.ROOT), (int) Math.round(toPxX.applyAsDouble(center.x())), (int) Math.round(toPxZ.applyAsDouble(center.z())), landmark.get(LandmarkComponentTypes.COLOR), 2);
 			});
 		}
@@ -436,7 +433,7 @@ public final class ParchmentExport {
 				if (!RoleplayersAtlas.layerVisible(landmark)) return;
 				List<BlockPos> points = landmark.get(AtlasComponents.ROUTE);
 				if (points == null || points.size() < 2) return;
-				String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString();
+				String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Component.empty()).getString();
 				if (name.isBlank()) return;
 				BlockPos mid = points.get(points.size() / 2);
 				drawPlateText(image, name, (int) Math.round(toPxX.applyAsDouble(mid.getX() + 0.5)), (int) Math.round(toPxZ.applyAsDouble(mid.getZ() + 0.5)) - 10, landmark.get(LandmarkComponentTypes.COLOR), 1);
@@ -446,7 +443,7 @@ public final class ParchmentExport {
 			allMarkers.forEach((landmark, texture) -> {
 				if (!RoleplayersAtlas.layerVisible(landmark)) return;
 				if (!Boolean.TRUE.equals(landmark.get(AtlasComponents.PEN_LABEL))) return;
-				String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString();
+				String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Component.empty()).getString();
 				if (name.isBlank()) return;
 				BlockPos pos = landmark.get(LandmarkComponentTypes.POS);
 				if (pos == null) return;

@@ -1,8 +1,8 @@
 package glam.ardor.roleplayers_atlas;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Client-side "field mode": the atlas book is shown in the player's hands
@@ -53,7 +53,7 @@ public final class AtlasHoldMode {
 	}
 
 	private static void finishCloseIfDone() {
-		if (active && closing && Util.getMeasuringTimeMs() - closingAt >= CLOSE_TOTAL_MS) {
+		if (active && closing && Util.getMillis() - closingAt >= CLOSE_TOTAL_MS) {
 			active = false;
 			closing = false;
 			pendingClose = false;
@@ -67,7 +67,7 @@ public final class AtlasHoldMode {
 		pendingClose = false;
 		shiftValue = 0;
 		shiftLastMs = 0;
-		activatedAt = Util.getMeasuringTimeMs();
+		activatedAt = Util.getMillis();
 	}
 
 	/**
@@ -82,7 +82,7 @@ public final class AtlasHoldMode {
 			return;
 		}
 		closing = true;
-		closingAt = Util.getMeasuringTimeMs();
+		closingAt = Util.getMillis();
 	}
 
 	/** Instantly puts the book away, without the animation. */
@@ -101,13 +101,13 @@ public final class AtlasHoldMode {
 	 */
 	public static float handShift() {
 		if (!active) return shiftValue = 0;
-		long now = Util.getMeasuringTimeMs();
+		long now = Util.getMillis();
 		if (shiftLastMs == 0) shiftLastMs = now;
 		float step = (now - shiftLastMs) / (float) SHIFT_MS;
 		shiftLastMs = now;
 		float target = shiftTargetNow();
 		float before = shiftValue;
-		shiftValue += MathHelper.clamp(target - shiftValue, -step, step);
+		shiftValue += Mth.clamp(target - shiftValue, -step, step);
 		// A page rustle as the book starts moving between hands.
 		if (before <= 0.001F && shiftValue > 0.001F) AtlasSounds.handShift();
 		if (before >= 0.999F && shiftValue < 0.999F) AtlasSounds.handShift();
@@ -129,17 +129,17 @@ public final class AtlasHoldMode {
 	 * The hand the small book settles into: the off hand normally, or the main
 	 * hand when only the off hand is holding an item.
 	 */
-	public static net.minecraft.util.Hand smallBookHand() {
-		net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
-		if (client.player != null && client.player.getMainHandStack().isEmpty() && !client.player.getOffHandStack().isEmpty()) return net.minecraft.util.Hand.MAIN_HAND;
-		return net.minecraft.util.Hand.OFF_HAND;
+	public static net.minecraft.world.InteractionHand smallBookHand() {
+		net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+		if (client.player != null && client.player.getMainHandItem().isEmpty() && !client.player.getOffhandItem().isEmpty()) return net.minecraft.world.InteractionHand.MAIN_HAND;
+		return net.minecraft.world.InteractionHand.OFF_HAND;
 	}
 
 	private static float shiftTargetNow() {
 		if (closing || pendingClose) return 0;
 		if (openProgress() < 1) return 0;
-		net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
-		return client.player != null && (!client.player.getMainHandStack().isEmpty() || !client.player.getOffHandStack().isEmpty()) ? 1 : 0;
+		net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+		return client.player != null && (!client.player.getMainHandItem().isEmpty() || !client.player.getOffhandItem().isEmpty()) ? 1 : 0;
 	}
 
 	public static ItemStack getVirtualStack() {
@@ -150,22 +150,22 @@ public final class AtlasHoldMode {
 	/** 0..1 raw progress of the draw (rise) phase; runs backwards while closing. */
 	public static float drawProgress() {
 		if (!active) return 1;
-		if (closing) return 1 - MathHelper.clamp((Util.getMeasuringTimeMs() - closingAt - CLOSE_DRAW_START_MS) / (float) CLOSE_DRAW_MS, 0f, 1f);
-		return MathHelper.clamp((Util.getMeasuringTimeMs() - activatedAt) / (float) DRAW_MS, 0f, 1f);
+		if (closing) return 1 - Mth.clamp((Util.getMillis() - closingAt - CLOSE_DRAW_START_MS) / (float) CLOSE_DRAW_MS, 0f, 1f);
+		return Mth.clamp((Util.getMillis() - activatedAt) / (float) DRAW_MS, 0f, 1f);
 	}
 
 	/** 0..1 raw progress of the off-hand reaching in; runs backwards while closing. */
 	public static float armProgress() {
 		if (!active) return 1;
-		if (closing) return 1 - MathHelper.clamp((Util.getMeasuringTimeMs() - closingAt - CLOSE_ARM_START_MS) / (float) CLOSE_ARM_MS, 0f, 1f);
-		return MathHelper.clamp((Util.getMeasuringTimeMs() - activatedAt - ARM_START_MS) / (float) ARM_MS, 0f, 1f);
+		if (closing) return 1 - Mth.clamp((Util.getMillis() - closingAt - CLOSE_ARM_START_MS) / (float) CLOSE_ARM_MS, 0f, 1f);
+		return Mth.clamp((Util.getMillis() - activatedAt - ARM_START_MS) / (float) ARM_MS, 0f, 1f);
 	}
 
 	/** 0..1 raw progress of the page-open phase; runs backwards while closing. */
 	public static float openProgress() {
 		if (!active) return 1;
-		if (closing) return 1 - MathHelper.clamp((Util.getMeasuringTimeMs() - closingAt) / (float) CLOSE_COVER_MS, 0f, 1f);
-		return MathHelper.clamp((Util.getMeasuringTimeMs() - activatedAt - OPEN_START_MS) / (float) OPEN_MS, 0f, 1f);
+		if (closing) return 1 - Mth.clamp((Util.getMillis() - closingAt) / (float) CLOSE_COVER_MS, 0f, 1f);
+		return Mth.clamp((Util.getMillis() - activatedAt - OPEN_START_MS) / (float) OPEN_MS, 0f, 1f);
 	}
 
 	/**
@@ -176,7 +176,7 @@ public final class AtlasHoldMode {
 	public static float labelAlpha() {
 		if (!active) return 1;
 		if (closing || pendingClose) return 0;
-		return MathHelper.clamp((Util.getMeasuringTimeMs() - activatedAt - (OPEN_START_MS + OPEN_MS)) / 200f, 0f, 1f);
+		return Mth.clamp((Util.getMillis() - activatedAt - (OPEN_START_MS + OPEN_MS)) / 200f, 0f, 1f);
 	}
 
 	public static float easeOutCubic(float t) {

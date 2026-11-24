@@ -1,9 +1,9 @@
 package glam.ardor.roleplayers_atlas.util;
 
 import folk.sisby.surveyor.client.ClientSummary;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.ServerData;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -20,11 +20,11 @@ public final class WorldKey {
 	private WorldKey() {
 	}
 
-	public static @Nullable String current(MinecraftClient client) {
-		if (client.isInSingleplayer() && client.getServer() != null) {
-			return "sp:" + client.getServer().getSaveProperties().getLevelName();
+	public static @Nullable String current(Minecraft client) {
+		if (client.isLocalServer() && client.getSingleplayerServer() != null) {
+			return "sp:" + client.getSingleplayerServer().getWorldData().getLevelName();
 		}
-		ClientPlayNetworkHandler handler = client.getNetworkHandler();
+		ClientPacketListener handler = client.getConnection();
 		if (handler != null) {
 			try {
 				ClientSummary summary = ClientSummary.of(handler);
@@ -35,11 +35,11 @@ public final class WorldKey {
 				// Surveyor hasn't settled yet; the address will do until it has.
 			}
 		}
-		ServerInfo entry = client.getCurrentServerEntry();
-		return entry != null ? "mp:" + entry.address : null;
+		ServerData entry = client.getCurrentServer();
+		return entry != null ? "mp:" + entry.ip : null;
 	}
 
 	public static @Nullable String current() {
-		return current(MinecraftClient.getInstance());
+		return current(Minecraft.getInstance());
 	}
 }

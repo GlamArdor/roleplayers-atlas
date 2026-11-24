@@ -1,9 +1,9 @@
 package glam.ardor.roleplayers_atlas.util;
 
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.biome.Biome;
 
 public class ForgeTags {
 	public static class Biomes {
@@ -62,7 +62,7 @@ public class ForgeTags {
 		public static final TagKey<Biome> IS_MOUNTAIN = tag("is_mountain");
 
 		public static TagKey<Biome> tag(String name) {
-			return TagKey.of(RegistryKeys.BIOME, Identifier.of("forge", name));
+			return TagKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath("forge", name));
 		}
 	}
 }

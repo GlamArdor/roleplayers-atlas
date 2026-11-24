@@ -17,14 +17,14 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.CommonLifecycleEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,7 +74,7 @@ public class RoleplayersAtlas implements ClientModInitializer {
 	public static final ScreenState<AtlasScreen> lastState = new ScreenState<>();
 
 	public static Identifier id(String path) {
-		return path.contains(":") ? Identifier.tryParse(path) : Identifier.of(ID, path);
+		return path.contains(":") ? Identifier.tryParse(path) : Identifier.fromNamespaceAndPath(ID, path);
 	}
 
 	/**
@@ -83,19 +83,19 @@ public class RoleplayersAtlas implements ClientModInitializer {
 	 * and the renderer swaps it in, so the atlas needs no item to exist.
 	 */
 	public static ItemStack virtualAtlasStack() {
-		ItemStack stack = Items.BOOK.getDefaultStack().copy();
-		stack.set(DataComponentTypes.ITEM_MODEL, id("atlas"));
-		stack.set(DataComponentTypes.ITEM_NAME, Text.translatable("gui.roleplayers_atlas.atlas"));
+		ItemStack stack = Items.BOOK.getDefaultInstance().copy();
+		stack.set(DataComponents.ITEM_MODEL, id("atlas"));
+		stack.set(DataComponents.ITEM_NAME, Component.translatable("gui.roleplayers_atlas.atlas"));
 		return stack;
 	}
 
 	public static AtlasScreen openAtlasScreen() {
-		if (MinecraftClient.getInstance().currentScreen == null) {
+		if (Minecraft.getInstance().screen == null) {
 			AtlasScreen screen = new AtlasScreen();
 			screen.init();
 			screen.prepareToOpen();
 			screen.tick();
-			MinecraftClient.getInstance().setScreen(screen);
+			Minecraft.getInstance().setScreen(screen);
 			return screen;
 		}
 		return null;
@@ -114,10 +114,10 @@ public class RoleplayersAtlas implements ClientModInitializer {
 		AtlasComponents.init();
 		AtlasKeybindings.init();
 		ZoneTitles.init();
-		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(TileTextures.getInstance());
-		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(StructureTileProviders.getInstance());
-		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(BiomeTileProviders.getInstance());
-		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(MarkerTextures.getInstance());
+		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(TileTextures.getInstance());
+		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(StructureTileProviders.getInstance());
+		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(BiomeTileProviders.getInstance());
+		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(MarkerTextures.getInstance());
 
 		// getOrCreate(summary), not the dimension: a proxy can put a different
 		// world behind the same dimension without the client ever disconnecting.
@@ -125,13 +125,13 @@ public class RoleplayersAtlas implements ClientModInitializer {
 		SurveyorClientEvents.Register.structuresAdded(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onStructuresAdded(s, k));
 		SurveyorClientEvents.Register.landmarksAdded(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onLandmarksAdded(s, k));
 		SurveyorClientEvents.Register.landmarksRemoved(id("world_data"), (s, k) -> WorldAtlasData.getOrCreate(s).onLandmarksRemoved(s, k));
-		ClientTickEvents.END_WORLD_TICK.register((w -> SurveyorClient.getSummaries(MinecraftClient.getInstance().getNetworkHandler()).values().forEach(s -> WorldAtlasData.getOrCreate(s).tick(s))));
-		CommonLifecycleEvents.TAGS_LOADED.register(((manager, client) -> BiomeTileProviders.getInstance().registerFallbacks(manager.getOrThrow(RegistryKeys.BIOME))));
+		ClientTickEvents.END_WORLD_TICK.register((w -> SurveyorClient.getSummaries(Minecraft.getInstance().getConnection()).values().forEach(s -> WorldAtlasData.getOrCreate(s).tick(s))));
+		CommonLifecycleEvents.TAGS_LOADED.register(((manager, client) -> BiomeTileProviders.getInstance().registerFallbacks(manager.lookupOrThrow(Registries.BIOME))));
 		ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> BiomeTileProviders.getInstance().clearFallbacks()));
 		ClientPlayConnectionEvents.DISCONNECT.register(((handler, client) -> WorldAtlasData.WORLDS.clear()));
 		// Landmarks already on the map arrive in a burst right after joining;
 		// anything later is a death that just happened and can be dated.
-		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> worldJoinedMs = net.minecraft.util.Util.getMeasuringTimeMs());
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> worldJoinedMs = net.minecraft.util.Util.getMillis());
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> TrackedMarkersStore.load(client));
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> MarkerLayers.load(client));
 		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> SpawnMarker.load(client));
@@ -141,7 +141,7 @@ public class RoleplayersAtlas implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(SpawnMarker::tick);
 		// Corrections are per world, and a proxy can change the world underfoot.
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			if (client.world != null) {
+			if (client.level != null) {
 				String world = glam.ardor.roleplayers_atlas.util.WorldKey.current(client);
 				BiomeOverrides.bind(world);
 				CityPaint.bind(world);
@@ -165,6 +165,6 @@ public class RoleplayersAtlas implements ClientModInitializer {
 		WorldSummary.enableStructures();
 		WorldSummary.enableLandmarks();
 
-		FabricLoader.getInstance().getModContainer(ID).ifPresent(c -> ResourceManagerHelper.registerBuiltinResourcePack(id("shader_patch"), c, Text.of("Shader Patch"), ResourcePackActivationType.NORMAL));
+		FabricLoader.getInstance().getModContainer(ID).ifPresent(c -> ResourceManagerHelper.registerBuiltinResourcePack(id("shader_patch"), c, Component.nullToEmpty("Shader Patch"), ResourcePackActivationType.NORMAL));
 	}
 }

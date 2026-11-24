@@ -1,6 +1,6 @@
 package glam.ardor.roleplayers_atlas;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 public class FeatureTiles {
 	public static final Identifier BEDROCK_ROOF = RoleplayersAtlas.id("feature/bedrock_roof");

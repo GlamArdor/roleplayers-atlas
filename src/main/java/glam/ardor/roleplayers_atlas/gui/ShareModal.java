@@ -1,105 +1,31 @@
 package glam.ardor.roleplayers_atlas.gui;
 
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.AtlasComponents;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.MapShare;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.WorldAtlasData;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ButtonComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.Component;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ScrollBoxComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import glam.ardor.roleplayers_atlas.gui.core.ToggleButtonComponent;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.WorldSummary;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.landmark.Landmark;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import folk.sisby.surveyor.landmark.component.LandmarkComponentTypes;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.tooltip.Tooltip;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.text.Text;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.world.World;
-
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
+import net.minecraft.world.level.Level;
 import java.nio.file.Path;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.ArrayList;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.input.CharInput;
 import java.util.List;
 
 /**
@@ -144,7 +70,7 @@ public class ShareModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -159,13 +85,13 @@ public class ShareModal extends Component {
 			context.fill(bx, by, bx + 9, by + 9, 0xFF3E2B18);
 			context.fill(bx + 1, by + 1, bx + 8, by + 8, 0xFFE8DCC2);
 			if (isSelected()) context.fill(bx + 2, by + 2, bx + 7, by + 7, 0xFF7A4A1E);
-			context.drawText(textRenderer, textRenderer.trimToWidth(entry.label, getWidth() - 17), bx + 13, y + 5, 0xFFF0E4C8, true);
+			context.drawString(font, font.plainSubstrByWidth(entry.label, getWidth() - 17), bx + 13, y + 5, 0xFFF0E4C8, true);
 			context.disableScissor();
 			super.render(context, mouseX, mouseY, partialTick);
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -201,7 +127,7 @@ public class ShareModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			setSelected(allIncluded());
 			int x = getGuiX();
 			int y = getGuiY();
@@ -218,13 +144,13 @@ public class ShareModal extends Component {
 			// Layer color swatch, then the name.
 			context.fill(bx + 13, by, bx + 22, by + 9, 0xFF3E2B18);
 			context.fill(bx + 14, by + 1, bx + 21, by + 8, 0xFF000000 | (layer.color() & 0xFFFFFF));
-			context.drawText(textRenderer, textRenderer.trimToWidth(layer.name(), getWidth() - 30), bx + 26, y + 5, 0xFFF0E4C8, true);
+			context.drawString(font, font.plainSubstrByWidth(layer.name(), getWidth() - 30), bx + 26, y + 5, 0xFFF0E4C8, true);
 			context.disableScissor();
 			super.render(context, mouseX, mouseY, partialTick);
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -243,7 +169,7 @@ public class ShareModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -253,16 +179,16 @@ public class ShareModal extends Component {
 			if (selectedXaero != null && selectedXaero.file().equals(source.file())) context.fill(x, y, x + getWidth(), y + getHeight(), 0x33FFD98A);
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
 			String count = " (" + source.count() + ")";
-			int room = getWidth() - 6 - textRenderer.getWidth(count);
-			String label = textRenderer.trimToWidth(source.label(), room);
+			int room = getWidth() - 6 - font.width(count);
+			String label = font.plainSubstrByWidth(source.label(), room);
 			// The world being played on right now is the one nearly everybody wants.
-			context.drawText(textRenderer, label + count, x + 3, y + 5, source.current() ? 0xFFFFE9A8 : 0xFFF0E4C8, true);
+			context.drawString(font, label + count, x + 3, y + 5, source.current() ? 0xFFFFE9A8 : 0xFFF0E4C8, true);
 			context.disableScissor();
 			super.render(context, mouseX, mouseY, partialTick);
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseY = click.y();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
 			return super.mouseClicked(click, doubled);
@@ -288,7 +214,7 @@ public class ShareModal extends Component {
 		private final int count;
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -302,14 +228,14 @@ public class ShareModal extends Component {
 			context.fill(bx + 1, by + 1, bx + 8, by + 8, 0xFFE8DCC2);
 			if (isSelected()) context.fill(bx + 2, by + 2, bx + 7, by + 7, 0xFF7A4A1E);
 			String count = " (" + this.count + ")";
-			int room = getWidth() - 17 - textRenderer.getWidth(count);
-			context.drawText(textRenderer, textRenderer.trimToWidth(set, room) + count, bx + 13, y + 5, 0xFFF0E4C8, true);
+			int room = getWidth() - 17 - font.width(count);
+			context.drawString(font, font.plainSubstrByWidth(set, room) + count, bx + 13, y + 5, 0xFFF0E4C8, true);
 			context.disableScissor();
 			super.render(context, mouseX, mouseY, partialTick);
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseY = click.y();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
 			return super.mouseClicked(click, doubled);
@@ -329,7 +255,7 @@ public class ShareModal extends Component {
 		}
 
 		@Override
-		public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+		public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 			int x = getGuiX();
 			int y = getGuiY();
 			int top = listTop();
@@ -338,13 +264,13 @@ public class ShareModal extends Component {
 			context.enableScissor(x, Math.max(y, top), x + getWidth(), Math.min(y + getHeight(), bottom));
 			if (file.equals(selectedFile)) context.fill(x, y, x + getWidth(), y + getHeight(), 0x33FFD98A);
 			if (!isClipped && isMouseOver(mouseX, mouseY) && mouseY >= top && mouseY < bottom) context.fill(x, y, x + getWidth(), y + getHeight(), 0x22FFFFFF);
-			context.drawText(textRenderer, textRenderer.trimToWidth(name, getWidth() - 6), x + 3, y + 5, 0xFFF0E4C8, true);
+			context.drawString(font, font.plainSubstrByWidth(name, getWidth() - 6), x + 3, y + 5, 0xFFF0E4C8, true);
 			context.disableScissor();
 			super.render(context, mouseX, mouseY, partialTick);
 		}
 
 		@Override
-		public boolean mouseClicked(Click click, boolean doubled) {
+		public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 			double mouseX = click.x(), mouseY = click.y();
 			int button = click.button();
 			if (mouseY < listTop() || mouseY >= listTop() + LIST_H) return false;
@@ -353,8 +279,8 @@ public class ShareModal extends Component {
 	}
 
 	private WorldSummary summary;
-	private DynamicRegistryManager manager;
-	private RegistryKey<World> dim;
+	private RegistryAccess manager;
+	private ResourceKey<Level> dim;
 
 	private final List<Entry> entries = new ArrayList<>();
 	private boolean includeTerrain = true;
@@ -362,17 +288,17 @@ public class ShareModal extends Component {
 	private boolean includeCorrections = true;
 	private boolean importMode = false;
 
-	private TextFieldWidget nameField;
-	private ButtonWidget btnTerrain;
-	private ButtonWidget btnCorrections;
-	private ButtonWidget btnAuthor;
-	private ButtonWidget btnAll;
-	private ButtonWidget btnNone;
-	private ButtonWidget btnExport;
-	private ButtonWidget btnImport;
-	private ButtonWidget btnFolder;
-	private ButtonWidget btnCancel;
-	private ButtonWidget btnTakeIn;
+	private EditBox nameField;
+	private Button btnTerrain;
+	private Button btnCorrections;
+	private Button btnAuthor;
+	private Button btnAll;
+	private Button btnNone;
+	private Button btnExport;
+	private Button btnImport;
+	private Button btnFolder;
+	private Button btnCancel;
+	private Button btnTakeIn;
 	private final ScrollBoxComponent[] columns = new ScrollBoxComponent[COL_COUNT];
 	private ScrollBoxComponent fileBox;
 
@@ -387,13 +313,13 @@ public class ShareModal extends Component {
 	private List<glam.ardor.roleplayers_atlas.XaeroImport.Waypoint> xaeroWaypoints = new ArrayList<>();
 	private final java.util.Set<String> chosenSets = new java.util.HashSet<>();
 	private boolean setsAsLayers = true;
-	private ButtonWidget btnSource;
-	private ButtonWidget btnSetsAsLayers;
+	private Button btnSource;
+	private Button btnSetsAsLayers;
 
 	private void select(Path file) {
 		selectedFile = file;
 		preview = MapShare.peek(file, dim);
-		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 	}
 
 	/** Reads one of Xaero's files and lists its sets to pick from. */
@@ -403,7 +329,7 @@ public class ShareModal extends Component {
 		chosenSets.clear();
 		chosenSets.addAll(glam.ardor.roleplayers_atlas.XaeroImport.sets(xaeroWaypoints).keySet());
 		rebuildSetBox();
-		MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ITEM_BOOK_PAGE_TURN, 1.0F));
+		Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 	}
 
 	private void rebuildSetBox() {
@@ -424,17 +350,17 @@ public class ShareModal extends Component {
 			.toList();
 	}
 
-	private Text sourceText() {
-		return Text.translatable("gui.roleplayers_atlas.share.source",
-			Text.translatable(fromXaero ? "gui.roleplayers_atlas.share.source.xaero" : "gui.roleplayers_atlas.share.source.scrolls"));
+	private net.minecraft.network.chat.Component sourceText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.source",
+			net.minecraft.network.chat.Component.translatable(fromXaero ? "gui.roleplayers_atlas.share.source.xaero" : "gui.roleplayers_atlas.share.source.scrolls"));
 	}
 
-	private Text setsAsLayersText() {
-		return Text.translatable("gui.roleplayers_atlas.share.setsAsLayers",
-			Text.translatable(setsAsLayers ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private net.minecraft.network.chat.Component setsAsLayersText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.setsAsLayers",
+			net.minecraft.network.chat.Component.translatable(setsAsLayers ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
-	void setData(WorldSummary summary, DynamicRegistryManager manager, RegistryKey<World> dim, WorldAtlasData data) {
+	void setData(WorldSummary summary, RegistryAccess manager, ResourceKey<Level> dim, WorldAtlasData data) {
 		this.summary = summary;
 		this.manager = manager;
 		this.dim = dim;
@@ -446,8 +372,8 @@ public class ShareModal extends Component {
 			boolean pen = Boolean.TRUE.equals(landmark.get(AtlasComponents.PEN_LABEL));
 			boolean route = landmark.contains(AtlasComponents.ROUTE);
 			boolean territory = !landmark.contains(LandmarkComponentTypes.POS) && landmark.contains(LandmarkComponentTypes.CHUNKS);
-			String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, Text.empty()).getString();
-			if (name.isBlank()) name = Text.translatable(route ? "gui.roleplayers_atlas.unnamedRoute" : territory ? "gui.roleplayers_atlas.unnamedZone" : pen ? "gui.roleplayers_atlas.unnamedLabel" : "gui.roleplayers_atlas.unnamedMarker").getString();
+			String name = landmark.getOrDefault(LandmarkComponentTypes.NAME, net.minecraft.network.chat.Component.empty()).getString();
+			if (name.isBlank()) name = net.minecraft.network.chat.Component.translatable(route ? "gui.roleplayers_atlas.unnamedRoute" : territory ? "gui.roleplayers_atlas.unnamedZone" : pen ? "gui.roleplayers_atlas.unnamedLabel" : "gui.roleplayers_atlas.unnamedMarker").getString();
 			String layer = glam.ardor.roleplayers_atlas.RoleplayersAtlas.layerOf(landmark);
 			if (!glam.ardor.roleplayers_atlas.MarkerLayers.DEFAULT_ID.equals(layer)) {
 				glam.ardor.roleplayers_atlas.MarkerLayers.MapLayer layerDef = glam.ardor.roleplayers_atlas.MarkerLayers.get(layer);
@@ -458,16 +384,16 @@ public class ShareModal extends Component {
 		entries.sort(java.util.Comparator.comparing(e -> e.label, String.CASE_INSENSITIVE_ORDER));
 	}
 
-	private Text terrainText() {
-		return Text.translatable("gui.roleplayers_atlas.share.terrain", Text.translatable(includeTerrain ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private net.minecraft.network.chat.Component terrainText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.terrain", net.minecraft.network.chat.Component.translatable(includeTerrain ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
-	private Text authorText() {
-		return Text.translatable("gui.roleplayers_atlas.share.author", Text.translatable(includeAuthor ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private net.minecraft.network.chat.Component authorText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.author", net.minecraft.network.chat.Component.translatable(includeAuthor ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
-	private Text correctionsText() {
-		return Text.translatable("gui.roleplayers_atlas.share.corrections", Text.translatable(includeCorrections ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
+	private net.minecraft.network.chat.Component correctionsText() {
+		return net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.corrections", net.minecraft.network.chat.Component.translatable(includeCorrections ? "gui.roleplayers_atlas.marker.zoneTitle.on" : "gui.roleplayers_atlas.marker.zoneTitle.off"));
 	}
 
 
@@ -496,37 +422,37 @@ public class ShareModal extends Component {
 		removeAllChildren();
 		super.init();
 
-		nameField = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, (this.width - 200) / 2, this.height / 2 - 62, 200, 18, Text.translatable("gui.roleplayers_atlas.share.name"));
+		nameField = new EditBox(Minecraft.getInstance().font, (this.width - 200) / 2, this.height / 2 - 62, 200, 18, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.name"));
 		nameField.setEditable(true);
-		nameField.setFocusUnlocked(true);
-		nameField.setPlaceholder(Text.translatable("gui.roleplayers_atlas.share.name"));
+		nameField.setCanLoseFocus(true);
+		nameField.setHint(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.name"));
 		nameField.setMaxLength(48);
 		nameField.setFocused(true);
 
 		// Three things the scroll can carry besides the marks themselves: the land
 		// as it was explored, how it was read, and whose reading it is.
-		addDrawableChild(btnTerrain = ButtonWidget.builder(terrainText(), button -> {
+		addRenderableWidget(btnTerrain = Button.builder(terrainText(), button -> {
 			includeTerrain = !includeTerrain;
 			button.setMessage(terrainText());
-		}).dimensions(this.width / 2 - 152, this.height / 2 - 42, 96, 20).build());
-		addDrawableChild(btnCorrections = ButtonWidget.builder(correctionsText(), button -> {
+		}).bounds(this.width / 2 - 152, this.height / 2 - 42, 96, 20).build());
+		addRenderableWidget(btnCorrections = Button.builder(correctionsText(), button -> {
 			includeCorrections = !includeCorrections;
 			button.setMessage(correctionsText());
-		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.corrections.tooltip")))
-			.dimensions(this.width / 2 - 48, this.height / 2 - 42, 96, 20).build());
-		addDrawableChild(btnAuthor = ButtonWidget.builder(authorText(), button -> {
+		}).tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.corrections.tooltip")))
+			.bounds(this.width / 2 - 48, this.height / 2 - 42, 96, 20).build());
+		addRenderableWidget(btnAuthor = Button.builder(authorText(), button -> {
 			includeAuthor = !includeAuthor;
 			button.setMessage(authorText());
-		}).dimensions(this.width / 2 + 56, this.height / 2 - 42, 96, 20).build());
+		}).bounds(this.width / 2 + 56, this.height / 2 - 42, 96, 20).build());
 
-		addDrawableChild(btnAll = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.all"), button -> {
+		addRenderableWidget(btnAll = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.all"), button -> {
 			entries.forEach(e -> e.included = true);
 			syncRows();
-		}).dimensions(this.width / 2 - 98, this.height / 2 - 18, 96, 14).build());
-		addDrawableChild(btnNone = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.none"), button -> {
+		}).bounds(this.width / 2 - 98, this.height / 2 - 18, 96, 14).build());
+		addRenderableWidget(btnNone = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.none"), button -> {
 			entries.forEach(e -> e.included = false);
 			syncRows();
-		}).dimensions(this.width / 2 + 2, this.height / 2 - 18, 96, 14).build());
+		}).bounds(this.width / 2 + 2, this.height / 2 - 18, 96, 14).build());
 
 		// The scroll boxes must join the tree before coordinates are assigned,
 		// or their content resolves relative positions against (0,0).
@@ -556,39 +482,39 @@ public class ShareModal extends Component {
 
 		// Import mode's two headers: where the marks are coming from, and – for
 		// Xaero's – whether its sets become layers of ours.
-		addDrawableChild(btnSource = ButtonWidget.builder(sourceText(), button -> {
+		addRenderableWidget(btnSource = Button.builder(sourceText(), button -> {
 			fromXaero = !fromXaero;
 			button.setMessage(sourceText());
 			switchMode(true);
-		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.source.tooltip")))
-			.dimensions(paneLeft(), this.height / 2 - 18, PANE_W, 14).build());
-		addDrawableChild(btnSetsAsLayers = ButtonWidget.builder(setsAsLayersText(), button -> {
+		}).tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.source.tooltip")))
+			.bounds(paneLeft(), this.height / 2 - 18, PANE_W, 14).build());
+		addRenderableWidget(btnSetsAsLayers = Button.builder(setsAsLayersText(), button -> {
 			setsAsLayers = !setsAsLayers;
 			button.setMessage(setsAsLayersText());
-		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.setsAsLayers.tooltip")))
-			.dimensions(previewLeft(), this.height / 2 - 18, PANE_W, 14).build());
+		}).tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.setsAsLayers.tooltip")))
+			.bounds(previewLeft(), this.height / 2 - 18, PANE_W, 14).build());
 
 		int bottomY = this.height / 2 + LIST_H + 24;
-		addDrawableChild(btnExport = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.export"), button -> doExport())
-			.tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.export.tooltip")))
-			.dimensions(0, bottomY, BTN_W, 20).build());
-		addDrawableChild(btnImport = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.import"), button -> switchMode(!importMode))
-			.tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.import.tooltip")))
-			.dimensions(0, bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnExport = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.export"), button -> doExport())
+			.tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.export.tooltip")))
+			.bounds(0, bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnImport = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.import"), button -> switchMode(!importMode))
+			.tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.import.tooltip")))
+			.bounds(0, bottomY, BTN_W, 20).build());
 		// Handing a scroll over means putting someone else's file into this
 		// folder, so the modal opens it rather than describing where it is.
-		addDrawableChild(btnFolder = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.folder"), button -> {
-			Util.getOperatingSystem().open(MapShare.scrollsDir());
-		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.folder.tooltip")))
-			.dimensions(0, bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnFolder = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.folder"), button -> {
+			Util.getPlatform().openPath(MapShare.scrollsDir());
+		}).tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.folder.tooltip")))
+			.bounds(0, bottomY, BTN_W, 20).build());
 		// Nothing is written until this is pressed – the row above only reads.
-		addDrawableChild(btnTakeIn = ButtonWidget.builder(Text.translatable("gui.roleplayers_atlas.share.takeIn"), button -> {
+		addRenderableWidget(btnTakeIn = Button.builder(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.takeIn"), button -> {
 			if (fromXaero) doXaeroImport();
 			else if (selectedFile != null) doImport(selectedFile);
-		}).tooltip(Tooltip.of(Text.translatable("gui.roleplayers_atlas.share.takeIn.tooltip")))
-			.dimensions(0, bottomY, BTN_W, 20).build());
-		addDrawableChild(btnCancel = ButtonWidget.builder(Text.translatable("gui.cancel"), button -> closeChild())
-			.dimensions(0, bottomY, BTN_W, 20).build());
+		}).tooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.takeIn.tooltip")))
+			.bounds(0, bottomY, BTN_W, 20).build());
+		addRenderableWidget(btnCancel = Button.builder(net.minecraft.network.chat.Component.translatable("gui.cancel"), button -> closeChild())
+			.bounds(0, bottomY, BTN_W, 20).build());
 		layoutBottomRow();
 	}
 
@@ -598,7 +524,7 @@ public class ShareModal extends Component {
 	 * the row off to one side.
 	 */
 	private void layoutBottomRow() {
-		List<ButtonWidget> shown = new ArrayList<>();
+		List<Button> shown = new ArrayList<>();
 		if (!importMode) shown.add(btnExport);
 		if (importMode) shown.add(btnTakeIn);
 		shown.add(btnImport);
@@ -606,7 +532,7 @@ public class ShareModal extends Component {
 		shown.add(btnCancel);
 		int total = shown.size() * BTN_W + (shown.size() - 1) * SP;
 		int x = this.width / 2 - total / 2;
-		for (ButtonWidget button : shown) {
+		for (Button button : shown) {
 			button.setX(x);
 			x += BTN_W + SP;
 		}
@@ -671,29 +597,29 @@ public class ShareModal extends Component {
 
 	private void doExport() {
 		List<Landmark> selected = entries.stream().filter(e -> e.included).map(e -> e.landmark).toList();
-		var player = MinecraftClient.getInstance().player;
+		var player = Minecraft.getInstance().player;
 		try {
-			Path file = MapShare.export(dim, summary, manager, selected, includeTerrain, includeCorrections, includeAuthor, nameField.getText());
+			Path file = MapShare.export(dim, summary, manager, selected, includeTerrain, includeCorrections, includeAuthor, nameField.getValue());
 			if (player != null) {
 				// An .atlas file has nothing to open it, so the link reveals the folder.
-				player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.exported", glam.ardor.roleplayers_atlas.ParchmentExport.folderLink(file)), false);
+				player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.exported", glam.ardor.roleplayers_atlas.ParchmentExport.folderLink(file)), false);
 				glam.ardor.roleplayers_atlas.AtlasSounds.exportDone();
 			}
 			closeChild();
 		} catch (Exception e) {
 			glam.ardor.roleplayers_atlas.RoleplayersAtlas.LOGGER.warn("[Roleplayer's Atlas] Export failed", e);
-			if (player != null) player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.exportFailed"), false);
+			if (player != null) player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.exportFailed"), false);
 		}
 	}
 
 	/** Writes the chosen Xaero waypoints in as marks of our own. */
 	private void doXaeroImport() {
-		var player = MinecraftClient.getInstance().player;
+		var player = Minecraft.getInstance().player;
 		List<glam.ardor.roleplayers_atlas.XaeroImport.Waypoint> chosen = chosenWaypoints();
 		int written = glam.ardor.roleplayers_atlas.XaeroImport.importWaypoints(chosen, dim, setsAsLayers);
 		if (player != null) {
-			player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.xaeroImported", written), false);
-			MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
+			player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.xaeroImported", written), false);
+			Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1F));
 		}
 		if (getParent() instanceof AtlasScreen screen) {
 			screen.rebuildLayerTabs();
@@ -703,24 +629,24 @@ public class ShareModal extends Component {
 	}
 
 	private void doImport(Path file) {
-		var player = MinecraftClient.getInstance().player;
+		var player = Minecraft.getInstance().player;
 		MapShare.ImportResult result = MapShare.importFile(file, dim, summary, manager);
 		if (player != null) {
 			if (result.error() != null) {
-				player.sendMessage(Text.translatable("gui.roleplayers_atlas.share." + result.error()), false);
+				player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share." + result.error()), false);
 				return;
 			}
-			player.sendMessage(Text.translatable("gui.roleplayers_atlas.share.imported", result.landmarks(), result.regions(), result.corrections()), false);
-			MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.ENTITY_VILLAGER_WORK_CARTOGRAPHER, 1F));
+			player.displayClientMessage(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.imported", result.landmarks(), result.regions(), result.corrections()), false);
+			Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1F));
 		}
 		if (getParent() instanceof AtlasScreen screen) screen.updateBookmarkerList();
 		closeChild();
 	}
 
 	@Override
-	public void render(DrawContext context, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics context, int mouseX, int mouseY, float partialTick) {
 		context.fill(0, 0, this.width, this.height, 0x66000000);
-		drawCentered(context, Text.translatable(importMode ? "gui.roleplayers_atlas.share.importTitle" : "gui.roleplayers_atlas.share.title"), this.height / 2 - 84, 0xDDDDDD, true);
+		drawCentered(context, net.minecraft.network.chat.Component.translatable(importMode ? "gui.roleplayers_atlas.share.importTitle" : "gui.roleplayers_atlas.share.title"), this.height / 2 - 84, 0xDDDDDD, true);
 
 		btnExport.visible = !importMode;
 		btnTerrain.visible = !importMode;
@@ -743,8 +669,8 @@ public class ShareModal extends Component {
 		btnSetsAsLayers.visible = importMode && fromXaero;
 		if (btnSource.visible) btnSource.render(context, mouseX, mouseY, partialTick);
 		if (btnSetsAsLayers.visible) btnSetsAsLayers.render(context, mouseX, mouseY, partialTick);
-		btnImport.setMessage(Text.translatable(importMode ? "gui.roleplayers_atlas.share.back" : "gui.roleplayers_atlas.share.import"));
-		btnImport.setTooltip(Tooltip.of(Text.translatable(importMode ? "gui.roleplayers_atlas.share.back.tooltip" : "gui.roleplayers_atlas.share.import.tooltip")));
+		btnImport.setMessage(net.minecraft.network.chat.Component.translatable(importMode ? "gui.roleplayers_atlas.share.back" : "gui.roleplayers_atlas.share.import"));
+		btnImport.setTooltip(Tooltip.create(net.minecraft.network.chat.Component.translatable(importMode ? "gui.roleplayers_atlas.share.back.tooltip" : "gui.roleplayers_atlas.share.import.tooltip")));
 
 		if (!importMode) {
 			nameField.render(context, mouseX, mouseY, partialTick);
@@ -759,24 +685,24 @@ public class ShareModal extends Component {
 			for (int i = 0; i < COL_COUNT; i++) {
 				int x = columnX(i);
 				context.fillGradient(x, listTop(), x + COL_W, listTop() + LIST_H, 0x66101010, 0x77101010);
-				Text header = Text.translatable("gui.roleplayers_atlas." + headers[i]);
-				context.drawText(textRenderer, header, x + (COL_W - textRenderer.getWidth(header)) / 2, listTop() - 11, 0xFFDDDDDD, true);
+				net.minecraft.network.chat.Component header = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas." + headers[i]);
+				context.drawString(font, header, x + (COL_W - font.width(header)) / 2, listTop() - 11, 0xFFDDDDDD, true);
 			}
 		} else {
 			context.fillGradient(paneLeft(), listTop(), paneLeft() + PANE_W, listTop() + LIST_H, 0x66101010, 0x77101010);
 			context.fillGradient(previewLeft(), listTop(), previewLeft() + PANE_W, listTop() + LIST_H, 0x66101010, 0x77101010);
 			if (fileBox.getViewport().getChildren().stream().allMatch(child -> child.getChildren().isEmpty())) {
 				int y = listTop() + LIST_H / 2 - 4;
-				Text none = Text.translatable(fromXaero ? "gui.roleplayers_atlas.share.noXaero" : "gui.roleplayers_atlas.share.noFiles");
-				context.drawText(textRenderer, none, paneLeft() + (PANE_W - textRenderer.getWidth(none)) / 2, y, 0xFFAAAAAA, true);
+				net.minecraft.network.chat.Component none = net.minecraft.network.chat.Component.translatable(fromXaero ? "gui.roleplayers_atlas.share.noXaero" : "gui.roleplayers_atlas.share.noFiles");
+				context.drawString(font, none, paneLeft() + (PANE_W - font.width(none)) / 2, y, 0xFFAAAAAA, true);
 			}
 			if (fromXaero) {
 				if (selectedXaero == null) {
-					context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.share.pickXaero"), previewLeft() + 5, listTop() + 5, 0xFF9A8C70, true);
+					context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.pickXaero"), previewLeft() + 5, listTop() + 5, 0xFF9A8C70, true);
 				} else {
 					// What Take in would write, counted rather than promised.
-					Text total = Text.translatable("gui.roleplayers_atlas.share.xaeroChosen", chosenWaypoints().size());
-					context.drawText(textRenderer, total, previewLeft() + (PANE_W - textRenderer.getWidth(total)) / 2, listTop() + LIST_H + 4, 0xFFF0E4C8, true);
+					net.minecraft.network.chat.Component total = net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.xaeroChosen", chosenWaypoints().size());
+					context.drawString(font, total, previewLeft() + (PANE_W - font.width(total)) / 2, listTop() + LIST_H + 4, 0xFFF0E4C8, true);
 				}
 			} else {
 				renderPreview(context);
@@ -794,26 +720,26 @@ public class ShareModal extends Component {
 	 * that would say nothing are left out rather than printed as zeroes: a scroll
 	 * of nothing but roads should read as a scroll of roads.
 	 */
-	private void renderPreview(DrawContext context) {
+	private void renderPreview(GuiGraphics context) {
 		int x = previewLeft() + 5;
 		int y = listTop() + 5;
 		if (preview == null) {
-			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.share.pickFile"), x, y, 0xFF9A8C70, true);
+			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.pickFile"), x, y, 0xFF9A8C70, true);
 			return;
 		}
-		context.drawText(textRenderer, textRenderer.trimToWidth(selectedFile.getFileName().toString(), PANE_W - 10), x, y, 0xFFF0E4C8, true);
+		context.drawString(font, font.plainSubstrByWidth(selectedFile.getFileName().toString(), PANE_W - 10), x, y, 0xFFF0E4C8, true);
 		y += 13;
 		if (!preview.sameDimension()) {
 			// The one thing that stops an import outright, said before it is tried.
-			for (net.minecraft.text.OrderedText line : textRenderer.wrapLines(Text.translatable("gui.roleplayers_atlas.share.previewOtherDim", preview.dimension()).formatted(net.minecraft.util.Formatting.RED), PANE_W - 10)) {
-				context.drawText(textRenderer, line, x, y, 0xFFFF8080, true);
+			for (net.minecraft.util.FormattedCharSequence line : font.split(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.previewOtherDim", preview.dimension()).withStyle(net.minecraft.ChatFormatting.RED), PANE_W - 10)) {
+				context.drawString(font, line, x, y, 0xFFFF8080, true);
 				y += 10;
 			}
 			return;
 		}
 		if (!preview.authors().isEmpty()) {
-			for (net.minecraft.text.OrderedText line : textRenderer.wrapLines(Text.translatable("gui.roleplayers_atlas.share.previewAuthors", String.join(", ", preview.authors())), PANE_W - 10)) {
-				context.drawText(textRenderer, line, x, y, 0xFFC8A05A, true);
+			for (net.minecraft.util.FormattedCharSequence line : font.split(net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.previewAuthors", String.join(", ", preview.authors())), PANE_W - 10)) {
+				context.drawString(font, line, x, y, 0xFFC8A05A, true);
 				y += 10;
 			}
 			y += 3;
@@ -827,14 +753,14 @@ public class ShareModal extends Component {
 		for (int[] pair : counts) {
 			if (pair[0] == 0) continue;
 			any = true;
-			context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.share.preview." + keys[pair[1]], pair[0]), x, y, 0xFFF0E4C8, true);
+			context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.preview." + keys[pair[1]], pair[0]), x, y, 0xFFF0E4C8, true);
 			y += 10;
 		}
-		if (!any) context.drawText(textRenderer, Text.translatable("gui.roleplayers_atlas.share.previewEmpty"), x, y, 0xFF9A8C70, true);
+		if (!any) context.drawString(font, net.minecraft.network.chat.Component.translatable("gui.roleplayers_atlas.share.previewEmpty"), x, y, 0xFF9A8C70, true);
 	}
 
 	@Override
-	public boolean mouseClicked(Click click, boolean doubled) {
+	public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
 		double mouseX = click.x(), mouseY = click.y();
 		int button = click.button();
 		// Nothing in this component tree hands out focus, and a text field that
@@ -849,7 +775,7 @@ public class ShareModal extends Component {
 	}
 
 	@Override
-	public boolean keyPressed(KeyInput input) {
+	public boolean keyPressed(KeyEvent input) {
 		int keyCode = input.key(), scanCode = input.scancode(), modifiers = input.modifiers();
 		// Escape steps back out of the dialog – first out of the file list, then
 		// out of the window. Left to the screen behind it, it would shut the book.
@@ -866,7 +792,7 @@ public class ShareModal extends Component {
 	}
 
 	@Override
-	public boolean charTyped(CharInput input) {
+	public boolean charTyped(CharacterEvent input) {
 		char chr = (char) input.codepoint();
 		int modifiers = input.modifiers();
 		return super.charTyped(input) || nameField.charTyped(input);

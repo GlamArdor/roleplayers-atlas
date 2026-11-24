@@ -1,22 +1,21 @@
 package glam.ardor.roleplayers_atlas.util;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderLayers;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.texture.TextureSetup;
-import net.minecraft.util.Identifier;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 
 import java.lang.reflect.Method;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.resources.Identifier;
 
 public class DrawBatcher implements AutoCloseable {
 
@@ -58,17 +57,17 @@ public class DrawBatcher implements AutoCloseable {
 			this.matrix4f = null;
 			this.vertexConsumer = null;
 		} else {
-			VertexConsumerProvider vertexConsumers = painter.vertexConsumers();
+			MultiBufferSource vertexConsumers = painter.vertexConsumers();
 			if (areWeShadersRightNow()) {
 				if (drawingTransparent) {
-					this.vertexConsumer = vertexConsumers.getBuffer(RenderLayers.entityNoOutline(texture));
+					this.vertexConsumer = vertexConsumers.getBuffer(RenderTypes.entityNoOutline(texture));
 				} else {
-					this.vertexConsumer = vertexConsumers.getBuffer(RenderLayers.entitySolid(texture));
+					this.vertexConsumer = vertexConsumers.getBuffer(RenderTypes.entitySolid(texture));
 				}
 			} else {
-				this.vertexConsumer = vertexConsumers.getBuffer(RenderLayers.text(texture));
+				this.vertexConsumer = vertexConsumers.getBuffer(RenderTypes.text(texture));
 			}
-			this.matrix4f = painter.matrices().peek().getPositionMatrix();
+			this.matrix4f = painter.matrices().last().pose();
 		}
 		this.textureWidth = textureWidth;
 		this.textureHeight = textureHeight;
@@ -111,25 +110,25 @@ public class DrawBatcher implements AutoCloseable {
 	}
 
 	protected void innerAdd(float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2, int argb) {
-		vertexConsumer.vertex(matrix4f, x1, y1, z).color(argb).texture(u1, v1).overlay(0).light(light).normal(0, 0, 0);
-		vertexConsumer.vertex(matrix4f, x1, y2, z).color(argb).texture(u1, v2).overlay(0).light(light).normal(0, 0, 0);
-		vertexConsumer.vertex(matrix4f, x2, y2, z).color(argb).texture(u2, v2).overlay(0).light(light).normal(0, 0, 0);
-		vertexConsumer.vertex(matrix4f, x2, y1, z).color(argb).texture(u2, v1).overlay(0).light(light).normal(0, 0, 0);
+		vertexConsumer.addVertex(matrix4f, x1, y1, z).setColor(argb).setUv(u1, v1).setOverlay(0).setLight(light).setNormal(0, 0, 0);
+		vertexConsumer.addVertex(matrix4f, x1, y2, z).setColor(argb).setUv(u1, v2).setOverlay(0).setLight(light).setNormal(0, 0, 0);
+		vertexConsumer.addVertex(matrix4f, x2, y2, z).setColor(argb).setUv(u2, v2).setOverlay(0).setLight(light).setNormal(0, 0, 0);
+		vertexConsumer.addVertex(matrix4f, x2, y1, z).setColor(argb).setUv(u2, v1).setOverlay(0).setLight(light).setNormal(0, 0, 0);
 	}
 
 	@Override
 	public void close() {
 		if (painter.isGui() && guiQuads != null && !guiQuads.isEmpty()) {
-			DrawContext context = painter.context();
-			Matrix3x2f pose = new Matrix3x2f(context.getMatrices());
-			ScreenRect scissor = context.scissorStack.peekLast();
+			GuiGraphics context = painter.context();
+			Matrix3x2f pose = new Matrix3x2f(context.pose());
+			ScreenRectangle scissor = context.scissorStack.peek();
 			// Textures carry their own sampler since 1.21.9, and TextureSetup now wants both.
-			AbstractTexture boundTexture = MinecraftClient.getInstance().getTextureManager().getTexture(texture);
-			TextureSetup textureSetup = TextureSetup.of(boundTexture.getGlTextureView(), boundTexture.getSampler());
-			ScreenRect bounds = new ScreenRect((int) Math.floor(guiMinX), (int) Math.floor(guiMinY), (int) Math.ceil(guiMaxX - guiMinX), (int) Math.ceil(guiMaxY - guiMinY)).transformEachVertex(pose);
+			AbstractTexture boundTexture = Minecraft.getInstance().getTextureManager().getTexture(texture);
+			TextureSetup textureSetup = TextureSetup.singleTexture(boundTexture.getTextureView(), boundTexture.getSampler());
+			ScreenRectangle bounds = new ScreenRectangle((int) Math.floor(guiMinX), (int) Math.floor(guiMinY), (int) Math.ceil(guiMaxX - guiMinX), (int) Math.ceil(guiMaxY - guiMinY)).transformMaxBounds(pose);
 			if (scissor != null) bounds = bounds.intersection(scissor);
 			if (bounds != null) {
-				context.state.addSimpleElement(new BatchedGuiQuads(RenderPipelines.GUI_TEXTURED, textureSetup, pose, scissor, guiQuads.toFloatArray(), guiColors.toIntArray(), guiColors.size(), bounds));
+				context.guiRenderState.submitGuiElement(new BatchedGuiQuads(RenderPipelines.GUI_TEXTURED, textureSetup, pose, scissor, guiQuads.toFloatArray(), guiColors.toIntArray(), guiColors.size(), bounds));
 			}
 			guiQuads = null;
 			guiColors = null;

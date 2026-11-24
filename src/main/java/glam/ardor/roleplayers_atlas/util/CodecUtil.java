@@ -2,13 +2,12 @@ package glam.ardor.roleplayers_atlas.util;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import net.minecraft.resource.metadata.ResourceMetadataSerializer;
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
 
 public class CodecUtil {
 	public static <T> Codec<Set<T>> set(Codec<T> codec) {
@@ -25,7 +24,7 @@ public class CodecUtil {
 		}, value -> DataResult.success(value.name()));
 	}
 
-	public static <T> ResourceMetadataSerializer<T> metadataSerializer(Codec<T> codec, Identifier id) {
-		return new ResourceMetadataSerializer<>(id.toString(), codec);
+	public static <T> MetadataSectionType<T> metadataSerializer(Codec<T> codec, Identifier id) {
+		return new MetadataSectionType<>(id.toString(), codec);
 	}
 }

@@ -2,10 +2,10 @@ package glam.ardor.roleplayers_atlas;
 
 import folk.sisby.surveyor.client.ClientSummary;
 import folk.sisby.surveyor.client.SurveyorClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 /**
  * Writes the explored map to disk every so often.
@@ -29,26 +29,26 @@ public final class MapAutosave {
 	private MapAutosave() {
 	}
 
-	public static void tick(MinecraftClient client) {
+	public static void tick(Minecraft client) {
 		// Singleplayer keeps its data on the integrated server, which saves on
 		// its own schedule; there is nothing here to write.
-		if (client.world == null || client.isInSingleplayer()) {
+		if (client.level == null || client.isLocalServer()) {
 			countdown = INTERVAL_TICKS;
 			return;
 		}
 		if (--countdown > 0) return;
 		countdown = INTERVAL_TICKS;
-		save(client.getNetworkHandler());
+		save(client.getConnection());
 	}
 
-	public static void save(ClientPlayNetworkHandler handler) {
+	public static void save(ClientPacketListener handler) {
 		if (handler == null) return;
 		try {
 			ClientSummary summary = ClientSummary.of(handler);
 			if (summary == null) return;
 			// leaveWorld is Surveyor's own "write this dimension out now" – it
 			// saves and nothing else, so it is safe to call while still there.
-			for (RegistryKey<World> dimension : SurveyorClient.getSummaries(handler).keySet()) {
+			for (ResourceKey<Level> dimension : SurveyorClient.getSummaries(handler).keySet()) {
 				summary.leaveWorld(dimension);
 			}
 		} catch (Exception e) {

@@ -2,11 +2,11 @@ package glam.ardor.roleplayers_atlas.gui;
 
 import glam.ardor.roleplayers_atlas.util.AtlasPainter;
 import folk.sisby.surveyor.PlayerSummary;
-import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.client.gui.GuiGraphics;
 
 public interface AtlasOverlay {
 	default void onScreenInit(AtlasScreen screen) {
@@ -19,7 +19,7 @@ public interface AtlasOverlay {
 	default void onRender(AtlasRenderContext context) {
 	}
 
-	record AtlasScreenRenderContext(AtlasScreen screen, DrawContext context, int mouseX, int mouseY, float markerScale, Map<UUID, PlayerSummary> friends) {
+	record AtlasScreenRenderContext(AtlasScreen screen, GuiGraphics context, int mouseX, int mouseY, float markerScale, Map<UUID, PlayerSummary> friends) {
 	}
 
 	record AtlasRenderContext(AtlasRenderer renderer, AtlasPainter painter, @Nullable Integer mouseX, @Nullable Integer mouseY, int light, float markerScale, Map<UUID, PlayerSummary> friends) {
